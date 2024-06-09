@@ -59,15 +59,14 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://flask-server-pi.vercel.app/');
+        const response = await fetch('https://flask-server-pi.vercel.app/translate');
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
         const data = await response.json();
         setCameraImage(data.img);
         if (data.translations.length > 0) {
-          // Append the new translations to the existing ones
-          setTranslations(prevTranslations => [...prevTranslations, ...data.translations]);
+          setTranslations(data.current_phrase.split(' '));
         }
       } catch (error) {
         console.error('Error fetching translations:', error.message);
@@ -79,16 +78,19 @@ function ASLTranslationPage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleClearLastLetter = () => {
-    setTranslations(prevTranslations => {
-      const updatedTranslations = [...prevTranslations];
-      updatedTranslations.pop(); // Remove the last translation
-      return updatedTranslations;
-    });
-  };
-
-  const handleClearTranslation = () => {
-    setTranslations([]);
+  const handleClearTranslation = async () => {
+    try {
+      const response = await fetch('https://flask-server-pi.vercel.app/clear', {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to clear');
+      }
+      const data = await response.json();
+      setTranslations([]);
+    } catch (error) {
+      console.error('Error clearing translation:', error.message);
+    }
   };
 
   return (
@@ -106,10 +108,7 @@ function ASLTranslationPage() {
         <p>{translations.join(' ')}</p>
       </TranslationText>
       {translations.length > 0 && (
-        <ClearButton onClick={handleClearLastLetter}>Delete Last Letter</ClearButton>
-      )}
-      {translations.length > 0 && (
-        <ClearButton onClick={handleClearTranslation}>Delete Whole Translation</ClearButton>
+        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
       )}
       <Instructions>
         <h2>Instructions:</h2>
