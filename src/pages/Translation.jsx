@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/AdminNavbar';
 
@@ -17,9 +17,10 @@ const CameraPlaceholder = styled.div`
   align-items: center;
 `;
 
-const CameraFeed = styled.img`
-  max-width: 100%;
-  max-height: 100%;
+const CameraFeed = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const TranslationText = styled.div`
@@ -42,15 +43,15 @@ const Instructions = styled.div`
 `;
 
 function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
+  const videoRef = useRef(null);
 
   // Determine the API URL based on the environment
   const apiUrl = process.env.NODE_ENV === 'production'
     ? 'https://<your-heroku-app>.herokuapp.com/translate'  // Replace with your Heroku app URL
     : 'http://127.0.0.1:5000/translate';
 
-  // Fetch camera image and translation from the server
+  // Fetch translation from the server
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,7 +60,6 @@ function ASLTranslationPage() {
           throw new Error('Failed to fetch');
         }
         const data = await response.json();
-        setCameraImage(data.img);
         setTranslation(data.translation);
       } catch (error) {
         console.error('Error fetching translation:', error.message);
@@ -71,15 +71,28 @@ function ASLTranslationPage() {
     return () => clearInterval(intervalId);
   }, [apiUrl]);
 
+  useEffect(() => {
+    // Access the camera feed
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error.message);
+      }
+    };
+
+    startCamera();
+  }, []);
+
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>Loading camera...</p>
-        )}
+        <CameraFeed ref={videoRef} />
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
