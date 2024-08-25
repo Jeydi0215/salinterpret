@@ -10,6 +10,7 @@ import Courses from './pages/Courses';
 import Quiz from './pages/Quiz';
 import Translation from './pages/Translation';
 import Start from './pages/Start'
+import UserMain from './pages/UserMain'
 
   
 
@@ -27,6 +28,8 @@ export default function App() {
         <Route path="/Translation" element={<Translation/>} /> 
         <Route path="/Quiz" element={<Quiz/>} /> 
         <Route path="/Main" element={<Main />} />
+        <Route path="/UserMain" element={<UserMain />} />
+   
    
         
       </Routes>
