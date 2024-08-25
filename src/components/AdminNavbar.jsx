@@ -12,7 +12,6 @@ export default function Navbar({ isScrolled }) {
   const links = [
     { name: 'Home', link: '/Main' },
     { name: 'Courses', link: '../Courses' },
-    { name: 'Translate', link: '/Translation' },
     { name: 'Upload', link: '../upload'},
   ];
 
@@ -68,9 +67,6 @@ export default function Navbar({ isScrolled }) {
           )}
         </div>
         <div className="right flex a-center">
-          <Link to ="Profile">
-            <FaUserCircle className="user-profile" />
-          </Link> 
           <button onClick={() => signOut(firebaseAuth)}>
             <FaPowerOff />
           </button>
