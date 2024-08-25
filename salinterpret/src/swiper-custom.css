@@ -1,0 +1,20 @@
+.swiper-container {
+    position: relative;
+  }
+  
+  .swiper-button-prev,
+  .swiper-button-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1; /* Adjust the z-index to make sure arrows appear below the background */
+  }
+  
+  .swiper-button-prev {
+    left: 10px;
+  }
+  
+  .swiper-button-next {
+    right: 10px;
+  }
+  
