@@ -1,31 +1,70 @@
-
 import React, { useState } from 'react';
 import styled from "styled-components";
 import BackgroundImage from '../components/BackgroundImage';
 import Header from '../components/Header';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { firebaseAuth } from '../utils/firebase-config';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
+const db = getFirestore();
 
 export default function Login() {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
-    email:"",
-    password:"",
-  })
-
-  onAuthStateChanged(firebaseAuth, (currentUser) => {
-    if(currentUser) navigate("/Main");
+    email: "",
+    password: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleLogIn = async () => {
+    setLoading(true);
     try {
       const { email, password } = formValues;
-      await signInWithEmailAndPassword(firebaseAuth, email, password)
+      const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+      const user = userCredential.user;
+      console.log("User logged in with UID:", user.uid);
+      await checkIfAdmin(user.uid);
     } catch (err) {
-      console.log(err)
+      console.log("Error during sign-in:", err);
+      setLoading(false); // Ensure loading is stopped if an error occurs
     }
-  }
+  };
+
+  const checkIfAdmin = async (uid) => {
+    try {
+      // Update to match the correct collection
+      const userDoc = doc(db, 'salinterpret', uid);
+      const docSnap = await getDoc(userDoc);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        console.log("User document data:", userData);
+
+        if (userData.roles && Array.isArray(userData.roles)) {
+          console.log("User roles array:", userData.roles);
+          if (userData.roles.includes("admin")) {
+            console.log("User is admin, navigating to /Main");
+            navigate("/Main"); // Redirect to admin main page
+          } else {
+            console.log("User is not admin, navigating to /UserMain");
+            navigate("/UserMain"); // Redirect to user main page
+          }
+        } else {
+          console.log("User roles field is not an array or is missing.");
+          navigate("/UserMain"); // Default to user main page if roles field is invalid
+        }
+      } else {
+        console.log("User document does not exist");
+        navigate("/UserMain"); // Default to user main page if document is missing
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      navigate("/UserMain"); // Default to user main page on error
+    } finally {
+      setLoading(false); // Stop loading once role is confirmed
+    }
+  };
 
   return (
     <Container>
@@ -52,13 +91,15 @@ export default function Login() {
                 value={formValues.password} 
                 onChange={(e) => setFormValues({...formValues, [e.target.name]: e.target.value})}
               />
-              <button onClick={handleLogIn}>Log in</button>
+              <button onClick={handleLogIn} disabled={loading}>
+                {loading ? "Loading..." : "Log in"}
+              </button>
             </div>
           </div>
         </div>
       </div>
     </Container>
-  )
+  );
 }
 
 const Container = styled.div`
@@ -125,7 +166,6 @@ const Container = styled.div`
     .form {
       width: 75vw;
       
-
       .container {
         input {
           width: 100%;
