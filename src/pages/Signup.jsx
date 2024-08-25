@@ -4,28 +4,63 @@ import BackgroundImage from '../components/BackgroundImage';
 import Header from '../components/Header';
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { firebaseAuth } from '../utils/firebase-config';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+
+
+const db = getFirestore();
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
-    email:"",
-    password:"",
-  })
+    email: "",
+    password: "",
+  });
 
-  onAuthStateChanged(firebaseAuth,(currentUser)=>{
-    if(currentUser) navigate("/Main");
-  })
-  const handleSignIn = async ()=>{
-    try{
-        const{email , password} = formValues;
-        await createUserWithEmailAndPassword(firebaseAuth,email,password)
-    }catch(err){
-        console.log(err)
+  onAuthStateChanged(firebaseAuth, (currentUser) => {
+    if (currentUser) navigate("/Main");
+  });
+
+  const handleSignIn = async () => {
+    try {
+      const { email, password } = formValues;
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const user = userCredential.user;
+
+      // Assuming you have some logic to determine if the user should be an admin
+      // For demonstration purposes, this example sets the admin status to false.
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        isAdmin: false // Set to true if you want this user to be an admin
+      });
+
+      // Check if the user is an admin and redirect accordingly
+      checkIfAdmin(user.uid);
+    } catch (err) {
+      console.log(err);
     }
-  }
+  };
 
+  const checkIfAdmin = async (uid) => {
+    try {
+      const userDoc = doc(db, 'users', uid);
+      const docSnap = await getDoc(userDoc);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        if (userData.isAdmin) {
+          navigate("/Main"); // Redirect to admin main page
+        } else {
+          navigate("/UserMain");  // Redirect to user main page
+        }
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+  };
 
   return (
     <Container showPassword={showPassword}>
@@ -39,18 +74,29 @@ export default function Signup() {
             <h6>Enter your Email to start</h6>
           </div>
           <div className="form">
-            <input type="email" placeholder="Email Address" name="email" value={formValues.email} onChange={(e)=>setFormValues({...formValues,[e.target.name]:e.target.value})}/>
+            <input
+              type="email"
+              placeholder="Email Address"
+              name="email"
+              value={formValues.email}
+              onChange={(e) => setFormValues({ ...formValues, [e.target.name]: e.target.value })}
+            />
             {showPassword && (
-              <input type="password" placeholder="Password" name="password" value={formValues.password} onChange={(e)=>setFormValues({...formValues,[e.target.name]:e.target.value})}/>
+              <input
+                type="password"
+                placeholder="Password"
+                name="password"
+                value={formValues.password}
+                onChange={(e) => setFormValues({ ...formValues, [e.target.name]: e.target.value })}
+              />
             )}
             {!showPassword && <button onClick={() => setShowPassword(true)}>Get Started</button>}
-          
           </div>
           <SignUpbutton onClick={handleSignIn}>SignUp</SignUpbutton>
         </div>
       </div>
     </Container>
-  )
+  );
 }
 
 const Container = styled.div`
@@ -77,7 +123,7 @@ const Container = styled.div`
         font-size: 2rem;
         width: 100%;
         margin-bottom: 1rem;
-        
+
         h1 {
           padding: 0;
           text-align: center;
@@ -91,7 +137,7 @@ const Container = styled.div`
         gap: 0; 
         width: 90%; 
         margin: auto;
-        
+
         input {
           color: black;
           border: none;
@@ -99,7 +145,7 @@ const Container = styled.div`
           font-size: 1rem;
           border: 1px solid black;
           width: 100%;
-          
+
           &:focus {
             outline: none;
           }
@@ -121,17 +167,16 @@ const Container = styled.div`
   }
 `;
 
-
-const SignUpbutton = styled.div `
-          padding: 0.5rem 0.3rem;
-          background-color:red;
-          color:white;
-          border:none;
-          height:36px;
-          width:74px;
-          border-radius:18px;
-          font-weight:bold;
-          font-size:15px;
-          cursor:pointer;
-          margin-top: 1rem;
-`
+const SignUpbutton = styled.div`
+  padding: 0.5rem 0.3rem;
+  background-color: red;
+  color: white;
+  border: none;
+  height: 36px;
+  width: 74px;
+  border-radius: 18px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 1rem;
+`;
