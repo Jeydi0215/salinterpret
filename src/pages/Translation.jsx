@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import Navbar from '../components/AdminNavbar';
+import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
   display: flex;
