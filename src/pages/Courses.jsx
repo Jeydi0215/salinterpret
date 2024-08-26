@@ -55,19 +55,27 @@ const CoursesPage = () => {
         const res = await listAll(listRef);
         const fileUrls = await Promise.all(res.items.map(async (item) => {
           const url = await getDownloadURL(item);
-          console.log('Image URL:', url); // Log the URL
           const metadata = await getMetadata(item);
+          const timestamp = new Date(metadata.timeCreated); // Use timeCreated field
+
+          console.log('Image URL:', url); // Log the URL
           console.log('Metadata:', metadata); // Log metadata
+          console.log('Timestamp:', timestamp); // Log the timestamp
+
           return { 
             id: item.name, 
             title: metadata.customMetadata?.title || item.name,
             tags: metadata.customMetadata?.tags || 'No tags available',
             thumbnailUrl: url,
-            timestamp: new Date(metadata.customMetadata?.timestamp || 0)
+            timestamp: timestamp
           };
         }));
 
+        // Sort images from oldest to newest based on timestamp
         fileUrls.sort((a, b) => a.timestamp - b.timestamp);
+
+        console.log('Sorted Images:', fileUrls); // Log sorted images
+
         setFiles(fileUrls);
       } catch (error) {
         console.error('Error fetching files:', error);
