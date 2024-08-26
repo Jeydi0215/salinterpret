@@ -317,8 +317,11 @@ const FreeTrialButton = styled.button`
   background: #41bfde;
   color: black;
   border: none;
+  width:50%;
+  height:70px;
   padding: 10px 20px;
   cursor: pointer;
+  font-size:20px;
   border-radius: 5px;
   margin-right: 10px;
   transition: background 0.3s ease;
@@ -336,6 +339,8 @@ const SeeMoreButton = styled.button`
   background: #febd03;
   color: black;
   border: none;
+  width:40%;
+  font-size:20px;
   padding: 10px 20px;
   cursor: pointer;
   border-radius: 5px;
