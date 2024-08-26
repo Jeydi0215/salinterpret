@@ -37,7 +37,7 @@ const Navbar = () => {
           <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
         </NavMenu>
         <NavActions>
-          <SignInButton onClick={() => navigate('/login')}>Sign In</SignInButton>
+          
           <MenuIcon />
         </NavActions>
       </Nav>
@@ -46,7 +46,7 @@ const Navbar = () => {
         <LeftSection>
           <Title>Welcome!</Title>
           <ButtonContainer>
-            <FreeTrialButton>Free Trial</FreeTrialButton>
+          <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
             <SeeMoreButton>See More</SeeMoreButton>
           </ButtonContainer>
         </LeftSection>
@@ -72,6 +72,11 @@ const Section = styled.section`
   color: white;
   padding: 100px 50px;
   scroll-snap-align: start;
+
+  @media (max-width: 768px) {
+    padding: 50px 20px;
+    height: auto; /* Adjust height for mobile */
+  }
 `;
 
 const AboutSection = () => {
@@ -85,13 +90,13 @@ const AboutSection = () => {
           <img src={Hacker} alt="" />
         </ImageWrapper>
         <ImageWrapper className={inView ? 'in-view' : ''}>
-        <img src={Hispter} alt="" />
+          <img src={Hispter} alt="" />
         </ImageWrapper>
         <ImageWrapper className={inView ? 'in-view' : ''}>
-        <img src={Member} alt="" />
+          <img src={Member} alt="" />
         </ImageWrapper>
         <ImageWrapper className={inView ? 'in-view' : ''}>
-        <img src={Mentor} alt="" />
+          <img src={Mentor} alt="" />
         </ImageWrapper>
       </ImagesContainer>
       <p>Salinterpret is dedicated to bridging communication gaps...</p>
@@ -125,7 +130,7 @@ const NavContainer = styled.div`
   position: relative;
   height: 100vh;
   overflow: auto;
-  position:sticky;
+  position: sticky;
   scroll-snap-type: y mandatory;
 `;
 
@@ -161,6 +166,10 @@ const Logo = styled.div`
     width: 40px;
     margin-right: 10px;
   }
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
 `;
 
 const NavMenu = styled.ul`
@@ -180,11 +189,22 @@ const NavItem = styled.li`
   &:hover {
     color: yellow;
   }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    margin: 0 10px;
+  }
 `;
 
 const NavActions = styled.div`
   display: flex;
   align-items: center;
+
+  @media (max-width: 768px) {
+    .sign-in-button {
+      display: none;
+    }
+  }
 `;
 
 const SignInButton = styled.button`
@@ -223,6 +243,12 @@ const HeroSection = styled.div`
   height: 100vh;
   padding: 0 100px;
   position: relative;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 20px;
+  }
 `;
 
 const LeftSection = styled.div`
@@ -231,6 +257,11 @@ const LeftSection = styled.div`
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  text-align: left;
+
+  @media (max-width: 768px) {
+    text-align: center;
+  }
 `;
 
 const RightSection = styled.div`
@@ -242,6 +273,11 @@ const RightSection = styled.div`
   text-align: center;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    align-items: center;
+    text-align: center;
+  }
 `;
 
 const HeroTextContainer = styled.div`
@@ -253,31 +289,60 @@ const HeroTextContainer = styled.div`
 
 const LogoWrapper = styled.div`
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 10px;
+  }
 `;
 
 const KaliwaLogoImg = styled.img`
   width: 200px;
+
+  @media (max-width: 768px) {
+    width: 150px;
+  }
 `;
 
 const Title = styled.h1`
   font-size: 64px;
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    font-size: 36px;
+    margin-bottom: 10px;
+  }
 `;
 
 const Description = styled.h2`
   font-size: 24px;
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
 `;
 
 const Text = styled.p`
   font-size: 18px;
   max-width: 600px;
   margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    gap: 10px;
+  }
 `;
 
 const FreeTrialButton = styled.button`
@@ -292,6 +357,11 @@ const FreeTrialButton = styled.button`
 
   &:hover {
     background: #008ecc;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    padding: 10px 20px;
   }
 `;
 
@@ -308,6 +378,11 @@ const SeeMoreButton = styled.button`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
 `;
 
 const ImagesContainer = styled.div`
@@ -319,13 +394,16 @@ const ImagesContainer = styled.div`
   justify-content: center; 
   flex-wrap: wrap; 
   width: 100%; 
+
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
 `;
 
 const ImageWrapper = styled.div`
   opacity: 0;
   transition: opacity 1s ease, transform 1s ease;
   transform: translateY(50px);
-  
 
   &.in-view {
     opacity: 1;
@@ -337,6 +415,11 @@ const ImageWrapper = styled.div`
     height: 200px;
     object-fit: cover;
     border-radius: 55%;
+
+    @media (max-width: 768px) {
+      width: 150px;
+      height: 150px;
+    }
   }
 `;
 
