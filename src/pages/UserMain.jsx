@@ -1,313 +1,397 @@
-import React, { useEffect, useState } from 'react';
-import { getStorage, ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
-import UserNavbar from '../components/UserNavbar';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import background from "../assets/login.jpg";
-import MovieLogo from "../assets/homeTitle.webp";
-import { FaPlay } from 'react-icons/fa';
-import { AiOutlineInfoCircle } from 'react-icons/ai';
+import { useInView } from 'react-intersection-observer';
+import ASL from '../assets/logo.png';
+import BackgroundImage from '../assets/lopit.png';
+import KaliwaLogo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
+import { FaBars } from 'react-icons/fa';
+import Hacker from '../assets/Hacker.png';
+import Hispter from '../assets/Hipster.png';
+import Member from '../assets/Member.png';
+import Mentor from '../assets/Mentor.png';
 
-const Main = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+const scrollToSection = (id) => {
+  const section = document.getElementById(id);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+const Navbar = ({ onSeeMoreClick }) => {
   const navigate = useNavigate();
-  const storage = getStorage();
-  const [mediaItems, setMediaItems] = useState([]);
-  const [selectedVideoUrl, setSelectedVideoUrl] = useState(null);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [showMoreInfo, setShowMoreInfo] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.pageYOffset > 0);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchMediaItems = async () => {
-      try {
-        const mediaRef = ref(storage, 'easy');
-        const mediaList = await listAll(mediaRef);
-        const items = await Promise.all(mediaList.items.map(async (item) => {
-          const url = await getDownloadURL(item);
-          const metadata = await getMetadata(item);
-          const { title, tags } = metadata.customMetadata || {};
-
-          return { url, title, tags };
-        }));
-        setMediaItems(items);
-      } catch (error) {
-        console.error('Error fetching media items:', error);
-      }
-    };
-
-    fetchMediaItems();
-  }, [storage]);
-
-  const playVideo = (url) => {
-    setSelectedVideoUrl(url);
-  };
-
-  const closeVideo = () => {
-    setSelectedVideoUrl(null);
-  };
-
-  const filteredMediaItems = mediaItems.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.tags && item.tags.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
   return (
-    <>
-      <Container>
-        <UserNavbar isScrolled={isScrolled} />
-        <div className="hero">
-          <img src={background} alt="background" className="background-image" />
-          <div className="container">
-            <div className="logo">
-              <img src={MovieLogo} alt="Movie Logo" className="logo-img" />
-            </div>
-            <div className="buttons flex">
-              <button className="flex j-center a-center" onClick={() => navigate('/Player')}>
-                <FaPlay className="icon" />
-                Play
-              </button>
-              <button className="more" onClick={() => setShowMoreInfo(true)}>
-                <AiOutlineInfoCircle className="icon" />
-                More Info
-              </button>
-            </div>
-          </div>
-        </div>
-        <SearchContainer>
-          <SearchBar
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </SearchContainer>
-        <MoviesContainer>
-          {filteredMediaItems.map((item, index) => (
-            <CustomMediaItem
-              key={index}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              onClick={() => playVideo(item.url)}
-            >
-              <ImageThumbnail src={item.url} alt={item.title || 'Thumbnail'} />
-            </CustomMediaItem>
-          ))}
-        </MoviesContainer>
-        {selectedVideoUrl && (
-          <VideoPlayerWrapper>
-            <VideoPlayer
-              src={selectedVideoUrl}
-              controls
-              autoPlay
-            />
-            <CloseButton onClick={closeVideo}>Close</CloseButton>
-          </VideoPlayerWrapper>
-        )}
-        {showMoreInfo && (
-          <PopupOverlay>
-            <PopupContainer>
-              <CloseButton onClick={() => setShowMoreInfo(false)}>Close</CloseButton>
-              <h2>Salinterpret</h2>
-              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem, it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
-            </PopupContainer>
-          </PopupOverlay>
-        )}
-        <Footer>
-          <p>&copy; Numbros</p>
-        </Footer>
-      </Container>
-    </>
+    <NavContainer>
+      <BackgroundBlur />
+      <Nav>
+        <Logo>
+          <img src={ASL} alt="Logo" />
+          Salinterpret
+        </Logo>
+        <NavMenu>
+          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+        </NavMenu>
+        <NavActions>
+          <MenuIcon />
+        </NavActions>
+      </Nav>
+
+      <HeroSection>
+        <LeftSection>
+          <Title>Welcome!</Title>
+          <ButtonContainer>
+            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
+            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+          </ButtonContainer>
+        </LeftSection>
+        <RightSection>
+          <LogoWrapper>
+            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+          </LogoWrapper>
+          <HeroTextContainer>
+            <Description>Salinterpret</Description>
+            <Text>
+              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+            </Text>
+          </HeroTextContainer>
+        </RightSection>
+      </HeroSection>
+    </NavContainer>
   );
 };
 
-const ImageThumbnail = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background-color: #000; /* Use a black background as a fallback */
+const AboutSection = () => {
+  const { ref: sectionRef, inView } = useInView({ triggerOnce: true });
+
+  return (
+    <Section id="about" ref={sectionRef}>
+      <h2>About Us</h2>
+      <ImagesContainer>
+        <ImageWrapper className={inView ? 'in-view' : ''}>
+          <img src={Hacker} alt="" />
+        </ImageWrapper>
+        <ImageWrapper className={inView ? 'in-view' : ''}>
+          <img src={Hispter} alt="" />
+        </ImageWrapper>
+        <ImageWrapper className={inView ? 'in-view' : ''}>
+          <img src={Member} alt="" />
+        </ImageWrapper>
+        <ImageWrapper className={inView ? 'in-view' : ''}>
+          <img src={Mentor} alt="" />
+        </ImageWrapper>
+      </ImagesContainer>
+      <p><strong><i>Meet the Team Numbros: The Team Behind Salinterpret </i></strong> <br/>
+      Our innovative team is working to bridge communication gaps with Salinterpret, a web application that translates American Sign Language (ASL) 
+      into text in real-time using OpenCV. At the helm is Justine Dimalanta, our Hacker and Hustler, who drives both the technical development and strategic direction with expertise and creativity. Jerson Mamangun, the Co-Hacker, collaborates on refining the app’s technical aspects to ensure top performance. Lara Jane Acar, the Hipster, focuses on crafting an intuitive and user-friendly experience. Offering vital guidance and support is Mr. Chris Allen Pineda, our Project Adviser. Together, we are dedicated to breaking down communication barriers and creating a more inclusive world! 🌎❤️</p>
+    </Section>
+  );
+};
+
+const PricingSection = () => (
+  <Section id="pricing">
+    <p style={{ fontSize: '28px' }}> <strong>Surprise!!! </strong></p><br/>
+    <p>Salinterpret is a free web app designed to bridge communication gaps. Our app offers essential features without any cost, ensuring that you have access to real-time translation and sign-to-word language features at no charge. You just need to have mobile data to access the app. Whether you're looking to communicate with the hearing-impaired or enhance your own understanding, Salinterpret is here to support you without any fees. Explore our features and experience the power of inclusive communication today!</p>
+  </Section>
+);
+
+const FeaturesSection = () => (
+  <Section id="features">
+    <h2>Features</h2>
+    <p>Explore the features of Salinterpret...</p>
+  </Section>
+);
+
+const ContactSection = () => (
+  <Section id="contact">
+    <h2>Contact Us</h2>
+    <p>Have questions or feedback? Reach out to us...</p>
+  </Section>
+);
+
+const Popup = ({ show, onClose }) => {
+  if (!show) return null;
+
+  return (
+    <PopupOverlay>
+      <PopupContainer>
+        <CloseButton onClick={onClose}>Close</CloseButton>
+        <h2>Salinterpret</h2>
+        <p>Surprise!!! Salinterpret is a free web app designed to bridge communication gaps. Our app offers essential features without any cost, ensuring that you have access to real-time translation and sign-to-word language features at no charge. You just need to have mobile data to access the app. Whether you're looking to communicate with the hearing-impaired or enhance your own understanding, Salinterpret is here to support you without any fees. Explore our features and experience the power of inclusive communication today!</p>
+      </PopupContainer>
+    </PopupOverlay>
+  );
+};
+
+// Styles
+const NavContainer = styled.div`
+  position: relative;
+  height: 100vh;
+  overflow: auto;
+  position: sticky;
+  scroll-snap-type: y mandatory;
 `;
 
-const Container = styled.div`
-  background-color: #1B1212;
-  .hero {
-    position: relative;
-    .background-image {
-      filter: brightness(60%);
-      height: 85vh;
-    }
-    img {
-      height: 100vh;
-      width: 100vw;
-    }
-    .container {
-      position: absolute;
-      bottom: 5rem;
-      .logo img {
-        width: 100%;
-        height: 100%;
-        margin-left: 5rem;
-      }
-      .buttons {
-        margin: 5rem;
-        gap: 2rem;
-        display: flex;
-        align-items: center;
-        button {
-          font-size: 1.4rem;
-          gap: 1rem;
-          border-radius: 0.2rem;
-          padding: 0.5rem 2rem;
-          border: none;
-          cursor: pointer;
-          transition: 0.2s ease-in-out;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          &:hover {
-            opacity: 0.8;
-          }
-          &:nth-of-type(2) {
-            background-color: rgba(109, 109, 110, 0.7);
-            color: white;
-          }
-          .icon {
-            margin-right: 0.5rem;
-          }
-        }
-      }
-    }
-  }
-  @media (max-width: 768px) {
-    .hero .container {
-      bottom: 3rem;
-      .logo img {
-        margin-left: 2rem;
-      }
-      .buttons {
-        margin: 2rem;
-        gap: 1rem;
-        flex-direction: row;  
-        justify-content: flex-start;  
-        button {
-          font-size: 1.2rem;
-          padding: 0.5rem 1.5rem;
-          width: auto; 
-          justify-content: center;
-          .icon {
-            margin-right: 0.3rem;
-          }
-        }
-      }
-    }
-  }
-  @media (max-width: 480px) {
-    .hero .container {
-      bottom: 2rem;
-      .logo img {
-        margin-left: 0.5rem;
-      }
-      .buttons {
-        flex-direction: column;
-        gap: 1rem;
-        button {
-          width: 100%;
-          text-align: center;
-        }
-      }
-    }
-  }
+const BackgroundBlur = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url(${BackgroundImage}) no-repeat center center/cover;
+  filter: blur(3px);
+  z-index: -1;
 `;
 
-const SearchContainer = styled.div`
+const Nav = styled.nav`
   display: flex;
-  justify-content: center;
-  padding: 2rem;
-`;
-
-const SearchBar = styled.input`
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  color: white;
+  position: absolute;
   width: 100%;
-  max-width: 600px;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  top: 0;
+  z-index: 100;
 `;
 
-const MoviesContainer = styled.div`
+const Logo = styled.div`
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  img {
+    width: 40px;
+    margin-right: 10px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+`;
+
+const NavMenu = styled.ul`
+  display: flex;
+  list-style: none;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const NavItem = styled.li`
+  margin: 0 20px;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    color: yellow;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    margin: 0 10px;
+  }
+`;
+
+const NavActions = styled.div`
+  display: flex;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    .sign-in-button {
+      display: none;
+    }
+  }
+`;
+
+const SignInButton = styled.button`
+  background: #4b37d4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-right: 20px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #3a2ba0;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const MenuIcon = styled(FaBars)`
+  display: none;
+  cursor: pointer;
+  font-size: 24px;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+const HeroSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 0 100px;
+  position: relative;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    padding: 0 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+`;
+
+const LeftSection = styled.div`
+  flex: 1;
+  margin-right: 50px;
+
+  @media (max-width: 768px) {
+    margin-right: 0;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 48px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    font-size: 32px;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  max-width: 300px;
+  margin-top: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+  }
+`;
+
+const FreeTrialButton = styled.button`
+  background: #4b37d4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #3a2ba0;
+  }
+
+  @media (max-width: 768px) {
+    margin: 10px 0;
+  }
+`;
+
+const SeeMoreButton = styled.button`
+  background: #f5c71a;
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #f0b700;
+  }
+`;
+
+const RightSection = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    margin-top: 20px;
+  }
+`;
+
+const LogoWrapper = styled.div`
+  margin-bottom: 20px;
+`;
+
+const KaliwaLogoImg = styled.img`
+  width: 150px;
+`;
+
+const HeroTextContainer = styled.div`
+  max-width: 500px;
+  text-align: center;
+`;
+
+const Description = styled.h2`
+  font-size: 28px;
+  margin-bottom: 10px;
+`;
+
+const Text = styled.p`
+  font-size: 16px;
+  line-height: 1.5;
+`;
+
+const Section = styled.section`
+  padding: 50px;
+  scroll-snap-align: start;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+`;
+
+const ImagesContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 2rem;
-  padding: 2rem;
 `;
 
-const CustomMediaItem = styled.div`
-  width: 300px;
-  height: 170px;
-  cursor: pointer;
-  position: relative;
-  background-color: #000;
-  overflow: hidden; /* Hide overflow to ensure clean edges */
-`;
+const ImageWrapper = styled.div`
+  margin: 10px;
+  opacity: 0;
+  transition: opacity 1s ease-in;
 
-const VideoPlayerWrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
-`;
+  &.in-view {
+    opacity: 1;
+  }
 
-const VideoPlayer = styled.video`
-  width: 80%;
-  height: 80%;
-  background-color: black;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: white;
-  border: none;
-  color: black;
-  padding: 10px;
-  cursor: pointer;
-`;
-
-const Footer = styled.footer`
-  text-align: center;
-  padding: 1rem;
-  background-color: #222;
-  color: #fff;
-  margin-top: auto;
+  img {
+    max-width: 200px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
 `;
 
 const PopupOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -315,14 +399,61 @@ const PopupOverlay = styled.div`
 `;
 
 const PopupContainer = styled.div`
-  background-color: #fff;
-  color: #000;
-  padding: 2rem;
+  background: white;
+  padding: 20px;
   border-radius: 10px;
-  width: 80%;
-  max-width: 600px;
-  position: relative;
+  max-width: 500px;
+  width: 100%;
   text-align: center;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
 `;
 
-export default Main;
+const CloseButton = styled.button`
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  &:hover {
+    background: #c62828;
+  }
+`;
+
+const App = () => {
+  const [popupVisible, setPopupVisible] = useState(false);
+
+  const handleSeeMoreClick = () => {
+    setPopupVisible(true);
+  };
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+  };
+
+  return (
+    <>
+      <Navbar onSeeMoreClick={handleSeeMoreClick} />
+      <AboutSection />
+      <PricingSection />
+      <FeaturesSection />
+      <ContactSection />
+      <Popup show={popupVisible} onClose={handlePopupClose} />
+    </>
+  );
+};
+
+export default App;
