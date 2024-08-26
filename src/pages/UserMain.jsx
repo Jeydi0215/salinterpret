@@ -40,7 +40,9 @@ const Main = () => {
           const metadata = await getMetadata(item);
           const { title, tags } = metadata.customMetadata || {};
 
-          // Since we are using the video itself as the thumbnail, no need for a separate thumbnail URL
+          // Debugging: Log fetched URLs and metadata
+          console.log('Fetched item:', { url, title, tags });
+
           return { url, title, tags };
         }));
         setMediaItems(items);
@@ -59,7 +61,6 @@ const Main = () => {
   const closeVideo = () => {
     setSelectedVideoUrl(null);
   };
-
 
   const filteredMediaItems = mediaItems.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,6 +143,10 @@ const VideoThumbnail = styled.video`
   height: 100%;
   object-fit: cover;
   pointer-events: none; /* Disable video controls */
+  background: red; /* Temporary background to debug */
+  @media (max-width: 768px) {
+    height: auto; /* Adjust height for mobile if necessary */
+  }
 `;
 
 const Container = styled.div`
@@ -264,6 +269,7 @@ const CustomMediaItem = styled.div`
   cursor: pointer;
   position: relative;
   background-color: #000;
+  border: 2px solid yellow; /* Temporary border to debug */
 `;
 
 const Actions = styled.div`
@@ -303,36 +309,29 @@ const VideoPlayerWrapper = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.8);
+  justify-content: center;
   z-index: 1000;
 `;
 
 const VideoPlayer = styled.video`
-  width: 80%;
-  height: 80%;
-  background-color: black;
+  max-width: 90%;
+  max-height: 80%;
+  background: #000;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: white;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.8);
   border: none;
-  color: black;
-  padding: 10px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-`;
-
-const Footer = styled.footer`
-  text-align: center;
-  padding: 1rem;
-  background-color: #222;
-  color: #fff;
-  margin-top: auto;
+  font-size: 1rem;
+  border-radius: 5px;
 `;
 
 const PopupOverlay = styled.div`
@@ -341,17 +340,28 @@ const PopupOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 999;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
-  background-color: #fff;
+  background: #fff;
   padding: 2rem;
-  margin: 5% auto;
-  width: 80%;
+  border-radius: 8px;
   max-width: 600px;
+  width: 90%;
   text-align: center;
+  position: relative;
+`;
+
+const Footer = styled.footer`
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
 `;
 
 export default Main;
