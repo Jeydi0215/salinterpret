@@ -4,7 +4,7 @@ import UserNavbar from '../components/UserNavbar';
 import styled from 'styled-components';
 import background from "../assets/login.jpg";
 import MovieLogo from "../assets/homeTitle.webp";
-import { FaPlay, FaTrashAlt, FaEdit } from 'react-icons/fa';
+import { FaPlay } from 'react-icons/fa';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,9 +39,6 @@ const Main = () => {
           const url = await getDownloadURL(item);
           const metadata = await getMetadata(item);
           const { title, tags } = metadata.customMetadata || {};
-
-          // Debugging: Log fetched URLs and metadata
-          console.log('Fetched item:', { url, title, tags });
 
           return { url, title, tags };
         }));
@@ -105,7 +102,7 @@ const Main = () => {
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => playVideo(item.url)}
             >
-              <VideoThumbnail src={item.url} controls={false} />
+              <ImageThumbnail src={item.url} alt={item.title || 'Thumbnail'} />
             </CustomMediaItem>
           ))}
         </MoviesContainer>
@@ -124,9 +121,7 @@ const Main = () => {
             <PopupContainer>
               <CloseButton onClick={() => setShowMoreInfo(false)}>Close</CloseButton>
               <h2>Salinterpret</h2>
-              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired 
-              persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem,
-               it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
+              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem, it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
             </PopupContainer>
           </PopupOverlay>
         )}
@@ -138,15 +133,11 @@ const Main = () => {
   );
 };
 
-const VideoThumbnail = styled.video`
+const ImageThumbnail = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none; /* Disable video controls */
-  background: red; /* Temporary background to debug */
-  @media (max-width: 768px) {
-    height: auto; /* Adjust height for mobile if necessary */
-  }
+  background-color: #000; /* Use a black background as a fallback */
 `;
 
 const Container = styled.div`
@@ -269,38 +260,7 @@ const CustomMediaItem = styled.div`
   cursor: pointer;
   position: relative;
   background-color: #000;
-  border: 2px solid yellow; /* Temporary border to debug */
-`;
-
-const Actions = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`;
-
-const Title = styled.h3`
-  color: white;
-  font-size: 1rem;
-  margin: 0;
-`;
-
-const EditButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.3rem;
-`;
-
-const DeleteButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.3rem;
+  overflow: hidden; /* Hide overflow to ensure clean edges */
 `;
 
 const VideoPlayerWrapper = styled.div`
@@ -309,29 +269,36 @@ const VideoPlayerWrapper = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
   z-index: 1000;
 `;
 
 const VideoPlayer = styled.video`
-  max-width: 90%;
-  max-height: 80%;
-  background: #000;
+  width: 80%;
+  height: 80%;
+  background-color: black;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  top: 20px;
+  right: 20px;
+  background-color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  color: black;
+  padding: 10px;
   cursor: pointer;
-  font-size: 1rem;
-  border-radius: 5px;
+`;
+
+const Footer = styled.footer`
+  text-align: center;
+  padding: 1rem;
+  background-color: #222;
+  color: #fff;
+  margin-top: auto;
 `;
 
 const PopupOverlay = styled.div`
@@ -340,28 +307,22 @@ const PopupOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
-  background: #fff;
+  background-color: #fff;
+  color: #000;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 10px;
+  width: 80%;
   max-width: 600px;
-  width: 90%;
-  text-align: center;
   position: relative;
-`;
-
-const Footer = styled.footer`
-  background: #000;
-  color: #fff;
   text-align: center;
-  padding: 1rem;
 `;
 
 export default Main;
