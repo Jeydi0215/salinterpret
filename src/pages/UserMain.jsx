@@ -4,7 +4,7 @@ import UserNavbar from '../components/UserNavbar';
 import styled from 'styled-components';
 import background from "../assets/login.jpg";
 import MovieLogo from "../assets/homeTitle.webp";
-import { FaPlay, FaTrashAlt, FaEdit } from 'react-icons/fa';
+import { FaPlay } from 'react-icons/fa';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,8 +40,7 @@ const Main = () => {
           const metadata = await getMetadata(item);
           const { title, tags } = metadata.customMetadata || {};
 
-          // Since we are using the video itself as the thumbnail, no need for a separate thumbnail URL
-          return { url, title, tags };
+          return { url, title, tags, contentType: metadata.contentType };
         }));
         setMediaItems(items);
       } catch (error) {
@@ -59,7 +58,6 @@ const Main = () => {
   const closeVideo = () => {
     setSelectedVideoUrl(null);
   };
-
 
   const filteredMediaItems = mediaItems.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -102,9 +100,12 @@ const Main = () => {
               key={index}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              onClick={() => playVideo(item.url)}
+              onClick={() => item.contentType.startsWith('video/') && playVideo(item.url)}
             >
-              <VideoThumbnail src={item.url} controls={false} />
+              <ImageThumbnail
+                src={item.contentType.startsWith('image/') ? item.url : 'placeholder.jpg'}
+                alt={item.title || 'Thumbnail'}
+              />
             </CustomMediaItem>
           ))}
         </MoviesContainer>
@@ -113,7 +114,6 @@ const Main = () => {
             <VideoPlayer
               src={selectedVideoUrl}
               controls
-              autoPlay
             />
             <CloseButton onClick={closeVideo}>Close</CloseButton>
           </VideoPlayerWrapper>
@@ -123,9 +123,7 @@ const Main = () => {
             <PopupContainer>
               <CloseButton onClick={() => setShowMoreInfo(false)}>Close</CloseButton>
               <h2>Salinterpret</h2>
-              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired 
-              persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem,
-               it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
+              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem, it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
             </PopupContainer>
           </PopupOverlay>
         )}
@@ -137,11 +135,11 @@ const Main = () => {
   );
 };
 
-const VideoThumbnail = styled.video`
+const ImageThumbnail = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none; /* Disable video controls */
+  background-color: #000; /* Use a black background as a fallback */
 `;
 
 const Container = styled.div`
@@ -264,37 +262,7 @@ const CustomMediaItem = styled.div`
   cursor: pointer;
   position: relative;
   background-color: #000;
-`;
-
-const Actions = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`;
-
-const Title = styled.h3`
-  color: white;
-  font-size: 1rem;
-  margin: 0;
-`;
-
-const EditButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.3rem;
-`;
-
-const DeleteButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.3rem;
+  overflow: hidden; /* Hide overflow to ensure clean edges */
 `;
 
 const VideoPlayerWrapper = styled.div`
@@ -318,21 +286,21 @@ const VideoPlayer = styled.video`
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: white;
+  top: 1rem;
+  right: 1rem;
+  background: #ff0000;
+  color: #fff;
   border: none;
-  color: black;
-  padding: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
   cursor: pointer;
 `;
 
 const Footer = styled.footer`
+  background-color: #333;
+  color: #fff;
   text-align: center;
   padding: 1rem;
-  background-color: #222;
-  color: #fff;
-  margin-top: auto;
 `;
 
 const PopupOverlay = styled.div`
@@ -341,16 +309,20 @@ const PopupOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
-  background-color: #fff;
+  background: #fff;
   padding: 2rem;
-  margin: 5% auto;
-  width: 80%;
+  border-radius: 8px;
+  width: 90%;
   max-width: 600px;
+  position: relative;
   text-align: center;
 `;
 
