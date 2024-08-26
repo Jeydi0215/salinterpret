@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Navbar from '../components/AdminNavbar';
+import Navbar from '../components/UserNavbar';
 import QuizButton from '../components/QuizButton';
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
