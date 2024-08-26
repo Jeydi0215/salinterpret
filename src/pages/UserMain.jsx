@@ -4,7 +4,7 @@ import UserNavbar from '../components/UserNavbar';
 import styled from 'styled-components';
 import background from "../assets/login.jpg";
 import MovieLogo from "../assets/homeTitle.webp";
-import { FaPlay, FaTrashAlt, FaEdit } from 'react-icons/fa';
+import { FaPlay } from 'react-icons/fa';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 
@@ -60,7 +60,6 @@ const Main = () => {
     setSelectedVideoUrl(null);
   };
 
-
   const filteredMediaItems = mediaItems.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.tags && item.tags.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -105,7 +104,6 @@ const Main = () => {
               onClick={() => playVideo(item.url)}
             >
               <VideoThumbnail src={item.url} controls={false} />
-
             </CustomMediaItem>
           ))}
         </MoviesContainer>
@@ -143,6 +141,7 @@ const VideoThumbnail = styled.video`
   height: 100%;
   object-fit: cover;
   pointer-events: none; /* Disable video controls */
+  background-color: black; /* Fallback color if video fails to load */
 `;
 
 const Container = styled.div`
@@ -265,6 +264,8 @@ const CustomMediaItem = styled.div`
   cursor: pointer;
   position: relative;
   background-color: #000;
+  background: url('path/to/fallback-thumbnail.jpg') no-repeat center center;
+  background-size: cover;
 `;
 
 const Actions = styled.div`
@@ -302,57 +303,61 @@ const VideoPlayerWrapper = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.8);
   z-index: 1000;
 `;
 
 const VideoPlayer = styled.video`
-  width: 80%;
-  height: 80%;
-  background-color: black;
+  max-width: 80%;
+  max-height: 80%;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: white;
+  background-color: #333;
   border: none;
-  color: black;
-  padding: 10px;
+  color: white;
+  padding: 0.5rem;
   cursor: pointer;
-`;
-
-const Footer = styled.footer`
-  text-align: center;
-  padding: 1rem;
-  background-color: #222;
-  color: #fff;
-  margin-top: auto;
 `;
 
 const PopupOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 999;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
   background-color: #fff;
   padding: 2rem;
-  margin: 5% auto;
-  width: 80%;
-  max-width: 600px;
+  border-radius: 10px;
   text-align: center;
+  max-width: 600px;
+  width: 100%;
+`;
+
+const Footer = styled.footer`
+  background-color: #111;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
 `;
 
 export default Main;
