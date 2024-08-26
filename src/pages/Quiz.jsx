@@ -1,230 +1,132 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { imageDb } from '../utils/firebase-config';
+import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
-import backgroundImg from '../assets/login.jpg';
-import { useNavigate } from 'react-router-dom';
-import A from '../assets/A.png';
-import B from '../assets/B.png';
-import L from '../assets/L.JPG';
-import K from '../assets/K.png';
-import R from '../assets/R.png';
+import UserNavbar from '../components/UserNavbar';
 
-// ScorePopup component
-const ScorePopup = ({ score, totalQuestions }) => {
-  const navigate = useNavigate();
-
-  const handleClose = () => {
-    navigate('/courses');
-  };
-
-  return (
-    <PopupOverlay>
-      <PopupContainer>
-        <PopupContent>
-          <h2>Quiz Completed!</h2>
-          <p>Your score: {score} out of {totalQuestions}</p>
-          <CloseButton onClick={handleClose}>Close</CloseButton>
-        </PopupContent>
-      </PopupContainer>
-    </PopupOverlay>
-  );
-};
-
-// QuizPage component
-const QuizPage = () => {
-  const quizTitle = "Quiz Time";
-  const initialQuestions = [
-    {
-      questionImage: A,
-      answerOptions: [
-        { option: "A", visible: true },
-        { option: "R", visible: true },
-        { option: "T", visible: true },
-        { option: "E", visible: true }
-      ],
-      correctAnswer: "A"
-    },
-    {
-      questionImage: B,
-      answerOptions: [
-        { option: "E", visible: true },
-        { option: "Z", visible: true },
-        { option: "B", visible: true },
-        { option: "Y", visible: true }
-      ],
-      correctAnswer: "B"
-    },
-    {
-      questionImage: L,
-      answerOptions: [
-        { option: "Z", visible: true },
-        { option: "O", visible: true },
-        { option: "L", visible: true },
-        { option: "R", visible: true }
-      ],
-      correctAnswer: "L"
-    },
-    {
-      questionImage: K,
-      answerOptions: [
-        { option: "E", visible: true },
-        { option: "C", visible: true },
-        { option: "K", visible: true },
-        { option: "A", visible: true }
-      ],
-      correctAnswer: "K"
-    },
-    {
-      questionImage: R,
-      answerOptions: [
-        { option: "R", visible: true },
-        { option: "M", visible: true },
-        { option: "W", visible: true },
-        { option: "Q", visible: true }
-      ],
-      correctAnswer: "R"
-    }
-  ];
-  const [questions, setQuestions] = useState(initialQuestions);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false); // State to track if quiz is completed
-  const navigate = useNavigate();
-
-  const handleAnswerSelect = (selectedAnswer) => {
-    if (selectedAnswer === questions[currentQuestionIndex].correctAnswer) {
-      setScore(score + 1);
-    }
-    
-    // Move to the next question
-    const nextQuestionIndex = currentQuestionIndex + 1;
-    if (nextQuestionIndex < questions.length) {
-      setCurrentQuestionIndex(nextQuestionIndex);
-    } else {
-      setQuizCompleted(true); // Set quizCompleted to true when all questions are answered
-    }
-  };
-
-  return (
-    <BackgroundContainer>
-      <QuizContainer>
-        <Header>{quizTitle}</Header>
-        {currentQuestionIndex < questions.length && (
-          <>
-            <QuestionContainer>
-              <QuestionImage src={questions[currentQuestionIndex].questionImage} alt="Question" />
-            </QuestionContainer>
-          </>
-        )}
-      </QuizContainer>
-      <OptionsContainer>
-        {currentQuestionIndex < questions.length && (
-          <>
-            {questions[currentQuestionIndex].answerOptions.map((option, index) => (
-              <Option key={index} onClick={() => handleAnswerSelect(option.option)}>
-                {option.option}
-              </Option>
-            ))}
-          </>
-        )}
-      </OptionsContainer>
-      {quizCompleted && ( // Render ScorePopup when quizCompleted is true
-        <ScorePopup score={score} totalQuestions={questions.length} />
-      )}
-    </BackgroundContainer>
-  );
-};
-
-const BackgroundContainer = styled.div`
-  background-image: url(${backgroundImg});
-  background-size: cover; 
-  min-height: 100vh; 
-  display: flex;
-  flex-direction: column;
+// Styled components
+const PageContainer = styled.div`
+  margin-top: 60px; 
+  padding: 20px;
+  background: black;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
 `;
 
 const QuizContainer = styled.div`
-  flex: 1; 
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  margin-top: 20px;
 `;
 
-const Header = styled.h1`
-  text-align: center;
-`;
-
-const QuestionContainer = styled.div`
-  border-radius: 10px;
-  padding: 20px;
+const QuizImage = styled.img`
+  width: 300px;
+  height: 200px;
+  border-radius: 8px;
   margin-bottom: 20px;
 `;
 
-const QuestionImage = styled.img`
-  display: block;
-  margin: 0 auto;
-  max-width: 100%;
-  height: auto;
-`;
-
 const OptionsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  padding: 20px;
-`;
-
-const Option = styled.div`
-  padding: 20px;
-  background-color: #fff;
-  color: #000;
-  border-radius: 5px;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-bottom: 10px;
-  
-  &:hover {
-    background-color: #f0f0f0;
-  }
-`;
-
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
 `;
 
-const PopupContainer = styled.div`
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-`;
-
-const PopupContent = styled.div`
-  text-align: center;
-  color:black;
-`;
-
-const CloseButton = styled.button`
-  background-color: #ff6347;
-  color: white;
+const OptionButton = styled.button`
+  background-color: #fff;
+  color: #000;
   border: none;
   padding: 10px 20px;
+  margin: 10px;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #ff473d;
+    background-color: #ddd;
   }
 `;
 
-export default QuizPage;
+const App = () => {
+  const [files, setFiles] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [quizOver, setQuizOver] = useState(false);
+
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const listRef = ref(imageDb, 'courses');
+        const res = await listAll(listRef);
+        const fileUrls = await Promise.all(res.items.map(async (item) => {
+          const url = await getDownloadURL(item);
+          const metadata = await getMetadata(item);
+          return { 
+            id: item.name, 
+            title: metadata.customMetadata?.title || item.name,
+            tags: metadata.customMetadata?.tags || 'No tags available',
+            thumbnailUrl: url
+          };
+        }));
+
+        setFiles(fileUrls);
+      } catch (error) {
+        console.error('Error fetching files:', error);
+      }
+    };
+
+    fetchFiles(); 
+  }, []);
+
+  const handleOptionClick = (isCorrect) => {
+    if (isCorrect) {
+      setScore(score + 1);
+    }
+
+    const nextQuestion = currentQuestion + 1;
+    if (nextQuestion < files.length) {
+      setCurrentQuestion(nextQuestion);
+    } else {
+      setQuizOver(true);
+    }
+  };
+
+  if (files.length === 0) {
+    return <PageContainer>Loading quiz...</PageContainer>;
+  }
+
+  return (
+    <>
+      <UserNavbar />
+      <PageContainer>
+        {quizOver ? (
+          <div>
+            <h2>Quiz Over!</h2>
+            <p>Your score: {score} / {files.length}</p>
+          </div>
+        ) : (
+          <QuizContainer>
+            <h2>Question {currentQuestion + 1} / {files.length}</h2>
+            <QuizImage src={files[currentQuestion].thumbnailUrl} alt={files[currentQuestion].title} />
+            <OptionsContainer>
+              {files.map((file, index) => (
+                <OptionButton
+                  key={index}
+                  onClick={() => handleOptionClick(file.id === files[currentQuestion].id)}
+                >
+                  {file.title}
+                </OptionButton>
+              ))}
+            </OptionsContainer>
+          </QuizContainer>
+        )}
+      </PageContainer>
+    </>
+  );
+};
+
+export default App;
+
