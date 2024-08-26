@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { imageDb } from '../utils/firebase-config';
+import { useNavigate } from 'react-router-dom';
 import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
-import UserNavbar from '../components/UserNavbar';
+import { imageDb } from '../utils/firebase-config';
 
 // Styled components
-const PageContainer = styled.div`
-  margin-top: 60px; 
+const QuizContainer = styled.div`
+  margin-top: 60px;
   padding: 20px;
   background: black;
   color: #fff;
@@ -14,50 +14,46 @@ const PageContainer = styled.div`
   text-align: center;
 `;
 
-const QuizContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-`;
-
-const QuizImage = styled.img`
-  width: 300px;
-  height: 200px;
-  border-radius: 8px;
+const ImageContainer = styled.div`
   margin-bottom: 20px;
-`;
 
-const OptionsContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 20px;
-`;
-
-const OptionButton = styled.button`
-  background-color: #fff;
-  color: #000;
-  border: none;
-  padding: 10px 20px;
-  margin: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: #ddd;
+  img {
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
   }
 `;
 
-const App = () => {
-  const [files, setFiles] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+const AnswerButton = styled.button`
+  padding: 10px 20px;
+  margin: 10px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #555;
+  }
+`;
+
+const QuizButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const QuizPage = () => {
+  const [images, setImages] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [quizOver, setQuizOver] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [answerChoices, setAnswerChoices] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFiles = async () => {
+    const fetchImages = async () => {
       try {
         const listRef = ref(imageDb, 'courses');
         const res = await listAll(listRef);
@@ -65,68 +61,92 @@ const App = () => {
           const url = await getDownloadURL(item);
           const metadata = await getMetadata(item);
           return { 
-            id: item.name, 
+            id: item.name,
             title: metadata.customMetadata?.title || item.name,
             tags: metadata.customMetadata?.tags || 'No tags available',
-            thumbnailUrl: url
+            thumbnailUrl: url,
           };
         }));
 
-        setFiles(fileUrls);
+        // Shuffle and select 7 random images
+        const shuffled = fileUrls.sort(() => 0.5 - Math.random()).slice(0, 7);
+        setImages(shuffled);
+        setAnswerChoices(generateChoices(shuffled));
       } catch (error) {
-        console.error('Error fetching files:', error);
+        console.error('Error fetching images:', error);
       }
     };
 
-    fetchFiles(); 
+    fetchImages();
   }, []);
 
-  const handleOptionClick = (isCorrect) => {
-    if (isCorrect) {
+  const generateChoices = (imageList) => {
+    // Extract titles from images
+    const titles = imageList.map(image => image.title);
+
+    // Generate choices for each question
+    return imageList.map(image => {
+      // Get 3 random incorrect choices
+      const incorrectChoices = titles.filter(title => title !== image.title)
+                                     .sort(() => 0.5 - Math.random())
+                                     .slice(0, 3);
+
+      // Combine the correct choice with incorrect choices and shuffle
+      const choices = [image.title, ...incorrectChoices].sort(() => 0.5 - Math.random());
+      return { image, choices };
+    });
+  };
+
+  const handleAnswer = (selectedAnswer) => {
+    if (selectedAnswer === images[currentIndex]?.title) {
       setScore(score + 1);
     }
 
-    const nextQuestion = currentQuestion + 1;
-    if (nextQuestion < files.length) {
-      setCurrentQuestion(nextQuestion);
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < images.length) {
+      setCurrentIndex(nextIndex);
     } else {
-      setQuizOver(true);
+      setQuizCompleted(true);
     }
   };
 
-  if (files.length === 0) {
-    return <PageContainer>Loading quiz...</PageContainer>;
-  }
+  const handleReturnToCourses = () => {
+    navigate('/courses');
+  };
 
   return (
-    <>
-      <UserNavbar />
-      <PageContainer>
-        {quizOver ? (
-          <div>
-            <h2>Quiz Over!</h2>
-            <p>Your score: {score} / {files.length}</p>
-          </div>
-        ) : (
-          <QuizContainer>
-            <h2>Question {currentQuestion + 1} / {files.length}</h2>
-            <QuizImage src={files[currentQuestion].thumbnailUrl} alt={files[currentQuestion].title} />
-            <OptionsContainer>
-              {files.map((file, index) => (
-                <OptionButton
-                  key={index}
-                  onClick={() => handleOptionClick(file.id === files[currentQuestion].id)}
-                >
-                  {file.title}
-                </OptionButton>
-              ))}
-            </OptionsContainer>
-          </QuizContainer>
-        )}
-      </PageContainer>
-    </>
+    <QuizContainer>
+      {quizCompleted ? (
+        <>
+          <h2>Quiz Completed!</h2>
+          <p>Your score: {score} out of {images.length}</p>
+          <QuizButtonContainer>
+            <AnswerButton onClick={handleReturnToCourses}>
+              Return to Courses
+            </AnswerButton>
+          </QuizButtonContainer>
+        </>
+      ) : (
+        <>
+          <h2>Question {currentIndex + 1}</h2>
+          {images[currentIndex] && (
+            <>
+              <ImageContainer>
+                <img src={images[currentIndex].thumbnailUrl} alt={`Question ${currentIndex + 1}`} />
+              </ImageContainer>
+              <div>
+                {answerChoices[currentIndex]?.choices.map((choice, index) => (
+                  <AnswerButton key={index} onClick={() => handleAnswer(choice)}>
+                    {choice}
+                  </AnswerButton>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </QuizContainer>
   );
 };
 
-export default App;
-
+export default QuizPage;
