@@ -123,10 +123,12 @@ const CoursesPage = () => {
   );
 };
 
-// Styled components for ResultCard, popup, and button
 const CardContainer = styled.div`
-  margin: 10px;
-  width: 150px;
+  flex: 1 1 calc(50% - 10px); // Take up half of the container width minus gap
+
+  // Optional: Adjust minimum width for smaller screens
+  min-width: 150px;
+
   cursor: pointer;
 
   .thumbnail {
@@ -143,13 +145,20 @@ const CardContainer = styled.div`
       margin: 0;
     }
   }
-`;
+`
 
 const GridContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   padding: 20px;
+  gap: 10px;
+  justify-content: center; // Center cards on mobile
+
+  @media (max-width: 768px) {
+    gap: 5px; // Reduce gap on mobile
+  }
 `;
+
 
 const Popup = styled.div`
   position: fixed;
