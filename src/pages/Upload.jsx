@@ -10,45 +10,59 @@ const PageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   background: #141413;
   font-family: 'Arial', sans-serif;
+  padding: 20px;
+`;
+
+const NavbarWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 20px; /* Add space below navbar on small screens */
 `;
 
 const UploadContainer = styled.div`
   display: flex;
-  width: 80%;
-  height:50%;
+  flex-direction: column;
+  width: 100%;
   max-width: 1200px;
   padding: 20px;
   border-radius: 12px;
   background: #FAF9F6;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+
+  @media (max-width: 768px) {
+    margin-top: 20px; /* Ensure there's space between the navbar and upload container on mobile */
+  }
 `;
 
 const LeftPanel = styled.div`
-  width: 50%;
+  width: 100%;
   padding: 20px;
-  border-right: 2px solid #eee;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+  border-bottom: 2px solid #eee;
+
+  @media (min-width: 768px) {
+    width: 50%;
+    border-right: 2px solid #eee;
+    border-bottom: none;
+  }
 `;
 
 const RightPanel = styled.div`
-  width: 50%;
+  width: 100%;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+
+  @media (min-width: 768px) {
+    width: 50%;
+  }
 `;
 
 const InputField = styled.input`
-  width: calc(100% - 24px);
+  width: 100%;
   height: 50px;
   padding: 12px;
   margin-bottom: 20px;
@@ -69,6 +83,7 @@ const InputFile = styled.input`
 `;
 
 const UploadButton = styled.label`
+  display: inline-block;
   padding: 14px 28px;
   font-size: 18px;
   background: #ff6f61;
@@ -78,6 +93,7 @@ const UploadButton = styled.label`
   cursor: pointer;
   transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
   text-align: center;
+  margin-top: 10px;
 
   &:hover {
     background: #e65c50;
@@ -90,13 +106,9 @@ const UploadButton = styled.label`
 `;
 
 const ButtonWrapper = styled.div`
-  position: absolute;
-  bottom: 20px; 
-  left: 50%; 
-  transform: translateX(-50%); 
-  width: 100%;
   display: flex;
   justify-content: center;
+  margin-top: 20px;
 `;
 
 const ProgressContainer = styled.div`
@@ -114,7 +126,7 @@ const ProgressBar = styled.progress`
     background: #FAF9F6;
   }
   ::-webkit-progress-value {
-    background:#FAF9F6;
+    background: #007bff;
   }
 `;
 
@@ -135,50 +147,54 @@ export default function Upload() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-    setFileName(selectedFile.name);
+    setFileName(selectedFile ? selectedFile.name : '');
   };
 
   const handleClick = () => {
-    if (file) {
-      const fileRef = ref(imageDb, `easy/${v4()}`);
-      const metadata = {
-        customMetadata: {
-          title,
-          tags,
-          location
-        }
-      };
-
-      const uploadTask = uploadBytesResumable(fileRef, file, metadata);
-
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          // Progress function
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setProgress(progress);
-        },
-        (error) => {
-          console.error('Error uploading file:', error);
-        },
-        () => {
-          // Complete function
-          getDownloadURL(uploadTask.snapshot.ref).then((url) => {
-            console.log('File URL:', url);
-            setFileName('');
-            setTitle('');
-            setTags('');
-            setLocation('');
-            setProgress(0);
-          });
-        }
-      );
+    if (!file) {
+      alert('Please choose a file before uploading.');
+      return;
     }
+
+    const folderPath = location === 'courses' ? 'courses' : 'easy';
+    const fileRef = ref(imageDb, `${folderPath}/${v4()}`);
+    const metadata = {
+      customMetadata: {
+        title,
+        tags,
+        location,
+      },
+    };
+
+    const uploadTask = uploadBytesResumable(fileRef, file, metadata);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setProgress(progress);
+      },
+      (error) => {
+        console.error('Error uploading file:', error);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+          console.log('File URL:', url);
+          setFileName('');
+          setTitle('');
+          setTags('');
+          setLocation('');
+          setProgress(0);
+        });
+      }
+    );
   };
 
   return (
     <PageContainer>
-      <Navbar />
+      <NavbarWrapper>
+        <Navbar />
+      </NavbarWrapper>
       <UploadContainer>
         <LeftPanel>
           <InputField
@@ -194,15 +210,18 @@ export default function Upload() {
             onChange={(e) => setTags(e.target.value)}
           />
           <InputField
-            type='text'
-            placeholder='Location'
+            as='select'
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-          />
+          >
+            <option value=''>Select Location</option>
+            <option value='courses'>Courses</option>
+            <option value='main'>Main</option>
+          </InputField>
           <InputFile
             type='file'
             onChange={handleFileChange}
-            accept='image/*,video/*' // Accept both image and video files
+            accept='image/*,video/*'
             id='file-upload'
           />
           <ButtonWrapper>
@@ -212,7 +231,7 @@ export default function Upload() {
         <RightPanel>
           {fileName && <FileName>File: {fileName}</FileName>}
           <ProgressContainer>
-            <ProgressBar value={progress} max="100" />
+            <ProgressBar value={progress} max='100' />
             {progress > 0 && <div>{Math.round(progress)}%</div>}
           </ProgressContainer>
           <ButtonWrapper>
