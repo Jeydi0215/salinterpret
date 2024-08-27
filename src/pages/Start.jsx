@@ -42,14 +42,7 @@ const Navbar = ({ onSeeMoreClick }) => {
         </NavMenu>
         <NavActions>
           <MenuIcon onClick={handleMenuToggle} />
-          {menuOpen && (
-            <MobileNavMenu>
-              <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-              <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-              <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-              <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-            </MobileNavMenu>
-          )}
+       
         </NavActions>
       </Nav>
 
