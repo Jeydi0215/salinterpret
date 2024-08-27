@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -6,6 +6,8 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color:white;
+  height:100vh ;
 `;
 
 const CameraPlaceholder = styled.div`
@@ -15,17 +17,18 @@ const CameraPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-`;
+  background-color:black;
+`;  
 
-const CameraFeed = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+const CameraFeed = styled.img`
+  max-width: 100%;
+  max-height: 100%;
 `;
 
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -36,73 +39,83 @@ const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1rem;
   }
 `;
 
+const ClearButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
 function ASLTranslationPage() {
-  const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null);
+  const [cameraImage, setCameraImage] = useState('');
+  const [translations, setTranslations] = useState([]);
 
-  // Determine the API URL based on the environment
-  const apiUrl = process.env.NODE_ENV === 'production'
-    ? 'https://<your-heroku-app>.herokuapp.com/translate'  // Replace with your Heroku app URL
-    : 'http://127.0.0.1:5000/translate';
-
-  // Fetch translation from the server
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch('http://localhost:5000/');
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
         const data = await response.json();
-        setTranslation(data.translation);
+        setCameraImage(data.img);
+        if (data.translations.length > 0) {
+          // Append the new translations to the existing ones
+          setTranslations(prevTranslations => [...prevTranslations, ...data.translations]);
+        }
       } catch (error) {
-        console.error('Error fetching translation:', error.message);
+        console.error('Error fetching translations:', error.message);
       }
     };
 
     const intervalId = setInterval(fetchData, 1000);
 
     return () => clearInterval(intervalId);
-  }, [apiUrl]);
-
-  useEffect(() => {
-    // Access the camera feed
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error.message);
-      }
-    };
-
-    startCamera();
   }, []);
+
+  const handleClearLastLetter = () => {
+    setTranslations(prevTranslations => {
+      const updatedTranslations = [...prevTranslations];
+      updatedTranslations.pop(); // Remove the last translation
+      return updatedTranslations;
+    });
+  };
+
+  const handleClearTranslation = () => {
+    setTranslations([]);
+  };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <CameraFeed ref={videoRef} />
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation}</p>
+        <p>{translations.join(' ')}</p>
       </TranslationText>
+      {translations.length > 0 && (
+        <ClearButton onClick={handleClearLastLetter}>Delete Last Letter</ClearButton>
+      )}
+      {translations.length > 0 && (
+        <ClearButton onClick={handleClearTranslation}>Delete Whole Translation</ClearButton>
+      )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your right hand in front of the camera.</p>
+        <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app currently only translates the alphabet.</p>
+        <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
