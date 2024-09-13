@@ -6,19 +6,19 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
-  height: 100vh;
+  background-color:white;
+  height:100vh ;
 `;
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh;
+  height: 50vh; 
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
-`;
+  background-color:black;
+`;  
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -28,7 +28,7 @@ const CameraFeed = styled.img`
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
-  color: black;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -39,7 +39,7 @@ const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
-  color: black;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1rem;
@@ -63,20 +63,11 @@ function ASLTranslationPage() {
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
-
         const data = await response.json();
-        console.log('Fetched data:', data); // Log the response for debugging
-
-        if (data.img) {
-          setCameraImage(data.img); // Ensure img is available before setting it
-        } else {
-          console.error('No camera image in the response');
-        }
-
-        if (data.translations && data.translations.length > 0) {
+        setCameraImage(data.img);
+        if (data.translations.length > 0) {
+          // Append the new translations to the existing ones
           setTranslations(prevTranslations => [...prevTranslations, ...data.translations]);
-        } else {
-          console.error('No translations found in the response');
         }
       } catch (error) {
         console.error('Error fetching translations:', error.message);
