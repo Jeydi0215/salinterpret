@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Navbar from '../components/AdminNavbar';
+import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
   display: flex;
@@ -54,7 +54,8 @@ const ClearButton = styled.button`
 
 function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
-  const [translations, setTranslations] = useState([]);
+  const [translation, setTranslation] = useState('');
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,12 +66,12 @@ function ASLTranslationPage() {
         }
         const data = await response.json();
         setCameraImage(data.img);
-        if (data.translations.length > 0) {
-          // Append the new translations to the existing ones
-          setTranslations(prevTranslations => [...prevTranslations, ...data.translations]);
+        if (data.translation !== '') {
+          // Append the new translation to the existing one
+          setTranslation(prevTranslation => prevTranslation + data.translation);
         }
       } catch (error) {
-        console.error('Error fetching translations:', error.message);
+        console.error('Error fetching translation:', error.message);
       }
     };
 
@@ -79,16 +80,8 @@ function ASLTranslationPage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleClearLastLetter = () => {
-    setTranslations(prevTranslations => {
-      const updatedTranslations = [...prevTranslations];
-      updatedTranslations.pop(); // Remove the last translation
-      return updatedTranslations;
-    });
-  };
-
   const handleClearTranslation = () => {
-    setTranslations([]);
+    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
   };
 
   return (
@@ -103,13 +96,10 @@ function ASLTranslationPage() {
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translations.join(' ')}</p>
+        <p>{translation}</p>
       </TranslationText>
-      {translations.length > 0 && (
-        <ClearButton onClick={handleClearLastLetter}>Delete Last Letter</ClearButton>
-      )}
-      {translations.length > 0 && (
-        <ClearButton onClick={handleClearTranslation}>Delete Whole Translation</ClearButton>
+      {translation && (
+        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
       )}
       <Instructions>
         <h2>Instructions:</h2>
