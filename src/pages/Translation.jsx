@@ -35,6 +35,12 @@ const TranslationText = styled.div`
   }
 `;
 
+const ClearButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
 const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
@@ -117,6 +123,10 @@ function ASLTranslationPage() {
     };
   }, []);
 
+  const handleClearTranslation = () => {
+    setTranslation(''); // Clear the translation
+  };
+
   return (
     <TranslationContainer>
       <Navbar />
@@ -127,6 +137,9 @@ function ASLTranslationPage() {
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
+      {translation && ( // Only show button if there is a translation
+        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
+      )}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
