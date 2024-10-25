@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
@@ -49,6 +50,54 @@ const ClearButton = styled.button`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    // Access the user's webcam
+    const getVideo = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+    };
+
+    getVideo();
+
+    const intervalId = setInterval(() => {
+      if (videoRef.current) {
+        captureImage();
+      }
+    }, 1000); // Capture image every second (adjust as needed)
+
+    return () => {
+      // Cleanup: Stop the video stream on component unmount
+      if (videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      }
+      clearInterval(intervalId); // Clear interval on unmount
+    };
+  }, []);
+
+  const captureImage = async () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    // Get image data as a base64 string
+    const imageData = canvas.toDataURL('image/jpeg');
+    await sendImage(imageData);
+  };
+
+  const sendImage = async (imageData) => {
+    try {
+      const response = await axios.post('http://localhost:10000/translate', {
+        image: imageData.split(',')[1], // Send only the base64 part
+      });
+      setTranslation(response.data.translation);
+    } catch (error) {
+      console.error("Error sending image:", error);
+    }
+  };
 
   const handleClearTranslation = () => {
     setTranslation('');
@@ -58,7 +107,8 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <p>Camera is disabled.</p> {/* Placeholder for the camera */}
+        <video ref={videoRef} autoPlay style={{ width: '100%', height: '100%' }} />
+        <canvas ref={canvasRef} style={{ display: 'none' }} width={300} height={300} />
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
@@ -70,7 +120,7 @@ function ASLTranslationPage() {
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
+        <p>2. Watch for real-time ASL translation.</p>
         <p>Note: This app translates the alphabet in ASL.</p>
       </Instructions>
     </TranslationContainer>
