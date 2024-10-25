@@ -56,44 +56,31 @@ function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
 
-  const handleImageCapture = async (imageData) => {
-    const formData = new FormData();
-    formData.append('image', imageData);
-
-    try {
-      const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch');
-      }
-
-      const data = await response.json();
-      setCameraImage(data.img);
-      if (data.translation !== '') {
-        // Append the new translation to the existing one
-        setTranslation(prevTranslation => prevTranslation + data.translation);
-      }
-    } catch (error) {
-      console.error('Error fetching translation:', error.message);
-    }
-  };
-
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      // Simulate capturing an image here
-      // For example, use a video stream or canvas to get image data
-      const simulatedImageData = new Blob(); // Replace with actual image data
-      handleImageCapture(simulatedImageData);
-    }, 1000);
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://flasky-d9sr.onrender.com/translate');
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+        const data = await response.json();
+        setCameraImage(data.img);
+        if (data.translation) {
+          // Append the new translation to the existing one
+          setTranslation(prevTranslation => prevTranslation + data.translation);
+        }
+      } catch (error) {
+        console.error('Error fetching translation:', error.message);
+      }
+    };
 
-    return () => clearInterval(intervalId);
+    const intervalId = setInterval(fetchData, 1000); // Fetch data every second
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   const handleClearTranslation = () => {
-    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
+    setTranslation(''); // Clear translation
   };
 
   return (
@@ -111,7 +98,7 @@ function ASLTranslationPage() {
         <p>{translation}</p>
       </TranslationText>
       {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
       )}
       <Instructions>
         <h2>Instructions:</h2>
