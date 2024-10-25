@@ -46,12 +46,6 @@ const Instructions = styled.div`
   }
 `;
 
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
   const videoRef = useRef(null); // Reference for the video element
@@ -123,10 +117,6 @@ function ASLTranslationPage() {
     };
   }, []);
 
-  const handleClearTranslation = () => {
-    setTranslation(''); // Clear translation
-  };
-
   return (
     <TranslationContainer>
       <Navbar />
@@ -137,14 +127,11 @@ function ASLTranslationPage() {
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
-      )}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
+        <p>Note: This app translates your hand gestures in real-time.</p>
       </Instructions>
     </TranslationContainer>
   );
