@@ -52,31 +52,53 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
+const ErrorMessage = styled.p`
+  color: red;
+  margin-top: 1rem;
+`;
+
 function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true); // Set loading state
         const response = await fetch('https://flasky-d9sr.onrender.com/translate');
         if (!response.ok) {
-          throw new Error('Failed to fetch');
+          throw new Error(`Error: ${response.status} - ${response.statusText}`);
         }
         const data = await response.json();
         setCameraImage(data.img);
-        if (data.translation !== '') {
+        if (data.translation) {
           setTranslation(prevTranslation => prevTranslation + data.translation);
         }
+        setErrorMessage(''); // Reset error message on success
       } catch (error) {
         console.error('Error fetching translation:', error.message);
+        setErrorMessage('Error fetching translation. Please check your connection or try again later.');
+        if (retryCount < 3) { // Allow up to 3 retries
+          setRetryCount(prevCount => prevCount + 1);
+        }
+      } finally {
+        setLoading(false); // Reset loading state
       }
     };
 
-    const intervalId = setInterval(fetchData, 1000);
+    const intervalId = setInterval(() => {
+      if (retryCount < 3) {
+        fetchData();
+      }
+    }, 1000);
+
+    fetchData(); // Initial fetch
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [retryCount]);
 
   const handleClearTranslation = () => {
     setTranslation(prevTranslation => prevTranslation.slice(0, -1));
@@ -86,10 +108,12 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        {cameraImage ? (
+        {loading ? (
+          <p>Loading camera...</p>
+        ) : cameraImage ? (
           <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
         ) : (
-          <p>Loading camera...</p>
+          <p>Error loading camera feed.</p>
         )}
       </CameraPlaceholder>
       <TranslationText>
@@ -99,6 +123,7 @@ function ASLTranslationPage() {
       {translation && (
         <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
       )}
+      {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
