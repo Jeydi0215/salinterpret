@@ -54,13 +54,6 @@ function ASLTranslationPage() {
     setTranslation('');
   };
 
-  // Function to simulate sending an image to the server for translation
-  const handleSimulateTranslation = () => {
-    // You can replace this with an actual fetch to your backend if needed
-    const simulatedTranslation = "Simulated ASL Translation"; // Replace this with actual translation logic
-    setTranslation(simulatedTranslation);
-  };
-
   return (
     <TranslationContainer>
       <Navbar />
@@ -80,7 +73,6 @@ function ASLTranslationPage() {
         <p>2. Wait for the translation to appear.</p>
         <p>Note: This app translates the alphabet in ASL.</p>
       </Instructions>
-      <ClearButton onClick={handleSimulateTranslation}>Simulate Translation</ClearButton>
     </TranslationContainer>
   );
 }
