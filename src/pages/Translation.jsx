@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Navbar from '../components/UserNavbar';
+import Navbar from '../components/AdminNavbar';
 
 const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color:white;
-  height:100vh ;
 `;
 
 const CameraPlaceholder = styled.div`
@@ -17,8 +15,7 @@ const CameraPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color:black;
-`;  
+`;
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -28,7 +25,6 @@ const CameraFeed = styled.img`
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
-  color:black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -39,50 +35,57 @@ const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
-  color:black;
 
   @media (max-width: 768px) {
     font-size: 1rem;
   }
 `;
 
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
 function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
 
+  // Directly set to your Render app URL
+  const apiUrl = 'https://flasky-d9sr.onrender.com/translate';  
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/translate');
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
-        }
-        const data = await response.json();
-        setCameraImage(data.img);
-        if (data.translation !== '') {
-          // Append the new translation to the existing one
-          setTranslation(prevTranslation => prevTranslation + data.translation);
-        }
-      } catch (error) {
-        console.error('Error fetching translation:', error.message);
+  // Function to fetch translation
+  const fetchTranslation = async (image) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', image);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch');
       }
+
+      const data = await response.json();
+      setCameraImage(data.img);
+      setTranslation(data.translation);
+    } catch (error) {
+      console.error('Error fetching translation:', error.message);
+    }
+  };
+
+  // Simulate capturing an image and fetching translation
+  useEffect(() => {
+    const simulateCamera = async () => {
+      // Replace this with your actual camera capture logic
+      const simulatedImage = new Blob(); // Use actual image blob
+
+      // Fetch the translation for the captured image
+      await fetchTranslation(simulatedImage);
     };
 
-    const intervalId = setInterval(fetchData, 1000);
+    // Set an interval to simulate fetching every second
+    const intervalId = setInterval(simulateCamera, 1000);
 
     return () => clearInterval(intervalId);
-  }, []);
-
-  const handleClearTranslation = () => {
-    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
-  };
+  }, []); // No dependencies to ensure it runs once on mount
 
   return (
     <TranslationContainer>
@@ -98,14 +101,11 @@ function ASLTranslationPage() {
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-      )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
+        <p>1. Place your right hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
+        <p>Note: This app currently only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
