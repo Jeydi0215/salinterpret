@@ -52,16 +52,10 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
-const CaptureButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
 function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
   const videoRef = useRef(null); // Reference for the video element
+  const intervalRef = useRef(null); // Reference for the interval
 
   useEffect(() => {
     // Function to start the video stream
@@ -79,7 +73,44 @@ function ASLTranslationPage() {
 
     startVideo();
 
-    // Cleanup function to stop the video stream when the component unmounts
+    // Function to send image for translation every second
+    const fetchTranslation = async () => {
+      if (videoRef.current) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+
+        // Draw the current frame from the video feed to the canvas
+        context.drawImage(videoRef.current, 0, 0);
+        const imgData = canvas.toDataURL('image/jpeg');
+
+        // Send the captured image to the server for translation
+        try {
+          const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+            method: 'POST',
+            body: JSON.stringify({ image: imgData }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setTranslation(data.translation); // Update the translation state
+          } else {
+            console.error('Error fetching translation:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error sending image for translation:', error.message);
+        }
+      }
+    };
+
+    // Start fetching translations every second
+    intervalRef.current = setInterval(fetchTranslation, 1000); // Adjust the interval as needed
+
+    // Cleanup function to stop the video stream and clear interval on unmount
     return () => {
       if (videoRef.current) {
         const stream = videoRef.current.srcObject;
@@ -88,35 +119,9 @@ function ASLTranslationPage() {
           tracks.forEach(track => track.stop());
         }
       }
+      clearInterval(intervalRef.current);
     };
   }, []);
-
-  const captureImage = async () => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
-    context.drawImage(videoRef.current, 0, 0);
-    const imgData = canvas.toDataURL('image/jpeg');
-
-    // Now, send the captured image to the server for translation
-    const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-      method: 'POST',
-      body: JSON.stringify({ image: imgData }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setCameraImage(data.img);
-      setTranslation(data.translation);
-    } else {
-      console.error('Error fetching translation:', response.statusText);
-    }
-  };
 
   const handleClearTranslation = () => {
     setTranslation(''); // Clear translation
@@ -128,7 +133,6 @@ function ASLTranslationPage() {
       <CameraPlaceholder>
         <VideoFeed ref={videoRef} autoPlay />
       </CameraPlaceholder>
-      <CaptureButton onClick={captureImage}>Capture Image</CaptureButton>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -139,7 +143,7 @@ function ASLTranslationPage() {
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Click "Capture Image" to translate.</p>
+        <p>2. Wait for the translation to appear.</p>
         <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
