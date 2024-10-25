@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -18,11 +18,6 @@ const CameraPlaceholder = styled.div`
   justify-content: center;
   align-items: center;
   background-color: black;
-`;
-
-const CameraFeed = styled.img`
-  max-width: 100%;
-  max-height: 100%;
 `;
 
 const TranslationText = styled.div`
@@ -53,75 +48,24 @@ const ClearButton = styled.button`
 `;
 
 function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    const constraints = {
-      video: {
-        facingMode: 'user',
-        width: 640,
-        height: 480,
-      },
-    };
-
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then((stream) => {
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((error) => {
-        console.error('Error accessing webcam:', error);
-      });
-
-    const sendFrame = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imgDataUrl = canvas.toDataURL('image/jpeg');
-      const imgData = imgDataUrl.split(',')[1]; // Get base64 part
-
-      fetch('https://flasky-d9sr.onrender.com/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: imgData }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.translation) {
-            setTranslation(data.translation);
-          }
-        })
-        .catch((error) => {
-          console.error('Error fetching translation:', error);
-        });
-    };
-
-    const intervalId = setInterval(sendFrame, 1000); // Send frame every second
-
-    return () => {
-      clearInterval(intervalId);
-      video.srcObject.getTracks().forEach((track) => track.stop()); // Stop video tracks on cleanup
-    };
-  }, []);
 
   const handleClearTranslation = () => {
     setTranslation('');
+  };
+
+  // Function to simulate sending an image to the server for translation
+  const handleSimulateTranslation = () => {
+    // You can replace this with an actual fetch to your backend if needed
+    const simulatedTranslation = "Simulated ASL Translation"; // Replace this with actual translation logic
+    setTranslation(simulatedTranslation);
   };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} width="640" height="480" autoPlay></video>
+        <p>Camera is disabled.</p> {/* Placeholder for the camera */}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
@@ -136,6 +80,7 @@ function ASLTranslationPage() {
         <p>2. Wait for the translation to appear.</p>
         <p>Note: This app translates the alphabet in ASL.</p>
       </Instructions>
+      <ClearButton onClick={handleSimulateTranslation}>Simulate Translation</ClearButton>
     </TranslationContainer>
   );
 }
