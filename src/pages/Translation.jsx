@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -20,7 +20,7 @@ const CameraPlaceholder = styled.div`
   background-color: black;
 `;  
 
-const CameraFeed = styled.img`
+const VideoFeed = styled.video`
   max-width: 100%;
   max-height: 100%;
 `;
@@ -52,32 +52,71 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
+const CaptureButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
 function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
+  const videoRef = useRef(null); // Reference for the video element
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Function to start the video stream
+    const startVideo = async () => {
       try {
-        const response = await fetch('https://flasky-d9sr.onrender.com/translate');
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
-        }
-        const data = await response.json();
-        setCameraImage(data.img);
-        if (data.translation) {
-          // Append the new translation to the existing one
-          setTranslation(prevTranslation => prevTranslation + data.translation);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
         }
       } catch (error) {
-        console.error('Error fetching translation:', error.message);
+        console.error('Error accessing camera:', error.message);
       }
     };
 
-    const intervalId = setInterval(fetchData, 1000); // Fetch data every second
+    startVideo();
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    // Cleanup function to stop the video stream when the component unmounts
+    return () => {
+      if (videoRef.current) {
+        const stream = videoRef.current.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
+      }
+    };
   }, []);
+
+  const captureImage = async () => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+
+    context.drawImage(videoRef.current, 0, 0);
+    const imgData = canvas.toDataURL('image/jpeg');
+
+    // Now, send the captured image to the server for translation
+    const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+      method: 'POST',
+      body: JSON.stringify({ image: imgData }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setCameraImage(data.img);
+      setTranslation(data.translation);
+    } else {
+      console.error('Error fetching translation:', response.statusText);
+    }
+  };
 
   const handleClearTranslation = () => {
     setTranslation(''); // Clear translation
@@ -87,12 +126,9 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>Loading camera...</p>
-        )}
+        <VideoFeed ref={videoRef} autoPlay />
       </CameraPlaceholder>
+      <CaptureButton onClick={captureImage}>Capture Image</CaptureButton>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -103,7 +139,7 @@ function ASLTranslationPage() {
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
+        <p>2. Click "Capture Image" to translate.</p>
         <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
