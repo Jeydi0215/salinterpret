@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -6,8 +6,8 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
-  height: 100vh;
+  background-color:white;
+  height:100vh ;
 `;
 
 const CameraPlaceholder = styled.div`
@@ -17,10 +17,10 @@ const CameraPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
+  background-color:black;
 `;  
 
-const VideoFeed = styled.video`
+const CameraFeed = styled.img`
   max-width: 100%;
   max-height: 100%;
 `;
@@ -28,10 +28,21 @@ const VideoFeed = styled.video`
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
-  color: black;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
+  }
+`;
+
+const Instructions = styled.div`
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  text-align: center;
+  color:black;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
   }
 `;
 
@@ -41,110 +52,60 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
 function ASLTranslationPage() {
+  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null); // Reference for the video element
-  const intervalRef = useRef(null); // Reference for the interval
+
 
   useEffect(() => {
-    // Function to start the video stream
-    const startVideo = async () => {
+    const fetchData = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
+        const response = await fetch('http://127.0.0.1:5000/translate');
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+        const data = await response.json();
+        setCameraImage(data.img);
+        if (data.translation !== '') {
+          // Append the new translation to the existing one
+          setTranslation(prevTranslation => prevTranslation + data.translation);
         }
       } catch (error) {
-        console.error('Error accessing camera:', error.message);
+        console.error('Error fetching translation:', error.message);
       }
     };
 
-    startVideo();
+    const intervalId = setInterval(fetchData, 1000);
 
-    // Function to send image for translation every second
-    const fetchTranslation = async () => {
-      if (videoRef.current) {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-
-        // Draw the current frame from the video feed to the canvas
-        context.drawImage(videoRef.current, 0, 0);
-        const imgData = canvas.toDataURL('image/jpeg');
-
-        // Send the captured image to the server for translation
-        try {
-          const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-            method: 'POST',
-            body: JSON.stringify({ image: imgData }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setTranslation(data.translation); // Update the translation state
-          } else {
-            console.error('Error fetching translation:', response.statusText);
-          }
-        } catch (error) {
-          console.error('Error sending image for translation:', error.message);
-        }
-      }
-    };
-
-    // Start fetching translations every second
-    intervalRef.current = setInterval(fetchTranslation, 1000); // Adjust the interval as needed
-
-    // Cleanup function to stop the video stream and clear interval on unmount
-    return () => {
-      if (videoRef.current) {
-        const stream = videoRef.current.srcObject;
-        if (stream) {
-          const tracks = stream.getTracks();
-          tracks.forEach(track => track.stop());
-        }
-      }
-      clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleClearTranslation = () => {
-    setTranslation(''); // Clear the translation
+    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
   };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <VideoFeed ref={videoRef} autoPlay />
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && ( // Only show button if there is a translation
-        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
+      {translation && (
+        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
       )}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app translates your hand gestures in real-time.</p>
+        <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
