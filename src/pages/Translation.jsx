@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import Navbar from '../components/UserNavbar';
 
+// Styled Components
 const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -48,16 +49,21 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
+// ASL Translation Component
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    // Access the user's webcam
     const getVideo = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoRef.current.srcObject = stream;
+      } catch (error) {
+        console.error('Error accessing webcam:', error);
+        alert('Could not access webcam. Please check your browser settings.');
+      }
     };
 
     getVideo();
@@ -66,15 +72,14 @@ function ASLTranslationPage() {
       if (videoRef.current) {
         captureImage();
       }
-    }, 1000); // Capture image every second (adjust as needed)
+    }, 1000); // Capture image every second
 
     return () => {
-      // Cleanup: Stop the video stream on component unmount
       if (videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
         tracks.forEach((track) => track.stop());
       }
-      clearInterval(intervalId); // Clear interval on unmount
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -83,19 +88,21 @@ function ASLTranslationPage() {
     const context = canvas.getContext('2d');
     context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-    // Get image data as a base64 string
     const imageData = canvas.toDataURL('image/jpeg');
     await sendImage(imageData);
   };
 
   const sendImage = async (imageData) => {
     try {
-      const response = await axios.post('https://flasky-d9sr.onrender.com/translate', {
-        image: imageData.split(',')[1], // Send only the base64 part
-      });
+      const response = await axios.post(
+        'https://flasky-d9sr.onrender.com/translate',
+        { image: imageData.split(',')[1] }, // Send only Base64 portion
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       setTranslation(response.data.translation);
     } catch (error) {
-      console.error("Error sending image:", error);
+      console.error('Error sending image:', error);
+      alert('Error translating ASL. Please try again.');
     }
   };
 
