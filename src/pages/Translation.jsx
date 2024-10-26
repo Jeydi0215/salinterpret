@@ -102,7 +102,6 @@ function ASLTranslationPage() {
       setTranslation(response.data.translation);
     } catch (error) {
       console.error('Error sending image:', error);
-      alert('Error translating ASL. Please try again.');
     }
   };
 
