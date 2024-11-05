@@ -95,7 +95,7 @@ function ASLTranslationPage() {
   const sendImage = async (imageData) => {
     try {
       const response = await axios.post(
-        'https://flasky-d9sr.onrender.com/translate',
+        'https://flask-server-sptz.onrender.com//translate',
         { image: imageData.split(',')[1] }, // Send only Base64 portion
         { headers: { 'Content-Type': 'application/json' } }
       );
