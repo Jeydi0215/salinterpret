@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import axios from 'axios';
 import Navbar from '../components/UserNavbar';
 
 // Styled Components
@@ -26,7 +25,6 @@ const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
-
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
@@ -37,23 +35,15 @@ const Instructions = styled.div`
   font-size: 1.2rem;
   text-align: center;
   color: black;
-
   @media (max-width: 768px) {
     font-size: 1rem;
   }
-`;
-
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
 `;
 
 // ASL Translation Component
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   useEffect(() => {
     const getVideo = async () => {
@@ -69,44 +59,39 @@ function ASLTranslationPage() {
     getVideo();
 
     const intervalId = setInterval(() => {
-      if (videoRef.current) {
-        captureImage();
-      }
-    }, 1000); // Capture image every second
+      captureFrame();
+    }, 1000);
 
     return () => {
       if (videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
-        tracks.forEach((track) => track.stop());
+        tracks.forEach(track => track.stop());
       }
       clearInterval(intervalId);
     };
   }, []);
 
-  const captureImage = async () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+  const captureFrame = async () => {
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const imageData = canvas.toDataURL('image/jpeg');
-    await sendImage(imageData);
-  };
+    const imgData = canvas.toDataURL('image/jpeg').split(',')[1];
 
-  const sendImage = async (imageData) => {
     try {
-      const response = await axios.post(
-        'https://flask-server-sptz.onrender.com/translate',
-        { image: imageData.split(',')[1] }, // Send only Base64 portion
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      setTranslation(response.data.translation);
+      const response = await fetch('https://flask-server-sptz.onrender.com//translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imgData }),
+      });
+      const data = await response.json();
+      setTranslation(data.translation || 'No sign detected');
     } catch (error) {
-      console.error('Error sending image:', error.response ? error.response.data : error.message);
+      console.error('Error translating image:', error);
     }
-  };
-
-  const handleClearTranslation = () => {
-    setTranslation('');
   };
 
   return (
@@ -114,15 +99,11 @@ function ASLTranslationPage() {
       <Navbar />
       <CameraPlaceholder>
         <video ref={videoRef} autoPlay style={{ width: '100%', height: '100%' }} />
-        <canvas ref={canvasRef} style={{ display: 'none' }} width={300} height={300} />
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>
-      )}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
