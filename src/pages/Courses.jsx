@@ -101,11 +101,7 @@ const CoursesPage = () => {
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
-            <img
-              src={selectedResult.thumbnailUrl}
-              alt={selectedResult.title}
-              className="popup-image"
-            />
+          
             <p><strong>Tags:</strong> {selectedResult.tags}</p>
             <button
               onClick={() => setSelectedResult(null)}
