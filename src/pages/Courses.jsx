@@ -120,15 +120,14 @@ const CoursesPage = () => {
 };
 
 const CardContainer = styled.div`
-  flex: 1 1 calc(50% - 10px); // Take up half of the container width minus gap
-
-  // Optional: Adjust minimum width for smaller screens
-  min-width: 150px;
-
+  flex: 1 1 calc(25% - 10px); // Adjusts each card to 25% width of the row, minus the gap
+  min-width: 150px;           // Set a minimum width for smaller screens
   cursor: pointer;
 
   .thumbnail {
     width: 100%;
+    height: 150px;            // Adjust height as needed
+    object-fit: cover;        // Maintains aspect ratio
     border-radius: 8px;
   }
 
@@ -141,20 +140,27 @@ const CardContainer = styled.div`
       margin: 0;
     }
   }
-`
+`;
 
 const GridContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   padding: 20px;
   gap: 10px;
-  justify-content: center; // Center cards on mobile
+  justify-content: space-between; // Distributes cards evenly across the row
+
+  @media (max-width: 1024px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;    // Center cards on medium screens
+  }
 
   @media (max-width: 768px) {
-    gap: 5px; // Reduce gap on mobile
+    flex: 1 1 calc(50% - 10px); // Adjusts to 2 cards per row on smaller screens
+    gap: 5px;                   // Reduce gap on mobile
   }
 `;
-
 
 const Popup = styled.div`
   position: fixed;
