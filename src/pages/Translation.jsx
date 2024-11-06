@@ -82,7 +82,7 @@ function ASLTranslationPage() {
     const imgData = canvas.toDataURL('image/jpeg').split(',')[1];
 
     try {
-      const response = await fetch('https://flask-server-sptz.onrender.com//translate', {
+      const response = await fetch('https://flask-server-sptz.onrender.com/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imgData }),
