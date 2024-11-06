@@ -120,14 +120,14 @@ const CoursesPage = () => {
 };
 
 const CardContainer = styled.div`
-  flex: 1 1 calc(25% - 10px); // Adjusts each card to 25% width of the row, minus the gap
-  min-width: 150px;           // Set a minimum width for smaller screens
+  flex: 1 1 calc(25% - 20px); // Each card takes up 25% width with some gap
+  max-width: 300px;           // Optional max width for cards
   cursor: pointer;
 
   .thumbnail {
-    width: 100%;
-    height: 150px;            // Adjust height as needed
-    object-fit: cover;        // Maintains aspect ratio
+    width: 100%;               // Full width within the card
+    height: auto;              // Height adjusts based on image aspect ratio
+    object-fit: cover;         // Crop to fill container, maintaining aspect ratio
     border-radius: 8px;
   }
 
@@ -136,7 +136,7 @@ const CardContainer = styled.div`
     margin-top: 10px;
 
     h4 {
-      font-size: 14px;
+      font-size: 16px;
       margin: 0;
     }
   }
@@ -146,21 +146,22 @@ const GridContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   padding: 20px;
-  gap: 10px;
+  gap: 20px;                     // Adjust gap to control spacing between cards
   justify-content: space-between; // Distributes cards evenly across the row
 
   @media (max-width: 1024px) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;    // Center cards on medium screens
+    gap: 15px;                   // Adjust gap for medium screens
   }
 
   @media (max-width: 768px) {
-    flex: 1 1 calc(50% - 10px); // Adjusts to 2 cards per row on smaller screens
-    gap: 5px;                   // Reduce gap on mobile
+    flex: 1 1 calc(50% - 20px); // Two cards per row on smaller screens
+  }
+
+  @media (max-width: 480px) {
+    flex: 1 1 100%;              // One card per row on very small screens
   }
 `;
+
 
 const Popup = styled.div`
   position: fixed;
