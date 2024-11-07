@@ -82,7 +82,7 @@ function ASLTranslationPage() {
           detectMotion(currentFrame);
         }
       }
-    }, 100); // Check every 500ms for motion (adjust as needed)
+    }, 100); // Check every 100ms for motion (adjust as needed)
 
     return () => clearInterval(intervalId);
   }, []);
@@ -141,16 +141,23 @@ function ASLTranslationPage() {
   // Fetch translation based on the captured image
   const fetchTranslation = async (image) => {
     try {
+      // Create a FormData object
+      const formData = new FormData();
+      // Convert the base64 string into a Blob
+      const blob = dataURItoBlob(image);
+      // Append the image to the FormData object
+      formData.append('image', blob, 'hand_image.png');
+
+      // Send the image via POST request
       const response = await fetch('https://flask-server-sptz.onrender.com/translate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image }),
+        body: formData,
       });
+
       if (!response.ok) {
         throw new Error('Failed to fetch translation');
       }
+
       const data = await response.json();
       if (data.translation) {
         setTranslation((prevTranslation) => prevTranslation + data.translation);
@@ -158,6 +165,17 @@ function ASLTranslationPage() {
     } catch (error) {
       console.error('Error fetching translation:', error.message);
     }
+  };
+
+  // Helper function to convert base64 to Blob
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/png' });
   };
 
   const handleClearTranslation = () => {
