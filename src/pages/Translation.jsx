@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-import * as tf from '@tensorflow/tfjs';
 import styled from 'styled-components';
 
 const TranslationContainer = styled.div`
