@@ -46,6 +46,12 @@ const Instructions = styled.div`
   }
 `;
 
+const CaptureButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
 const ClearButton = styled.button`
   margin-top: 1rem;
   padding: 0.5rem 1rem;
@@ -54,14 +60,9 @@ const ClearButton = styled.button`
 
 function ASLTranslationPage() {
   const videoRef = useRef(null);
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const [prevFrame, setPrevFrame] = useState(null);
-  const [motionDetected, setMotionDetected] = useState(false);
 
-  const threshold = 5000; // Threshold for motion detection (can be adjusted)
-
-  // Function to start the webcam stream and detect motion
+  // Function to start the webcam stream
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -73,65 +74,16 @@ function ASLTranslationPage() {
           console.error("Error accessing webcam: ", err);
         });
     }
-
-    // Continuously check for motion
-    const intervalId = setInterval(() => {
-      if (videoRef.current && videoRef.current.videoWidth) {
-        const currentFrame = getCurrentFrame();
-        if (currentFrame) {
-          detectMotion(currentFrame);
-        }
-      }
-    }, 100); // Check every 100ms for motion
-
-    return () => clearInterval(intervalId);
   }, []);
 
-  // Capture the current frame from the video feed
-  const getCurrentFrame = () => {
+  // Capture a snapshot when the "Capture" button is clicked
+  const captureSnapshot = () => {
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    return canvas;
-  };
-
-  // Detect motion by comparing the current frame to the previous one
-  const detectMotion = (currentFrame) => {
-    if (!prevFrame) {
-      setPrevFrame(currentFrame);
-      return;
-    }
-
-    const currentFrameData = currentFrame.getContext('2d').getImageData(0, 0, currentFrame.width, currentFrame.height);
-    const prevFrameData = prevFrame.getContext('2d').getImageData(0, 0, prevFrame.width, prevFrame.height);
-
-    let totalDifference = 0;
-
-    // Compare pixel by pixel
-    for (let i = 0; i < currentFrameData.data.length; i += 4) {
-      const rDiff = Math.abs(currentFrameData.data[i] - prevFrameData.data[i]);
-      const gDiff = Math.abs(currentFrameData.data[i + 1] - prevFrameData.data[i + 1]);
-      const bDiff = Math.abs(currentFrameData.data[i + 2] - prevFrameData.data[i + 2]);
-      totalDifference += rDiff + gDiff + bDiff;
-    }
-
-    // If the difference exceeds the threshold, consider it motion
-    if (totalDifference > threshold) {
-      setMotionDetected(true);
-      captureSnapshot(currentFrame);
-    } else {
-      setMotionDetected(false);
-    }
-
-    setPrevFrame(currentFrame);
-  };
-
-  // Capture a snapshot when motion is detected
-  const captureSnapshot = (currentFrame) => {
-    const snapshotUrl = currentFrame.toDataURL('image/png');
-    setCameraImage(snapshotUrl);
+    const snapshotUrl = canvas.toDataURL('image/png');
     fetchTranslation(snapshotUrl);
   };
 
@@ -167,6 +119,7 @@ function ASLTranslationPage() {
       <CameraPlaceholder>
         <video ref={videoRef} autoPlay width="640" height="480" />
       </CameraPlaceholder>
+      <CaptureButton onClick={captureSnapshot}>Capture</CaptureButton>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -175,7 +128,7 @@ function ASLTranslationPage() {
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
+        <p>2. Click the "Capture" button to capture a snapshot.</p>
         <p>Note: This app only translates the alphabet for now.</p>
       </Instructions>
     </TranslationContainer>
