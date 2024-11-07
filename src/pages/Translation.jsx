@@ -1,119 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import Navbar from '../components/UserNavbar';
+// TranslationPage.js
+import React, { useState } from 'react';
+import axios from 'axios';
 
-const TranslationContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-  height: 100vh;
-`;
-
-const CameraPlaceholder = styled.div`
-  width: 80%;
-  height: 50vh; 
-  margin-top: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: black;
-`;  
-
-const CameraFeed = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-`;
-
-const TranslationText = styled.div`
-  margin-top: 2rem;
-  font-size: 1.5rem;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
-
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
-function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
+const TranslationPage = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
   const [translation, setTranslation] = useState('');
+  const [translatedImage, setTranslatedImage] = useState('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://flask-server-sptz.onrender.com/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: cameraImage }) // base64 encoded image string
-        });
+  // Handle file input change
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
 
-        if (!response.ok) {
-          console.error(`Error status: ${response.status}`);
-          throw new Error('Failed to fetch');
+  // Submit the image to the Flask server
+  const handleTranslate = async () => {
+    if (!selectedFile) {
+      alert("Please select an image file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/translate', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
+      });
 
-        const data = await response.json();
-        setCameraImage(data.img);
-        if (data.translation !== '') {
-          setTranslation(prevTranslation => prevTranslation + data.translation);
-        }
-      } catch (error) {
-        console.error('Error fetching translation:', error.message);
-      }
-    };
-
-    const intervalId = setInterval(fetchData, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const handleClearTranslation = () => {
-    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
+      setTranslation(response.data.translation);
+      setTranslatedImage(`data:image/jpeg;base64,${response.data.img}`);
+    } catch (error) {
+      console.error("Error translating image:", error);
+      alert("There was an error translating the image.");
+    }
   };
 
   return (
-    <TranslationContainer>
-      <Navbar />
-      <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>Loading camera...</p>
-        )}
-      </CameraPlaceholder>
-      <TranslationText>
-        <h2>Translation:</h2>
-        <p>{translation}</p>
-      </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-      )}
-      <Instructions>
-        <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
-      </Instructions>
-    </TranslationContainer>
-  );
-}
+    <div style={{ textAlign: 'center' }}>
+      <h2>ASL Translation</h2>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <button onClick={handleTranslate} style={{ marginLeft: '10px' }}>Translate</button>
 
-export default ASLTranslationPage;
+      {translation && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Translation:</h3>
+          <p>{translation}</p>
+        </div>
+      )}
+
+      {translatedImage && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Processed Image:</h3>
+          <img src={translatedImage} alt="Translated ASL" style={{ maxWidth: '300px', maxHeight: '300px' }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TranslationPage;
