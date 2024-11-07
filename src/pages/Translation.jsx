@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -6,19 +6,19 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
-  height: 100vh;
+  background-color:white;
+  height:100vh ;
 `;
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh;
+  height: 50vh; 
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
-`;
+  background-color:black;
+`;  
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -28,7 +28,7 @@ const CameraFeed = styled.img`
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
-  color: black;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -39,7 +39,7 @@ const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
-  color: black;
+  color:black;
 
   @media (max-width: 768px) {
     font-size: 1rem;
@@ -53,152 +53,59 @@ const ClearButton = styled.button`
 `;
 
 function ASLTranslationPage() {
-  const videoRef = useRef(null);
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const [prevFrame, setPrevFrame] = useState(null);
-  const [motionDetected, setMotionDetected] = useState(false);
 
-  const threshold = 5000; // Threshold for motion detection (can be adjusted)
 
-  // Function to start the webcam stream and detect motion
   useEffect(() => {
-    if (videoRef.current) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          videoRef.current.srcObject = stream;
-        })
-        .catch((err) => {
-          console.error("Error accessing webcam: ", err);
-        });
-    }
-
-    // Continuously check for motion
-    const intervalId = setInterval(() => {
-      if (videoRef.current && videoRef.current.videoWidth) {
-        const currentFrame = getCurrentFrame();
-        if (currentFrame) {
-          detectMotion(currentFrame);
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/translate');
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
         }
+        const data = await response.json();
+        setCameraImage(data.img);
+        if (data.translation !== '') {
+          // Append the new translation to the existing one
+          setTranslation(prevTranslation => prevTranslation + data.translation);
+        }
+      } catch (error) {
+        console.error('Error fetching translation:', error.message);
       }
-    }, 100); // Check every 100ms for motion (adjust as needed)
+    };
+
+    const intervalId = setInterval(fetchData, 1000);
 
     return () => clearInterval(intervalId);
   }, []);
 
-  // Capture the current frame from the video feed
-  const getCurrentFrame = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      return canvas;
-    }
-    return null;
-  };
-
-  // Detect motion by comparing the current frame to the previous one
-  const detectMotion = (currentFrame) => {
-    if (!prevFrame) {
-      setPrevFrame(currentFrame);
-      return;
-    }
-
-    const currentFrameData = currentFrame.getContext('2d').getImageData(0, 0, currentFrame.width, currentFrame.height);
-    const prevFrameData = prevFrame.getContext('2d').getImageData(0, 0, prevFrame.width, prevFrame.height);
-
-    let totalDifference = 0;
-
-    // Compare pixel by pixel
-    for (let i = 0; i < currentFrameData.data.length; i += 4) {
-      const rDiff = Math.abs(currentFrameData.data[i] - prevFrameData.data[i]);
-      const gDiff = Math.abs(currentFrameData.data[i + 1] - prevFrameData.data[i + 1]);
-      const bDiff = Math.abs(currentFrameData.data[i + 2] - prevFrameData.data[i + 2]);
-      totalDifference += rDiff + gDiff + bDiff;
-    }
-
-    // If the difference exceeds the threshold, consider it motion
-    if (totalDifference > threshold) {
-      setMotionDetected(true);
-      captureSnapshot(currentFrame);
-    } else {
-      setMotionDetected(false);
-    }
-
-    setPrevFrame(currentFrame);
-  };
-
-  // Capture a snapshot when motion is detected
-  const captureSnapshot = (currentFrame) => {
-    const snapshotUrl = currentFrame.toDataURL('image/png');
-    setCameraImage(snapshotUrl);
-    fetchTranslation(snapshotUrl);
-  };
-
-  // Fetch translation based on the captured image
-  const fetchTranslation = async (image) => {
-    try {
-      // Create a FormData object
-      const formData = new FormData();
-      // Convert the base64 string into a Blob
-      const blob = dataURItoBlob(image);
-      // Append the image to the FormData object
-      formData.append('image', blob, 'hand_image.png');
-
-      // Send the image via POST request
-      const response = await fetch('http://127.0.0.1:5000/translate', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch translation');
-      }
-
-      const data = await response.json();
-      if (data.translation) {
-        setTranslation((prevTranslation) => prevTranslation + data.translation);
-      }
-    } catch (error) {
-      console.error('Error fetching translation:', error.message);
-    }
-  };
-
-  // Helper function to convert base64 to Blob
-  const dataURItoBlob = (dataURI) => {
-    const byteString = atob(dataURI.split(',')[1]);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: 'image/png' });
-  };
-
   const handleClearTranslation = () => {
-    setTranslation('');
-    setMotionDetected(false);  // Reset motion detection state
+    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
   };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} autoPlay width="640" height="480" />
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>}
+      {translation && (
+        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+      )}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app only translates the alphabet for now.</p>
+        <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
