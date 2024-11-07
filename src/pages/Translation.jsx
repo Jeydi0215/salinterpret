@@ -141,7 +141,7 @@ function ASLTranslationPage() {
   // Fetch translation based on the captured image
   const fetchTranslation = async (image) => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/translate', {
+      const response = await fetch('https://flask-server-sptz.onrender.com/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
