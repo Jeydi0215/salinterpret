@@ -28,8 +28,9 @@ const Navbar = ({ onSeeMoreClick }) => {
   };
 
   return (
-        <Analytics />
+        
     <NavContainer>
+      <Analytics />
       <BackgroundBlur />
       <Nav>
         <Logo>
