@@ -82,7 +82,7 @@ function ASLTranslationPage() {
           detectMotion(currentFrame);
         }
       }
-    }, 500); // Check every 500ms for motion (adjust as needed)
+    }, 100); // Check every 500ms for motion (adjust as needed)
 
     return () => clearInterval(intervalId);
   }, []);
