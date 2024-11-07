@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -12,12 +12,17 @@ const TranslationContainer = styled.div`
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh;
+  height: 50vh; 
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: black;
+`;
+
+const CameraFeed = styled.img`
+  max-width: 100%;
+  max-height: 100%;
 `;
 
 const TranslationText = styled.div`
@@ -48,24 +53,10 @@ const ClearButton = styled.button`
 `;
 
 function ASLTranslationPage() {
+  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null);
 
   useEffect(() => {
-    // Access the camera and stream to the video element
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-      }
-    };
-
-    startCamera();
-
     const fetchData = async () => {
       try {
         const response = await fetch('https://flask-server-sptz.onrender.com/translate');
@@ -73,8 +64,9 @@ function ASLTranslationPage() {
           throw new Error('Failed to fetch');
         }
         const data = await response.json();
+        setCameraImage(data.img);
         if (data.translation !== '') {
-          setTranslation((prevTranslation) => prevTranslation + data.translation);
+          setTranslation(prevTranslation => prevTranslation + data.translation);
         }
       } catch (error) {
         console.error('Error fetching translation:', error.message);
@@ -87,14 +79,18 @@ function ASLTranslationPage() {
   }, []);
 
   const handleClearTranslation = () => {
-    setTranslation((prevTranslation) => prevTranslation.slice(0, -1));
+    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
   };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} autoPlay playsInline width="100%" height="100%" />
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
@@ -107,7 +103,7 @@ function ASLTranslationPage() {
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app currently only translates the alphabet.</p>
+        <p>Note: This app currently translates only the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
