@@ -139,6 +139,7 @@ const Popup = ({ show, onClose }) => {
         Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
       </PopupContainer>
     </PopupOverlay>
+      <Analytics />
   );
 };
 
