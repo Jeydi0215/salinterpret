@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useInView } from 'react-intersection-observer';
+import { Analytics } from "@vercel/analytics/react"
 import ASL from '../assets/logo.png';
 import BackgroundImage from '../assets/lopit.png';
 import KaliwaLogo from '../assets/logo.png';
