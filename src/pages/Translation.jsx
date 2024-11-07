@@ -82,7 +82,7 @@ function ASLTranslationPage() {
           detectMotion(currentFrame);
         }
       }
-    }, 100); // Check every 100ms for motion
+    }, 500); // Check every 500ms for motion (adjust as needed)
 
     return () => clearInterval(intervalId);
   }, []);
@@ -93,8 +93,11 @@ function ASLTranslationPage() {
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    return canvas;
+    if (ctx) {
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+    return null;
   };
 
   // Detect motion by comparing the current frame to the previous one
@@ -159,6 +162,7 @@ function ASLTranslationPage() {
 
   const handleClearTranslation = () => {
     setTranslation('');
+    setMotionDetected(false);  // Reset motion detection state
   };
 
   return (
