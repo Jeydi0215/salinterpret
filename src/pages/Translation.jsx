@@ -95,11 +95,13 @@ function ASLTranslationPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify({ image: image.split(',')[1] }), // Send only the base64 part
       });
+
       if (!response.ok) {
         throw new Error('Failed to fetch translation');
       }
+
       const data = await response.json();
       if (data.translation) {
         setTranslation((prevTranslation) => prevTranslation + data.translation);
