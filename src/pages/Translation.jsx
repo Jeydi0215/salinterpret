@@ -149,7 +149,7 @@ function ASLTranslationPage() {
       formData.append('image', blob, 'hand_image.png');
 
       // Send the image via POST request
-      const response = await fetch('https://flask-server-sptz.onrender.com/translate', {
+      const response = await fetch('http://127.0.0.1:5000/translate', {
         method: 'POST',
         body: formData,
       });
