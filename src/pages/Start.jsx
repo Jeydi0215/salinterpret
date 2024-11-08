@@ -192,7 +192,7 @@ const Logo = styled.div`
     font-size: 18px;
   }
 `;
-const NavMenu = styled.ul
+const NavMenu = styled.ul`
   display: flex;
   list-style: none;
   &.open {
@@ -210,9 +210,9 @@ const NavMenu = styled.ul
   @media (max-width: 768px) {
     display: none;
   }
-;
+`;
 
-const NavItem = styled.li
+const NavItem = styled.li`
   margin: 0 20px;
   font-size: 16px;
   cursor: pointer;
@@ -225,7 +225,7 @@ const NavItem = styled.li
     font-size: 14px;
     margin: 10px 0;
   }
-;
+`;
 
 const NavActions = styled.div
   display: flex;
