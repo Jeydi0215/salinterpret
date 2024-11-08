@@ -146,19 +146,19 @@ const GridContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   padding: 20px;
-  gap: 20px;                     // Adjust gap to control spacing between cards
-  justify-content: space-between; // Distributes cards evenly across the row
+  gap: 20px;                    
+  justify-content: space-between; 
 
   @media (max-width: 1024px) {
-    gap: 15px;                   // Adjust gap for medium screens
+    gap: 15px;                  
   }
 
   @media (max-width: 768px) {
-    flex: 1 1 calc(50% - 20px); // Two cards per row on smaller screens
+    flex: 1 1 calc(50% - 20px); 
   }
 
   @media (max-width: 480px) {
-    flex: 1 1 100%;              // One card per row on very small screens
+    flex: 1 1 100%;              
   }
 `;
 
@@ -194,6 +194,7 @@ const Popup = styled.div`
   }
   h2{
   font-size:20px;
+  color:red;
   }
   p{
   font-size:15px;
