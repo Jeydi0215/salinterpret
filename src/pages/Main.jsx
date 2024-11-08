@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { getStorage, ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import AdminNavbar from '../components/AdminNavbar';
 import styled from 'styled-components';
-import background from "../assets/login.jpg";
 import MovieLogo from "../assets/homeTitle.webp";
 import { FaPlay } from 'react-icons/fa';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
@@ -40,8 +39,7 @@ const Main = () => {
           const metadata = await getMetadata(item);
           const { title, tags } = metadata.customMetadata || {};
 
-          // Since we are using the video itself as the thumbnail, no need for a separate thumbnail URL
-          return { url, title, tags };
+          return { id: item.name, url, title, tags };
         }));
         setMediaItems(items);
       } catch (error) {
@@ -65,10 +63,25 @@ const Main = () => {
     (item.tags && item.tags.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const deleteVideo = (videoId) => {
+    const confirmed = window.confirm("Are you sure you want to delete this video from your list?");
+    if (confirmed) {
+      try {
+        setMediaItems(prevItems => prevItems.filter(item => item.id !== videoId));
+        alert("Video deleted.");
+      } catch (error) {
+        console.error("Error deleting video:", error);
+        alert("Failed to delete video.");
+      }
+    }
+  };
+
   return (
     <>
       <Container>
         <AdminNavbar isScrolled={isScrolled} />
+        
+        {/* Adjusted and Centered Search Bar */}
         <SearchContainer>
           <SearchBar
             type="text"
@@ -77,18 +90,25 @@ const Main = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </SearchContainer>
+
+        {/* Videos below the search bar */}
         <MoviesContainer>
           {filteredMediaItems.map((item, index) => (
             <CustomMediaItem
-              key={index}
+              key={item.id}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => playVideo(item.url)}
             >
               <VideoThumbnail src={item.url} controls={false} />
+              <DeleteButton onClick={() => deleteVideo(item.id)}>
+                Delete
+              </DeleteButton>
             </CustomMediaItem>
           ))}
         </MoviesContainer>
+
+        {/* Video Player Modal */}
         {selectedVideoUrl && (
           <VideoPlayerWrapper>
             <VideoPlayer
@@ -99,17 +119,8 @@ const Main = () => {
             <CloseButton onClick={closeVideo}>Close</CloseButton>
           </VideoPlayerWrapper>
         )}
-        {showMoreInfo && (
-          <PopupOverlay>
-            <PopupContainer>
-              <CloseButton onClick={() => setShowMoreInfo(false)}>Close</CloseButton>
-              <h2>Salinterpret</h2>
-              <p>A word play of Salin and Interpret. Salinterpret is a PWA used to create a bridge of communication between hearing-impaired and non-hearing-impaired 
-              persons and create a more welcoming environment for them. Our app includes some features that can be a solution to the problem,
-               it includes real-time translation, and we also included a sign-to-word language feature which will also help non-hearing-impaired communicate with hearing-impaired persons.</p>
-            </PopupContainer>
-          </PopupOverlay>
-        )}
+
+        {/* Footer */}
         <Footer>
           <p>&copy; Numbros</p>
         </Footer>
@@ -122,114 +133,37 @@ const VideoThumbnail = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none; /* Disable video controls */
-  background-color: black; /* Fallback color if video fails to load */
+  pointer-events: none; 
+  background-color: black;
 `;
 
 const Container = styled.div`
-  background-color: #1B1212;
-  .hero {
-    position: relative;
-    .background-image {
-      filter: brightness(60%);
-      height: 85vh;
-    }
-    img {
-      height: 100vh;
-      width: 100vw;
-    }
-    .container {
-      position: absolute;
-      bottom: 5rem;
-      .logo img {
-        width: 100%;
-        height: 100%;
-        margin-left: 5rem;
-      }
-      .buttons {
-        margin: 5rem;
-        gap: 2rem;
-        display: flex;
-        align-items: center;
-        button {
-          font-size: 1.4rem;
-          gap: 1rem;
-          border-radius: 0.2rem;
-          padding: 0.5rem 2rem;
-          border: none;
-          cursor: pointer;
-          transition: 0.2s ease-in-out;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          &:hover {
-            opacity: 0.8;
-          }
-          &:nth-of-type(2) {
-            background-color: rgba(109, 109, 110, 0.7);
-            color: white;
-          }
-          .icon {
-            margin-right: 0.5rem;
-          }
-        }
-      }
-    }
-  }
-  @media (max-width: 768px) {
-    .hero .container {
-      bottom: 3rem;
-      .logo img {
-        margin-left: 2rem;
-      }
-      .buttons {
-        margin: 2rem;
-        gap: 1rem;
-        flex-direction: row;  
-        justify-content: flex-start;  
-        button {
-          font-size: 1.2rem;
-          padding: 0.5rem 1.5rem;
-          width: auto; 
-          justify-content: center;
-          .icon {
-            margin-right: 0.3rem;
-          }
-        }
-      }
-    }
-  }
-  @media (max-width: 480px) {
-    .hero .container {
-      bottom: 2rem;
-      .logo img {
-        margin-left: 0.5rem;
-      }
-      .buttons {
-        flex-direction: column;
-        gap: 1rem;
-        button {
-          width: 100%;
-          text-align: center;
-        }
-      }
-    }
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: 0px; 
 `;
 
 const SearchContainer = styled.div`
   display: flex;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: center;  
+  align-items: center; 
+  width: 100%;
+  height: 40vh;  
+  position: relative;
+  padding-top: -60px; 
 `;
 
 const SearchBar = styled.input`
-  width: 100%;
+  width: 80%; 
   max-width: 600px;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  text-align: center; 
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
 const MoviesContainer = styled.div`
@@ -238,6 +172,7 @@ const MoviesContainer = styled.div`
   justify-content: center;
   gap: 2rem;
   padding: 2rem;
+  flex-grow: 1;
 `;
 
 const CustomMediaItem = styled.div`
@@ -250,35 +185,19 @@ const CustomMediaItem = styled.div`
   background-size: cover;
 `;
 
-const Actions = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`;
-
-const Title = styled.h3`
-  color: white;
-  font-size: 1rem;
-  margin: 0;
-`;
-
-const EditButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.3rem;
-`;
-
 const DeleteButton = styled.button`
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: red;
   border: none;
   color: white;
   cursor: pointer;
-  padding: 0.3rem;
+  padding: 0.5rem;
+  position: absolute;
+  right: 10px;  
+  top: 50%;  
+  transform: translateY(-50%); 
+  font-size: 1rem;
+  border-radius: 4px;
+  z-index: 10;
 `;
 
 const VideoPlayerWrapper = styled.div`
@@ -308,28 +227,6 @@ const CloseButton = styled.button`
   color: white;
   padding: 0.5rem;
   cursor: pointer;
-`;
-
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContainer = styled.div`
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 10px;
-  text-align: center;
-  max-width: 600px;
-  width: 100%;
 `;
 
 const Footer = styled.footer`
