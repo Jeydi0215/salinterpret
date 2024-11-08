@@ -27,50 +27,51 @@ const Navbar = ({ onSeeMoreClick }) => {
     setMenuOpen(!menuOpen);
   };
 
-  return (
-    <Analytics />
-    <NavContainer>
-      <BackgroundBlur />
-      <Nav>
-        <Logo>
-          <img src={ASL} alt="Logo" />
-          Salinterpret
-        </Logo>
-        <NavMenu className={menuOpen ? 'open' : ''}>
-          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-        </NavMenu>
-        <NavActions>
-          <MenuIcon onClick={handleMenuToggle} />
-        </NavActions>
-      </Nav>
+    return (
+    <>
+      <Analytics />
+      <NavContainer>
+        <BackgroundBlur />
+        <Nav>
+          <Logo>
+            <img src={ASL} alt="Logo" />
+            Salinterpret
+          </Logo>
+          <NavMenu className={menuOpen ? 'open' : ''}>
+            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+          </NavMenu>
+          <NavActions>
+            <MenuIcon onClick={handleMenuToggle} />
+          </NavActions>
+        </Nav>
 
-      <HeroSection>
-        <LeftSection>
-          <Title>Welcome!</Title>
-          <ButtonContainer>
-            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
-          </ButtonContainer>
-        </LeftSection>
-        <RightSection>
-          <LogoWrapper>
-            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-          </LogoWrapper>
-          <HeroTextContainer>
-            <Description>Salinterpret</Description>
-            <Text>
-              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-            </Text>
-          </HeroTextContainer>
-        </RightSection>
-      </HeroSection>
-    </NavContainer>
+        <HeroSection>
+          <LeftSection>
+            <Title>Welcome!</Title>
+            <ButtonContainer>
+              <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
+              <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+            </ButtonContainer>
+          </LeftSection>
+          <RightSection>
+            <LogoWrapper>
+              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+            </LogoWrapper>
+            <HeroTextContainer>
+              <Description>Salinterpret</Description>
+              <Text>
+                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+              </Text>
+            </HeroTextContainer>
+          </RightSection>
+        </HeroSection>
+      </NavContainer>
+    </>
   );
 };
-
 const AboutSection = () => {
   const { ref: sectionRef, inView } = useInView({ triggerOnce: true });
 
