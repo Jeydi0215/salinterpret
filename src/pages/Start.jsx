@@ -382,10 +382,6 @@ const ActionButton = styled.button`
     cursor: not-allowed;
   }
 `;
-const Description = styled.h2`
-  font-size: 28px;
-  margin-bottom: 10px;
-`;
 
 const Text = styled.p`
   font-size: 16px;
