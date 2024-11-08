@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
-const TranslationContainer = styled.div
+const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: white;
   height: 100vh;
-;
+`;
 
-const CameraPlaceholder = styled.div
+const CameraPlaceholder = styled.div`
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
@@ -18,14 +18,14 @@ const CameraPlaceholder = styled.div
   justify-content: center;
   align-items: center;
   background-color: black;
-;
+`;
 
-const CameraFeed = styled.img
+const CameraFeed = styled.img`
   max-width: 100%;
   max-height: 100%;
-;
+`;
 
-const TranslationText = styled.div
+const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
@@ -33,9 +33,9 @@ const TranslationText = styled.div
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
-;
+`;
 
-const Instructions = styled.div
+const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
@@ -44,19 +44,19 @@ const Instructions = styled.div
   @media (max-width: 768px) {
     font-size: 1rem;
   }
-;
+`;
 
-const CaptureButton = styled.button
+const CaptureButton = styled.button`
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
-;
+`;
 
-const ClearButton = styled.button
+const ClearButton = styled.button`
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
-;
+`;
 
 function ASLTranslationPage() {
   const videoRef = useRef(null);
@@ -141,4 +141,3 @@ function ASLTranslationPage() {
 }
 
 export default ASLTranslationPage;
-
