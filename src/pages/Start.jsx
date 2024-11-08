@@ -412,3 +412,4 @@ const ImageWrapper = styled.div`
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
 `;
+export default App;
