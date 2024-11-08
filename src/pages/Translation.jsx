@@ -61,6 +61,8 @@ const ClearButton = styled.button`
 function ASLTranslationPage() {
   const videoRef = useRef(null);
   const [translation, setTranslation] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Function to start the webcam stream
   useEffect(() => {
@@ -92,6 +94,8 @@ function ASLTranslationPage() {
 
   // Fetch translation based on the captured image
   const fetchTranslation = async (imageBlob) => {
+    setLoading(true);
+    setError(''); // Clear any previous errors
     try {
       const formData = new FormData();
       formData.append('image', imageBlob);
@@ -108,9 +112,14 @@ function ASLTranslationPage() {
       const data = await response.json();
       if (data.translation) {
         setTranslation((prevTranslation) => prevTranslation + data.translation);
+      } else {
+        setError('No translation found');
       }
     } catch (error) {
       console.error('Error fetching translation:', error.message);
+      setError('An error occurred while fetching the translation.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,6 +134,8 @@ function ASLTranslationPage() {
         <video ref={videoRef} autoPlay width="640" height="480" />
       </CameraPlaceholder>
       <CaptureButton onClick={captureSnapshot}>Capture</CaptureButton>
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
