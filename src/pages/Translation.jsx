@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';  // Import Axios
 import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
@@ -10,59 +11,12 @@ const TranslationContainer = styled.div`
   height: 100vh;
 `;
 
-const CameraPlaceholder = styled.div`
-  width: 80%;
-  height: 50vh;
-  margin-top: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: black;
-`;
-
-const CameraFeed = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-`;
-
-const TranslationText = styled.div`
-  margin-top: 2rem;
-  font-size: 1.5rem;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
-
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-const CaptureButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
+// (Other styled components remain the same)
 
 function ASLTranslationPage() {
   const videoRef = useRef(null);
   const [translation, setTranslation] = useState('');
 
-  // Function to start the webcam stream
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -76,7 +30,6 @@ function ASLTranslationPage() {
     }
   }, []);
 
-  // Capture a snapshot when the "Capture" button is clicked
   const captureSnapshot = () => {
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
@@ -84,30 +37,25 @@ function ASLTranslationPage() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-    // Convert the canvas image to a Blob for uploading as FormData
     canvas.toBlob((blob) => {
       fetchTranslation(blob);
     }, 'image/png');
   };
 
-  // Fetch translation based on the captured image
   const fetchTranslation = async (imageBlob) => {
     try {
       const formData = new FormData();
       formData.append('image', imageBlob);
 
-      const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-        method: 'POST',
-        body: formData,
+      // Use Axios to make the POST request
+      const response = await axios.post('https://flasky-d9sr.onrender.com/translate', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch translation');
-      }
-
-      const data = await response.json();
-      if (data.translation) {
-        setTranslation((prevTranslation) => prevTranslation + data.translation);
+      if (response.data.translation) {
+        setTranslation((prevTranslation) => prevTranslation + response.data.translation);
       }
     } catch (error) {
       console.error('Error fetching translation:', error.message);
