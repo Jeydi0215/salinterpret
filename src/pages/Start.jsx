@@ -159,7 +159,7 @@ const Popup = ({ show, onClose }) => {
 
 Salinterpret values your privacy, and by using the app, you consent to the collection and use of your data as outlined in our Privacy Policy. All content, design, and code in Salinterpret are the intellectual property of Numbros, protected by copyright and trademark laws. Duplication, distribution, or use of our content without permission is prohibited. Salinterpret is provided “as is” without any warranties, express or implied. We do not guarantee error-free, secure, or uninterrupted operation and cannot ensure translation accuracy. Salinterpret will not be liable for damages arising from your use or inability to use the app.
 
-These Terms may be updated from time to time, and your continued use of Salinterpret following changes signifies your acceptance. These Terms are governed by the laws ,and any disputes will fall under the exclusive jurisdiction of the courts in [Your Jurisdiction]. If you have questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!</p>
+These Terms may be updated from time to time, and your continued use of Salinterpret following changes signifies your acceptance. These Terms are governed by the laws ,and any disputes will fall under the exclusive jurisdiction of the court. If you have questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!</p>
       </PopupContainer>
     </PopupOverlay>
   );
