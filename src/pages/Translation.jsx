@@ -96,7 +96,7 @@ function ASLTranslationPage() {
       const formData = new FormData();
       formData.append('image', imageBlob);
 
-      const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+      const response = await fetch('https://flasky-gray.vercel.app/translate', {
         method: 'POST',
         body: formData,
       });
