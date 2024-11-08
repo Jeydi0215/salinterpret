@@ -1,39 +1,23 @@
-import { getAuth } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { db } from './firebase-config'; // Make sure to import your Firestore config
+import { doc, getDoc } from 'firebase/firestore';
 
-// Initialize Firebase Auth and Firestore
-const auth = getAuth();
-const db = getFirestore();
-
-// Function to fetch analytics data
-const fetchAnalyticsData = async () => {
-  // Get the current user
-  const user = auth.currentUser;
-
-  // Check if the user is authenticated
-  if (!user) {
-    console.error("User is not authenticated.");
-    return;
-  }
-
-  // Define the document reference to fetch analytics data
-  const analyticsDocRef = doc(db, "analytics", "yourDocumentId");
+// Function to get quiz analytics data
+export const getQuizAnalytics = async () => {
+  // Fetch the analytics data from Firestore
+  const analyticsDocRef = doc(db, "analytics", "yourDocumentId"); // Replace with actual document ID
 
   try {
-    // Fetch the document from Firestore
     const docSnap = await getDoc(analyticsDocRef);
-
+    
     if (docSnap.exists()) {
-      // Successfully fetched the document
-      console.log("Analytics Data:", docSnap.data());
+      // Return the fetched data
+      return docSnap.data(); // Return the data as an object
     } else {
-      // Document does not exist
-      console.log("No analytics data found.");
+      console.error("No analytics data found.");
+      return null; // Return null if no data found
     }
   } catch (error) {
     console.error("Error fetching analytics data:", error);
+    return null; // Return null in case of an error
   }
 };
-
-// Call the function to fetch the data
-fetchAnalyticsData();
