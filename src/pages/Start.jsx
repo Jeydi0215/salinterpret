@@ -28,48 +28,47 @@ const Navbar = ({ onSeeMoreClick }) => {
   };
 
   return (
-    <>
-      <Analytics />
-      <NavContainer>
-        <BackgroundBlur />
-        <Nav>
-          <Logo>
-            <img src={ASL} alt="Logo" />
-            Salinterpret
-          </Logo>
-          <NavMenu className={menuOpen ? 'open' : ''}>
-            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-          </NavMenu>
-          <NavActions>
-            <MenuIcon onClick={handleMenuToggle} />
-          </NavActions>
-        </Nav>
+     <Analytics />
+    <NavContainer>
+      <BackgroundBlur />
+      <Nav>
+        <Logo>
+          <img src={ASL} alt="Logo" />
+          Salinterpret
+        </Logo>
+        <NavMenu className={menuOpen ? 'open' : ''}>
+          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+        </NavMenu>
+        <NavActions>
+          <MenuIcon onClick={handleMenuToggle} />
+       
+        </NavActions>
+      </Nav>
 
-        <HeroSection>
-          <LeftSection>
-            <Title>Welcome!</Title>
-            <ButtonContainer>
-              <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-              <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
-            </ButtonContainer>
-          </LeftSection>
-          <RightSection>
-            <LogoWrapper>
-              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-            </LogoWrapper>
-            <HeroTextContainer>
-              <Description>Salinterpret</Description>
-              <Text>
-                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-              </Text>
-            </HeroTextContainer>
-          </RightSection>
-        </HeroSection>
-      </NavContainer>
-    </>
+      <HeroSection>
+        <LeftSection>
+          <Title>Welcome!</Title>
+          <ButtonContainer>
+            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
+            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+          </ButtonContainer>
+        </LeftSection>
+        <RightSection>
+          <LogoWrapper>
+            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+          </LogoWrapper>
+          <HeroTextContainer>
+            <Description>Salinterpret</Description>
+            <Text>
+              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+            </Text>
+          </HeroTextContainer>
+        </RightSection>
+      </HeroSection>
+    </NavContainer>
   );
 };
 
@@ -141,19 +140,20 @@ const Popup = ({ show, onClose }) => {
         Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
       </PopupContainer>
     </PopupOverlay>
+  
   );
 };
 
 // Styles
-const NavContainer = styled.div`
+const NavContainer = styled.div
   position: relative;
   height: 100vh;
   overflow: auto;
   position: sticky;
   scroll-snap-type: y mandatory;
-`;
+;
 
-const BackgroundBlur = styled.div`
+const BackgroundBlur = styled.div
   position: absolute;
   top: 0;
   left: 0;
@@ -162,9 +162,9 @@ const BackgroundBlur = styled.div`
   background: url(${BackgroundImage}) no-repeat center center/cover;
   filter: blur(3px);
   z-index: -1;
-`;
+;
 
-const Nav = styled.nav`
+const Nav = styled.nav
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -174,9 +174,9 @@ const Nav = styled.nav`
   width: 100%;
   top: 0;
   z-index: 100;
-`;
+;
 
-const Logo = styled.div`
+const Logo = styled.div
   font-size: 24px;
   font-weight: bold;
   display: flex;
@@ -189,9 +189,9 @@ const Logo = styled.div`
   @media (max-width: 768px) {
     font-size: 18px;
   }
-`;
+;
 
-const NavMenu = styled.ul`
+const NavMenu = styled.ul
   display: flex;
   list-style: none;
   &.open {
@@ -209,9 +209,9 @@ const NavMenu = styled.ul`
   @media (max-width: 768px) {
     display: none;
   }
-`;
+;
 
-const NavItem = styled.li`
+const NavItem = styled.li
   margin: 0 20px;
   font-size: 16px;
   cursor: pointer;
@@ -224,9 +224,9 @@ const NavItem = styled.li`
     font-size: 14px;
     margin: 10px 0;
   }
-`;
+;
 
-const NavActions = styled.div`
+const NavActions = styled.div
   display: flex;
   align-items: center;
 
@@ -235,9 +235,9 @@ const NavActions = styled.div`
       display: none;
     }
   }
-`;
+;
 
-const MenuIcon = styled(FaBars)`
+const MenuIcon = styled(FaBars)
   display: none;
   cursor: pointer;
   font-size: 24px;
@@ -245,9 +245,9 @@ const MenuIcon = styled(FaBars)`
   @media (max-width: 768px) {
     display: block;
   }
-`;
+;
 
-const MobileNavMenu = styled.div`
+const MobileNavMenu = styled.div
   display: none;
 
   @media (max-width: 768px) {
@@ -260,9 +260,9 @@ const MobileNavMenu = styled.div`
     padding: 10px;
     border-radius: 5px;
   }
-`;
+;
 
-const HeroSection = styled.div`
+const HeroSection = styled.div
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -276,141 +276,231 @@ const HeroSection = styled.div`
     flex-direction: column;
     text-align: center;
   }
-`;
+;
 
-const LeftSection = styled.div`
+const LeftSection = styled.div
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  max-width: 50%;
-  z-index: 2;
-`;
+  margin-right: 50px;
 
-const Title = styled.h1`
+  @media (max-width: 768px) {
+    margin-right: 0;
+    margin-top:50%;
+  }
+;
+
+const Title = styled.h1
   font-size: 48px;
-  color: #fff;
   margin-bottom: 20px;
 
   @media (max-width: 768px) {
     font-size: 32px;
   }
-`;
+;
 
-const ButtonContainer = styled.div`
+const ButtonContainer = styled.div
   display: flex;
-  gap: 20px;
-`;
+  max-width: 300px;
+  margin-top: 20px;
 
-const FreeTrialButton = styled.button`
-  background-color: #ff6600;
-  color: white;
-  padding: 10px 20px;
+  @media (max-width: 768px) {
+    flex-direction: row;
+    gap:20px;
+    align-items: center;
+  }
+;
+
+const FreeTrialButton = styled.button
+  background: #41bfde;
+  color: black;
   border: none;
+  width:50%;
+  height:70px;
+  padding: 10px 20px;
   cursor: pointer;
-  font-size: 16px;
+  font-size:20px;
   border-radius: 5px;
+  margin-right: 10px;
+  transition: background 0.3s ease;
 
   &:hover {
-    background-color: #ff4500;
+    background: #3a2ba0;
   }
-`;
 
-const SeeMoreButton = styled.button`
-  background-color: #4caf50;
-  color: white;
-  padding: 10px 20px;
+  @media (max-width: 768px) {
+    margin: 10px 0;
+  }
+;
+
+const SeeMoreButton = styled.button
+  background: #febd03;
+  color: black;
   border: none;
+  width:40%;
+  font-size:20px;
+  padding: 10px 20px;
   cursor: pointer;
-  font-size: 16px;
   border-radius: 5px;
+  transition: background 0.3s ease;
 
   &:hover {
-    background-color: #388e3c;
+    background: yellow;
   }
-`;
+;
 
-const RightSection = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 50%;
-`;
-
-const LogoWrapper = styled.div`
-  margin-left: 20px;
-`;
-
-const KaliwaLogoImg = styled.img`
-  width: 200px;
-`;
-
-const HeroTextContainer = styled.div`
+const RightSection = styled.div
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  max-width: 400px;
-`;
 
-const Description = styled.h3`
-  font-size: 30px;
-  color: white;
-`;
+  @media (max-width: 768px) {
+    margin-top: 20px;
+  }
+;
 
-const Text = styled.p`
+const LogoWrapper = styled.div
+  margin-bottom: 20px;
+;
+
+const KaliwaLogoImg = styled.img
+  width: 150px;
+;
+
+const HeroTextContainer = styled.div
+  max-width: 500px;
+  text-align: center;
+;
+
+const Description = styled.h2
+  font-size: 28px;
+  margin-bottom: 10px;
+;
+
+const Text = styled.p
   font-size: 16px;
-  color: white;
-`;
+  line-height: 1.5;
+;
 
-const Section = styled.section`
+const Section = styled.section
   padding: 50px;
-  background-color: white;
-`;
+  scroll-snap-align: start;
 
-const ImagesContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-`;
+  h2 {
+    margin-bottom: 20px;
+  }
 
-const ImageWrapper = styled.div`
+  p {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+;
+
+const ImagesContainer = styled.div
+  display: flex; 
+  flex-wrap: nowrap; 
+  gap: 10px;
+  overflow-x: auto; 
+  justify-content: center; 
+  margin: 0 auto;
+  max-width: 1200px; 
+
+  @media (max-width: 768px) {
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px;
+    overflow-x: hidden;
+    justify-content: center; 
+  }
+;
+
+const ImageWrapper = styled.div
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 1s ease-in;
+
   &.in-view {
     opacity: 1;
   }
-`;
 
-const PopupOverlay = styled.div`
+  img {
+    width: 150px; 
+    width:100%;
+    height: auto; 
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+;
+
+
+const PopupOverlay = styled.div
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-`;
+  z-index: 1000;
+;
 
-const PopupContainer = styled.div`
+const PopupContainer = styled.div
   background: white;
-  padding: 30px;
+  padding: 20px;
   border-radius: 10px;
-  width: 400px;
+  max-width: 500px;
+  color:black;
+  width: 100%;
   text-align: center;
-`;
 
-const CloseButton = styled.button`
-  background: red;
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+;
+
+const CloseButton = styled.button
+  background: #f44336;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
-`;
+  font-size: 16px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 
-export default Navbar;
+  &:hover {
+    background: #c62828;
+  }
+;
+
+const App = () => {
+  const [popupVisible, setPopupVisible] = useState(false);
+
+  const handleSeeMoreClick = () => {
+    setPopupVisible(true);
+  };
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+  };
+
+  return (
+    <>
+      <Navbar onSeeMoreClick={handleSeeMoreClick} />
+      <AboutSection />
+      <PricingSection />
+      <FeaturesSection />
+      <ContactSection />
+      <Popup show={popupVisible} onClose={handlePopupClose} />
+    </>
+  );
+};
+
+export default App;
