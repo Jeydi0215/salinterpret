@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
@@ -336,186 +336,32 @@ const ModalOverlay = styled.div`
 
 const ModalContainer = styled.div`
   background: white;
-  padding: 30px;
-  border-radius: 10px;
-  width: 500px;
+  padding: 20px;
+  border-radius: 5px;
+  width: 90%;
+  max-width: 500px;
   text-align: center;
-
-  h2 {
-    font-size: 24px;
-  }
-
-  p {
-    font-size: 16px;
-    margin: 20px 0;
-  }
 `;
 
 const CheckboxContainer = styled.div`
-  margin: 20px 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  margin: 10px 0;
+
+  input[type="checkbox"] {
+    margin-right: 5px;
+  }
 `;
 
 const ActionButton = styled.button`
-  background: #41bfde;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin: 10px;
-
-  &:hover {
-    background: #3a2ba0;
-  }
-
-  &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
-`;
-
-const Text = styled.p`
-  font-size: 16px;
-  line-height: 1.5;
-`;
-
-const Section = styled.section`
-  padding: 50px;
-  scroll-snap-align: start;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  p {
-    font-size: 18px;
-    line-height: 1.6;
-  }
-`;
-
-const ImagesContainer = styled.div`
-  display: flex; 
-  flex-wrap: nowrap; 
-  gap: 10px;
-  overflow-x: auto; 
-  justify-content: center; 
-  margin: 0 auto;
-  max-width: 1200px; 
-
-  @media (max-width: 768px) {
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 10px;
-    overflow-x: hidden;
-    justify-content: center; 
-  }
-`;
-
-const ImageWrapper = styled.div`
-  opacity: 0;
-  transition: opacity 1s ease-in;
-
-  &.in-view {
-    opacity: 1;
-  }
-
-  img {
-    width: 150px; 
-    width:100%;
-    height: auto; 
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-`;
-
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContainer = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 500px;
+  background-color: ${(props) => (props.disabled ? '#ccc' : '#febd03')};
   color: black;
-  width: 100%;
-  text-align: center;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  p {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-`;
-
-const CloseButton = styled.button`
-  background: #f44336;
-  color: white;
   border: none;
   padding: 10px 20px;
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  &:hover {
-    background: #c62828;
-  }
+  transition: background 0.3s ease;
+  margin-top:10px;
 `;
 
-const Popup = ({ show, onClose }) => {
-  if (!show) return null;
-
-  return (
-    <PopupOverlay>
-      <PopupContainer>
-        <CloseButton onClick={onClose}>Close</CloseButton>
-        <h2>More Information</h2>
-        <p>This is some more information shown in a popup!</p>
-      </PopupContainer>
-    </PopupOverlay>
-  );
-};
-
-const App = () => {
-  const [popupVisible, setPopupVisible] = useState(false);
-
-  const handleSeeMoreClick = () => {
-    setPopupVisible(true);
-  };
-
-  const handlePopupClose = () => {
-    setPopupVisible(false);
-  };
-
-  return (
-    <>
-      <Navbar onSeeMoreClick={handleSeeMoreClick} />
-      <AboutSection />
-      <PricingSection />
-      <FeaturesSection />
-      <ContactSection />
-      <Popup show={popupVisible} onClose={handlePopupClose} />
-    </>
-  );
-};
-
-export default App;
+export default Navbar;
