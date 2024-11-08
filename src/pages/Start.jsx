@@ -19,12 +19,17 @@ const scrollToSection = (id) => {
   }
 };
 
+
 const Navbar = ({ onSeeMoreClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
   const navigate = useNavigate();
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
+  };
+  const handleCheckboxChange = (e) => {  
+    setIsChecked(e.target.checked);
   };
 
   return (
@@ -53,8 +58,18 @@ const Navbar = ({ onSeeMoreClick }) => {
         <LeftSection>
           <Title>Welcome!</Title>
           <ButtonContainer>
+           {/* Terms and Conditions Checkbox */}
+  <TermsAndConditionsContainer>
+    <input
+      type="checkbox"
+      id="termsAndConditions"
+      checked={isChecked}
+      onChange={handleCheckboxChange}
+    />
+    <label htmlFor="termsAndConditions">I agree to the <TermsAndConditionsLink href="/terms-and-conditions" target="_blank">Terms and Conditions</TermsAndConditionsLink></label>
+  </TermsAndConditionsContainer>
             <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+            <SeeMoreButton onClick={onSeeMoreClick}>Terms</SeeMoreButton>
           </ButtonContainer>
         </LeftSection>
         <RightSection>
@@ -139,9 +154,12 @@ const Popup = ({ show, onClose }) => {
     <PopupOverlay>
       <PopupContainer>
         <CloseButton onClick={onClose}>Close</CloseButton>
-        <h2>Salinterpret</h2>
-        <p>We're on a mission to connect hearing-impaired and non-hearing-impaired communities like never before. With Salinterpret, sign language transforms into words, making communication effortless and inclusive. Dive into our ASL courses, tutorials, and fun interactive games that make learning exciting and accessible for everyone.
-        Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
+        <h2>Terms and Conditions</h2>
+        <p>Welcome to Salinterpret! By accessing or using Salinterpret, a web-based sign language translation app, you agree to be bound by these Terms and Conditions. Please read them carefully. If you do not agree with these Terms, please do not use Salinterpret. You confirm that you are at least 18 years old, or you have parental/guardian permission if younger. Account registration may be required for certain features, and you are responsible for keeping your account details secure and notifying us of any unauthorized use. You agree to provide accurate information when using the app, and you may not misuse Salinterpret, interfere with its functionality, or engage in unlawful activities.
+
+Salinterpret values your privacy, and by using the app, you consent to the collection and use of your data as outlined in our Privacy Policy. All content, design, and code in Salinterpret are the intellectual property of Numbros, protected by copyright and trademark laws. Duplication, distribution, or use of our content without permission is prohibited. Salinterpret is provided “as is” without any warranties, express or implied. We do not guarantee error-free, secure, or uninterrupted operation and cannot ensure translation accuracy. Salinterpret will not be liable for damages arising from your use or inability to use the app.
+
+These Terms may be updated from time to time, and your continued use of Salinterpret following changes signifies your acceptance. These Terms are governed by the laws ,and any disputes will fall under the exclusive jurisdiction of the courts in [Your Jurisdiction]. If you have questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!</p>
       </PopupContainer>
     </PopupOverlay>
   );
@@ -312,44 +330,35 @@ const ButtonContainer = styled.div`
   }
 `;
 
-const FreeTrialButton = styled.button`
+export const FreeTrialButton = styled.button`
   background: #41bfde;
   color: black;
   border: none;
-  width:50%;
-  height:70px;
+  width: 50%;
+  height: 70px;
   padding: 10px 20px;
   cursor: pointer;
-  font-size:20px;
+  font-size: 20px;
   border-radius: 5px;
   margin-right: 10px;
   transition: background 0.3s ease;
-
-  &:hover {
-    background: #3a2ba0;
-  }
-
-  @media (max-width: 768px) {
-    margin: 10px 0;
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
   }
 `;
 
-const SeeMoreButton = styled.button`
+export const SeeMoreButton = styled.button`
   background: #febd03;
   color: black;
   border: none;
-  width:40%;
-  font-size:20px;
+  width: 40%;
+  font-size: 20px;
   padding: 10px 20px;
   cursor: pointer;
   border-radius: 5px;
   transition: background 0.3s ease;
-
-  &:hover {
-    background: yellow;
-  }
 `;
-
 const RightSection = styled.div`
   flex: 1;
   display: flex;
@@ -433,7 +442,26 @@ const ImageWrapper = styled.div`
   }
 `;
 
+const TermsAndConditionsContainer = styled.div`
+  margin-bottom: 20px;
+  label {
+    font-size: 14px;
+    color: white;
+    input {
+      margin-right: 10px;
+    }
+  }
+`;
 
+const TermsAndConditionsLink = styled.a`
+  font-size: 14px;
+  color: #febd03;
+  text-decoration: none;
+
+  &:hover {
+    color: #3a2ba0;
+  }
+`;
 const PopupOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -485,6 +513,12 @@ const CloseButton = styled.button`
 
 const App = () => {
   const [popupVisible, setPopupVisible] = useState(false);
+
+  const [isChecked, setIsChecked] = useState(false);
+
+  const handleCheckboxChange = (e) => {
+    setIsChecked(e.target.checked);
+  };
 
   const handleSeeMoreClick = () => {
     setPopupVisible(true);
