@@ -30,46 +30,47 @@ const Navbar = ({ onSeeMoreClick }) => {
   return (
     <>
       <Analytics />
-      <NavContainer>
-        <BackgroundBlur />
-        <Nav>
-          <Logo>
-            <img src={ASL} alt="Logo" />
-            Salinterpret
-          </Logo>
-          <NavMenu className={menuOpen ? 'open' : ''}>
-            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-          </NavMenu>
-          <NavActions>
-            <MenuIcon onClick={handleMenuToggle} />
-          </NavActions>
-        </Nav>
+    <NavContainer>
+      <BackgroundBlur />
+      <Nav>
+        <Logo>
+          <img src={ASL} alt="Logo" />
+          Salinterpret
+        </Logo>
+        <NavMenu className={menuOpen ? 'open' : ''}>
+          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+        </NavMenu>
+        <NavActions>
+          <MenuIcon onClick={handleMenuToggle} />
+       
+        </NavActions>
+      </Nav>
 
-        <HeroSection>
-          <LeftSection>
-            <Title>Welcome!</Title>
-            <ButtonContainer>
-              <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-              <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
-            </ButtonContainer>
-          </LeftSection>
-          <RightSection>
-            <LogoWrapper>
-              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-            </LogoWrapper>
-            <HeroTextContainer>
-              <Description>Salinterpret</Description>
-              <Text>
-                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-              </Text>
-            </HeroTextContainer>
-          </RightSection>
-        </HeroSection>
-      </NavContainer>
-    </>
+      <HeroSection>
+        <LeftSection>
+          <Title>Welcome!</Title>
+          <ButtonContainer>
+            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
+            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+          </ButtonContainer>
+        </LeftSection>
+        <RightSection>
+          <LogoWrapper>
+            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+          </LogoWrapper>
+          <HeroTextContainer>
+            <Description>Salinterpret</Description>
+            <Text>
+              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+            </Text>
+          </HeroTextContainer>
+        </RightSection>
+      </HeroSection>
+    </NavContainer>
+      </>
   );
 };
 
@@ -93,7 +94,7 @@ const AboutSection = () => {
           <img src={Mentor} alt="" />
         </ImageWrapper>
       </ImagesContainer>
-      <p><strong><i>Meet the Team Numbros: The Team Behind Salinterpret</i></strong></p>
+      <p><strong><i>Meet the Team Numbros: The Team Behind Salinterpret </i></strong></p>
       <p>
         <ul>
           <li>Justine Dimalanta: Hacker & Hustler, leading technical development</li>
@@ -138,7 +139,7 @@ const Popup = ({ show, onClose }) => {
         <CloseButton onClick={onClose}>Close</CloseButton>
         <h2>Salinterpret</h2>
         <p>We're on a mission to connect hearing-impaired and non-hearing-impaired communities like never before. With Salinterpret, sign language transforms into words, making communication effortless and inclusive. Dive into our ASL courses, tutorials, and fun interactive games that make learning exciting and accessible for everyone.
-          Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
+        Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
       </PopupContainer>
     </PopupOverlay>
   );
@@ -229,6 +230,7 @@ const NavItem = styled.li`
 const NavActions = styled.div`
   display: flex;
   align-items: center;
+
   @media (max-width: 768px) {
     .sign-in-button {
       display: none;
@@ -243,6 +245,21 @@ const MenuIcon = styled(FaBars)`
 
   @media (max-width: 768px) {
     display: block;
+  }
+`;
+
+const MobileNavMenu = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background: white;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
   }
 `;
 
@@ -263,11 +280,12 @@ const HeroSection = styled.div`
 `;
 
 const LeftSection = styled.div`
-  width: 50%;
-  padding-top: 50px;
+  flex: 1;
+  margin-right: 50px;
 
   @media (max-width: 768px) {
-    width: 100%;
+    margin-right: 0;
+    margin-top:50%;
   }
 `;
 
@@ -282,38 +300,62 @@ const Title = styled.h1`
 
 const ButtonContainer = styled.div`
   display: flex;
-  gap: 20px;
+  max-width: 300px;
+  margin-top: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    gap:20px;
+    align-items: center;
+  }
 `;
 
 const FreeTrialButton = styled.button`
-  background-color: #ff6600;
-  color: white;
-  padding: 10px 20px;
+  background: #41bfde;
+  color: black;
   border: none;
-  border-radius: 5px;
+  width:50%;
+  height:70px;
+  padding: 10px 20px;
   cursor: pointer;
+  font-size:20px;
+  border-radius: 5px;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #3a2ba0;
+  }
+
+  @media (max-width: 768px) {
+    margin: 10px 0;
+  }
 `;
 
 const SeeMoreButton = styled.button`
-  background-color: transparent;
-  color: #ff6600;
+  background: #febd03;
+  color: black;
+  border: none;
+  width:40%;
+  font-size:20px;
   padding: 10px 20px;
-  border: 2px solid #ff6600;
-  border-radius: 5px;
   cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: yellow;
+  }
 `;
 
 const RightSection = styled.div`
-  width: 50%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding-left: 50px;
+  align-items: center;
 
   @media (max-width: 768px) {
-    width: 100%;
-    padding-left: 0;
+    margin-top: 20px;
   }
 `;
 
@@ -322,16 +364,17 @@ const LogoWrapper = styled.div`
 `;
 
 const KaliwaLogoImg = styled.img`
-  width: 250px;
+  width: 150px;
 `;
 
 const HeroTextContainer = styled.div`
-  max-width: 400px;
+  max-width: 500px;
+  text-align: center;
 `;
 
 const Description = styled.h2`
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 28px;
+  margin-bottom: 10px;
 `;
 
 const Text = styled.p`
@@ -340,21 +383,54 @@ const Text = styled.p`
 `;
 
 const Section = styled.section`
-  padding: 50px 20px;
+  padding: 50px;
+  scroll-snap-align: start;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.6;
+  }
 `;
 
 const ImagesContainer = styled.div`
-  display: flex;
-  gap: 20px;
+  display: flex; 
+  flex-wrap: nowrap; 
+  gap: 10px;
+  overflow-x: auto; 
+  justify-content: center; 
+  margin: 0 auto;
+  max-width: 1200px; 
+
+  @media (max-width: 768px) {
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px;
+    overflow-x: hidden;
+    justify-content: center; 
+  }
 `;
 
 const ImageWrapper = styled.div`
-  transition: transform 0.3s ease;
-  
+  opacity: 0;
+  transition: opacity 1s ease-in;
+
   &.in-view {
-    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  img {
+    width: 150px; 
+    width:100%;
+    height: auto; 
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 `;
+
 
 const PopupOverlay = styled.div`
   position: fixed;
@@ -366,24 +442,66 @@ const PopupOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
   background: white;
   padding: 20px;
-  border-radius: 5px;
-  width: 400px;
+  border-radius: 10px;
+  max-width: 500px;
+  color:black;
+  width: 100%;
   text-align: center;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
 `;
 
 const CloseButton = styled.button`
-  background: transparent;
+  background: #f44336;
+  color: white;
   border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 16px;
   position: absolute;
   top: 10px;
   right: 10px;
+
+  &:hover {
+    background: #c62828;
+  }
 `;
 
-export default Navbar;
+const App = () => {
+  const [popupVisible, setPopupVisible] = useState(false);
+
+  const handleSeeMoreClick = () => {
+    setPopupVisible(true);
+  };
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+  };
+
+  return (
+    <>
+      <Navbar onSeeMoreClick={handleSeeMoreClick} />
+      <AboutSection />
+      <PricingSection />
+      <FeaturesSection />
+      <ContactSection />
+      <Popup show={popupVisible} onClose={handlePopupClose} />
+    </>
+  );
+};
+
+export default App;
