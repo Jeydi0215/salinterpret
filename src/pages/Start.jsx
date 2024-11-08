@@ -119,14 +119,16 @@ const PricingSection = () => (
 const FeaturesSection = () => (
   <Section id="features">
     <h2>Features</h2>
-    <p>Explore the features of Salinterpret...</p>
+    <p>: Salinterpret is a cutting-edge platform designed to revolutionize the way individuals learn sign language. Combining interactive courses, gamification, and comprehensive video tutorials with support for multiple languages, Salinterpret is the most engaging, accessible, and effective way to master sign language.
+
+</p>
   </Section>
 );
 
 const ContactSection = () => (
   <Section id="contact">
     <h2>Contact Us</h2>
-    <p>Have questions or feedback? Reach out to us...</p>
+    <p>Have questions or feedback? Reach out to us at saliinterpret@gmail.com.</p>
   </Section>
 );
 
