@@ -1,114 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import Navbar from '../components/UserNavbar';
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import cv2
+from cvzone.HandTrackingModule import HandDetector
+from cvzone.ClassificationModule import Classifier
+import numpy as np
+import math
+import base64
+import warnings
+import os
+import logging
 
-const TranslationContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color:white;
-  height:100vh ;
-`;
+# Setup basic logging
+logging.basicConfig(level=logging.INFO)
 
-const CameraPlaceholder = styled.div`
-  width: 80%;
-  height: 50vh; 
-  margin-top: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color:black;
-`;  
+# Suppress TensorFlow warnings
+warnings.filterwarnings("ignore", category=UserWarning, message="No training configuration found in the save file")
 
-const CameraFeed = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-`;
+app = Flask(__name__)
 
-const TranslationText = styled.div`
-  margin-top: 2rem;
-  font-size: 1.5rem;
-  color:black;
+# Enable CORS for specific origins
+CORS(app, supports_credentials=True, origins=["https://salinterpret.vercel.app", "https://salinterpret-2373231f0ed4.herokuapp.com"])
 
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
+# Model and label paths
+model_path = os.environ.get('MODEL_PATH', 'Model/keras_model.h5')
+labels_path = os.environ.get('LABELS_PATH', 'Model/labels.txt')
 
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color:black;
+# Initialize the classifier and hand detector
+try:
+    classifier = Classifier(model_path, labels_path)
+    detector = HandDetector(maxHands=1)
+    logging.info("Classifier and HandDetector initialized successfully.")
+except Exception as e:
+    logging.error(f"Error initializing Classifier or HandDetector: {e}")
 
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
+# Constants
+offset = 20
+imgSize = 300
+labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I/J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y/Z"]
 
-const ClearButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
+# Default route for the root URL
+@app.route("/")
+def home():
+    return "Welcome to Flask!"
 
-function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
-  const [translation, setTranslation] = useState('');
+# Translation function
+def translate_image(img):
+    hands, img = detector.findHands(img)
+    if hands:
+        hand = hands[0]
+        x, y, w, h = hand['bbox']
+        imgWhite = np.ones((imgSize, imgSize, 3), np.uint8) * 255
+        imgCrop = img[y - offset:y + h + offset, x - offset:x + w + offset]
 
+        aspectRatio = h / w
+        if aspectRatio > 1:
+            k = imgSize / h
+            wCal = math.ceil(k * w)
+            imgResize = cv2.resize(imgCrop, (wCal, imgSize))
+            wGap = math.ceil((imgSize - wCal) / 2)
+            imgWhite[:, wGap:wCal + wGap] = imgResize
+            prediction, index = classifier.getPrediction(imgWhite, draw=False)
+        else:
+            k = imgSize / w
+            hCal = math.ceil(k * h)
+            if imgCrop.size > 0:
+                imgResize = cv2.resize(imgCrop, (imgSize, hCal))
+            else:
+                return ''
+            hGap = math.ceil((imgSize - hCal) / 2)
+            imgWhite[hGap:hCal + hGap, :] = imgResize
+            prediction, index = classifier.getPrediction(imgWhite, draw=False)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://flasky-d9sr.onrender.com/translate');
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
-        }
-        const data = await response.json();
-        setCameraImage(data.img);
-        if (data.translation !== '') {
-          // Append the new translation to the existing one
-          setTranslation(prevTranslation => prevTranslation + data.translation);
-        }
-      } catch (error) {
-        console.error('Error fetching translation:', error.message);
-      }
-    };
+        translation = labels[index]
+    else:
+        translation = ''
+    return translation
 
-    const intervalId = setInterval(fetchData, 1000);
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://salinterpret.vercel.app"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
-    return () => clearInterval(intervalId);
-  }, []);
+@app.route('/translate', methods=['POST', 'OPTIONS'])
+def translate_asl():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'preflight successful'}), 200
 
-  const handleClearTranslation = () => {
-    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
-  };
+    file = request.files.get('image')
+    if not file:
+        return jsonify({'error': 'No image file provided'}), 400
 
-  return (
-    <TranslationContainer>
-      <Navbar />
-      <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>Loading camera...</p>
-        )}
-      </CameraPlaceholder>
-      <TranslationText>
-        <h2>Translation:</h2>
-        <p>{translation}</p>
-      </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-      )}
-      <Instructions>
-        <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
-      </Instructions>
-    </TranslationContainer>
-  );
-}
+    # Convert the uploaded file to an image
+    file_bytes = np.frombuffer(file.read(), np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-export default ASLTranslationPage;
+    # Get the translation
+    translation = translate_image(img)
+
+    # Encode the image for the response
+    _, buffer = cv2.imencode('.jpg', img)
+    img_str = base64.b64encode(buffer).decode('utf-8')
+
+    # Return JSON response directly to the frontend
+    return jsonify({'img': img_str, 'translation': translation})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
