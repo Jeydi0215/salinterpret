@@ -102,7 +102,7 @@ const CoursesPage = () => {
           <Popup>
             <h2>{selectedResult.title}</h2>
           
-            <p><strong>Tags:</strong> {selectedResult.tags}</p>
+            <p><strong>Instruction:</strong> {selectedResult.tags}</p>
             <button
               onClick={() => setSelectedResult(null)}
               className="close-button"
@@ -125,9 +125,9 @@ const CardContainer = styled.div`
   cursor: pointer;
 
   .thumbnail {
-    width: 100%;               // Full width within the card
-    height: auto;              // Height adjusts based on image aspect ratio
-    object-fit: cover;         // Crop to fill container, maintaining aspect ratio
+    width: 100%;               
+    height: auto;              
+    object-fit: cover;         
     border-radius: 8px;
   }
 
@@ -165,12 +165,12 @@ const GridContainer = styled.div`
 
 const Popup = styled.div`
   position: fixed;
-  top: 20%;
+  top: 50%;
   left: 50%;
   transform: translateX(-50%);
   background-color: #fff;
   color: #000;
-  padding: 20px;
+  padding: 30px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
