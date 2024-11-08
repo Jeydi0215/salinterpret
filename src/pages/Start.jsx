@@ -227,18 +227,18 @@ const NavItem = styled.li`
   }
 `;
 
-const NavActions = styled.div
+const NavActions = styled.div`
   display: flex;
   align-items: center;
-
+;
   @media (max-width: 768px) {
     .sign-in-button {
       display: none;
     }
   }
-;
+`;
 
-const MenuIcon = styled(FaBars)
+const MenuIcon = styled(FaBars)`
   display: none;
   cursor: pointer;
   font-size: 24px;
@@ -261,9 +261,9 @@ const MobileNavMenu = styled.div
     padding: 10px;
     border-radius: 5px;
   }
-;
+`;
 
-const HeroSection = styled.div
+const HeroSection = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -277,9 +277,9 @@ const HeroSection = styled.div
     flex-direction: column;
     text-align: center;
   }
-;
+`;
 
-const LeftSection = styled.div
+const LeftSection = styled.div`
   flex: 1;
   margin-right: 50px;
 
@@ -296,9 +296,9 @@ const Title = styled.h1
   @media (max-width: 768px) {
     font-size: 32px;
   }
-;
+`;
 
-const ButtonContainer = styled.div
+const ButtonContainer = styled.div`
   display: flex;
   max-width: 300px;
   margin-top: 20px;
@@ -308,9 +308,9 @@ const ButtonContainer = styled.div
     gap:20px;
     align-items: center;
   }
-;
+`;
 
-const FreeTrialButton = styled.button
+const FreeTrialButton = styled.button`
   background: #41bfde;
   color: black;
   border: none;
@@ -330,9 +330,9 @@ const FreeTrialButton = styled.button
   @media (max-width: 768px) {
     margin: 10px 0;
   }
-;
+`;
 
-const SeeMoreButton = styled.button
+const SeeMoreButton = styled.button`
   background: #febd03;
   color: black;
   border: none;
@@ -346,9 +346,9 @@ const SeeMoreButton = styled.button
   &:hover {
     background: yellow;
   }
-;
+`;
 
-const RightSection = styled.div
+const RightSection = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -357,32 +357,32 @@ const RightSection = styled.div
   @media (max-width: 768px) {
     margin-top: 20px;
   }
-;
+`;
 
-const LogoWrapper = styled.div
+const LogoWrapper = styled.div`
   margin-bottom: 20px;
-;
+`;
 
-const KaliwaLogoImg = styled.img
+const KaliwaLogoImg = styled.img`
   width: 150px;
-;
+`;
 
-const HeroTextContainer = styled.div
+const HeroTextContainer = styled.div`
   max-width: 500px;
   text-align: center;
-;
+`;
 
-const Description = styled.h2
+const Description = styled.h2`
   font-size: 28px;
   margin-bottom: 10px;
-;
+`;
 
-const Text = styled.p
+const Text = styled.p`
   font-size: 16px;
   line-height: 1.5;
-;
+`;
 
-const Section = styled.section
+const Section = styled.section`
   padding: 50px;
   scroll-snap-align: start;
 
@@ -394,9 +394,9 @@ const Section = styled.section
     font-size: 18px;
     line-height: 1.6;
   }
-;
+`;
 
-const ImagesContainer = styled.div
+const ImagesContainer = styled.div`
   display: flex; 
   flex-wrap: nowrap; 
   gap: 10px;
@@ -412,9 +412,9 @@ const ImagesContainer = styled.div
     overflow-x: hidden;
     justify-content: center; 
   }
-;
+`;
 
-const ImageWrapper = styled.div
+const ImageWrapper = styled.div`
   opacity: 0;
   transition: opacity 1s ease-in;
 
@@ -429,10 +429,10 @@ const ImageWrapper = styled.div
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
-;
+`;
 
 
-const PopupOverlay = styled.div
+const PopupOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
@@ -443,9 +443,9 @@ const PopupOverlay = styled.div
   justify-content: center;
   align-items: center;
   z-index: 1000;
-;
+`;
 
-const PopupContainer = styled.div
+const PopupContainer = styled.div`
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -462,9 +462,9 @@ const PopupContainer = styled.div
     font-size: 16px;
     line-height: 1.5;
   }
-;
+`;
 
-const CloseButton = styled.button
+const CloseButton = styled.button`
   background: #f44336;
   color: white;
   border: none;
@@ -479,7 +479,7 @@ const CloseButton = styled.button
   &:hover {
     background: #c62828;
   }
-;
+`;
 
 const App = () => {
   const [popupVisible, setPopupVisible] = useState(false);
