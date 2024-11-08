@@ -10,7 +10,6 @@ export default function Navbar({ isScrolled }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const links = [
-      { name: 'Home', link: '/Main' },
     { name: 'Upload', link: '../upload'},
   ];
 
