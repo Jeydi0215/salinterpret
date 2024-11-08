@@ -10,6 +10,7 @@ import Hacker from '../assets/Hacker.png';
 import Hispter from '../assets/Hipster.png';
 import Member from '../assets/Member.png';
 import Mentor from '../assets/Mentor.png';
+import { Analytics } from "@vercel/analytics/react";
 
 const scrollToSection = (id) => {
   const section = document.getElementById(id);
@@ -27,47 +28,48 @@ const Navbar = ({ onSeeMoreClick }) => {
   };
 
   return (
-        
-    <NavContainer>
-      <BackgroundBlur />
-      <Nav>
-        <Logo>
-          <img src={ASL} alt="Logo" />
-          Salinterpret
-        </Logo>
-        <NavMenu className={menuOpen ? 'open' : ''}>
-          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-        </NavMenu>
-        <NavActions>
-          <MenuIcon onClick={handleMenuToggle} />
-       
-        </NavActions>
-      </Nav>
+    <>
+      <Analytics />
+      <NavContainer>
+        <BackgroundBlur />
+        <Nav>
+          <Logo>
+            <img src={ASL} alt="Logo" />
+            Salinterpret
+          </Logo>
+          <NavMenu className={menuOpen ? 'open' : ''}>
+            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+          </NavMenu>
+          <NavActions>
+            <MenuIcon onClick={handleMenuToggle} />
+          </NavActions>
+        </Nav>
 
-      <HeroSection>
-        <LeftSection>
-          <Title>Welcome!</Title>
-          <ButtonContainer>
-            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
-          </ButtonContainer>
-        </LeftSection>
-        <RightSection>
-          <LogoWrapper>
-            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-          </LogoWrapper>
-          <HeroTextContainer>
-            <Description>Salinterpret</Description>
-            <Text>
-              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-            </Text>
-          </HeroTextContainer>
-        </RightSection>
-      </HeroSection>
-    </NavContainer>
+        <HeroSection>
+          <LeftSection>
+            <Title>Welcome!</Title>
+            <ButtonContainer>
+              <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
+              <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+            </ButtonContainer>
+          </LeftSection>
+          <RightSection>
+            <LogoWrapper>
+              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+            </LogoWrapper>
+            <HeroTextContainer>
+              <Description>Salinterpret</Description>
+              <Text>
+                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+              </Text>
+            </HeroTextContainer>
+          </RightSection>
+        </HeroSection>
+      </NavContainer>
+    </>
   );
 };
 
@@ -139,7 +141,6 @@ const Popup = ({ show, onClose }) => {
         Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
       </PopupContainer>
     </PopupOverlay>
-  
   );
 };
 
@@ -279,16 +280,16 @@ const HeroSection = styled.div`
 
 const LeftSection = styled.div`
   flex: 1;
-  margin-right: 50px;
-
-  @media (max-width: 768px) {
-    margin-right: 0;
-    margin-top:50%;
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 50%;
+  z-index: 2;
 `;
 
 const Title = styled.h1`
   font-size: 48px;
+  color: #fff;
   margin-bottom: 20px;
 
   @media (max-width: 768px) {
@@ -298,137 +299,90 @@ const Title = styled.h1`
 
 const ButtonContainer = styled.div`
   display: flex;
-  max-width: 300px;
-  margin-top: 20px;
-
-  @media (max-width: 768px) {
-    flex-direction: row;
-    gap:20px;
-    align-items: center;
-  }
+  gap: 20px;
 `;
 
 const FreeTrialButton = styled.button`
-  background: #41bfde;
-  color: black;
-  border: none;
-  width:50%;
-  height:70px;
+  background-color: #ff6600;
+  color: white;
   padding: 10px 20px;
+  border: none;
   cursor: pointer;
-  font-size:20px;
+  font-size: 16px;
   border-radius: 5px;
-  margin-right: 10px;
-  transition: background 0.3s ease;
 
   &:hover {
-    background: #3a2ba0;
-  }
-
-  @media (max-width: 768px) {
-    margin: 10px 0;
+    background-color: #ff4500;
   }
 `;
 
 const SeeMoreButton = styled.button`
-  background: #febd03;
-  color: black;
-  border: none;
-  width:40%;
-  font-size:20px;
+  background-color: #4caf50;
+  color: white;
   padding: 10px 20px;
+  border: none;
   cursor: pointer;
+  font-size: 16px;
   border-radius: 5px;
-  transition: background 0.3s ease;
 
   &:hover {
-    background: yellow;
+    background-color: #388e3c;
   }
 `;
 
 const RightSection = styled.div`
   flex: 1;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-
-  @media (max-width: 768px) {
-    margin-top: 20px;
-  }
+  max-width: 50%;
 `;
 
 const LogoWrapper = styled.div`
-  margin-bottom: 20px;
+  margin-left: 20px;
 `;
 
 const KaliwaLogoImg = styled.img`
-  width: 150px;
+  width: 200px;
 `;
 
 const HeroTextContainer = styled.div`
-  max-width: 500px;
-  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 400px;
 `;
 
-const Description = styled.h2`
-  font-size: 28px;
-  margin-bottom: 10px;
+const Description = styled.h3`
+  font-size: 30px;
+  color: white;
 `;
 
 const Text = styled.p`
   font-size: 16px;
-  line-height: 1.5;
+  color: white;
 `;
 
 const Section = styled.section`
   padding: 50px;
-  scroll-snap-align: start;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  p {
-    font-size: 18px;
-    line-height: 1.6;
-  }
+  background-color: white;
 `;
 
 const ImagesContainer = styled.div`
-  display: flex; 
-  flex-wrap: nowrap; 
-  gap: 10px;
-  overflow-x: auto; 
-  justify-content: center; 
-  margin: 0 auto;
-  max-width: 1200px; 
-
-  @media (max-width: 768px) {
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 10px;
-    overflow-x: hidden;
-    justify-content: center; 
-  }
+  display: flex;
+  justify-content: center;
+  gap: 30px;
 `;
 
 const ImageWrapper = styled.div`
   opacity: 0;
-  transition: opacity 1s ease-in;
-
+  transition: opacity 0.5s ease-in-out;
   &.in-view {
     opacity: 1;
   }
-
-  img {
-    width: 150px; 
-    width:100%;
-    height: auto; 
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
 `;
-
 
 const PopupOverlay = styled.div`
   position: fixed;
@@ -436,70 +390,27 @@ const PopupOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
 `;
 
 const PopupContainer = styled.div`
   background: white;
-  padding: 20px;
+  padding: 30px;
   border-radius: 10px;
-  max-width: 500px;
-  color:black;
-  width: 100%;
+  width: 400px;
   text-align: center;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  p {
-    font-size: 16px;
-    line-height: 1.5;
-  }
 `;
 
 const CloseButton = styled.button`
-  background: #f44336;
+  background: red;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  &:hover {
-    background: #c62828;
-  }
 `;
 
-const App = () => {
-  const [popupVisible, setPopupVisible] = useState(false);
-
-  const handleSeeMoreClick = () => {
-    setPopupVisible(true);
-  };
-
-  const handlePopupClose = () => {
-    setPopupVisible(false);
-  };
-
-  return (
-    <>
-      <Navbar onSeeMoreClick={handleSeeMoreClick} />
-      <AboutSection />
-      <PricingSection />
-      <FeaturesSection />
-      <ContactSection />
-      <Popup show={popupVisible} onClose={handlePopupClose} />
-    </>
-  );
-};
-
-export default App;
+export default Navbar;
