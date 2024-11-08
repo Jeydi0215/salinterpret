@@ -119,6 +119,8 @@ const Main = () => {
         )}
         {showMoreInfo && (
           <PopupOverlay>
+            <p>We're on a mission to connect hearing-impaired and non-hearing-impaired communities like never before. With Salinterpret, sign language transforms into words, making communication effortless and inclusive. Dive into our ASL courses, tutorials, and fun interactive games that make learning exciting and accessible for everyone.
+        Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
             <PopupContainer>
               <CloseButton onClick={() => setShowMoreInfo(false)}>Close</CloseButton>
               <h2>Salinterpret</h2>
