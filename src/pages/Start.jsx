@@ -321,11 +321,6 @@ const Description = styled.h2`
   margin-bottom: 20px;
 `;
 
-const Text = styled.p`
-  font-size: 18px;
-  line-height: 1.6;
-`;
-
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
