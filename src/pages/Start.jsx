@@ -1,149 +1,106 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useInView } from 'react-intersection-observer';
+import { useNavigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import ASL from '../assets/logo.png';
 import BackgroundImage from '../assets/lopit.png';
 import KaliwaLogo from '../assets/logo.png';
-import { useNavigate } from 'react-router-dom';
 import { FaBars } from 'react-icons/fa';
-import Hacker from '../assets/Hacker.png';
-import Hispter from '../assets/Hipster.png';
-import Member from '../assets/Member.png';
-import Mentor from '../assets/Mentor.png';
-import { Analytics } from '@vercel/analytics/react';
-
-const scrollToSection = (id) => {
-  const section = document.getElementById(id);
-  if (section) {
-    section.scrollIntoView({ behavior: 'smooth' });
-  }
-};
 
 const Navbar = ({ onSeeMoreClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);  // Modal visibility state
+  const [termsAccepted, setTermsAccepted] = useState(false);  // State to check if terms are accepted
   const navigate = useNavigate();
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
   };
 
+  const handleSignInClick = () => {
+    setModalVisible(true); // Show the modal when 'Sign In' is clicked
+  };
+
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true); // User accepts the terms
+    setModalVisible(false); // Close the modal
+    navigate('/login'); // Navigate to login after accepting
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false); // Close the modal without accepting
+  };
+
   return (
     <>
       <Analytics />
-    <NavContainer>
-      <BackgroundBlur />
-      <Nav>
-        <Logo>
-          <img src={ASL} alt="Logo" />
-          Salinterpret
-        </Logo>
-        <NavMenu className={menuOpen ? 'open' : ''}>
-          <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-          <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-          <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-          <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-        </NavMenu>
-        <NavActions>
-          <MenuIcon onClick={handleMenuToggle} />
-       
-        </NavActions>
-      </Nav>
+      <NavContainer>
+        <BackgroundBlur />
+        <Nav>
+          <Logo>
+            <img src={ASL} alt="Logo" />
+            Salinterpret
+          </Logo>
+          <NavMenu className={menuOpen ? 'open' : ''}>
+            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
+            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
+            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
+            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
+          </NavMenu>
+          <NavActions>
+            <MenuIcon onClick={handleMenuToggle} />
+          </NavActions>
+        </Nav>
 
-      <HeroSection>
-        <LeftSection>
-          <Title>Welcome!</Title>
-          <ButtonContainer>
-            <FreeTrialButton onClick={() => navigate('/login')}>Sign In</FreeTrialButton>
-            <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
-          </ButtonContainer>
-        </LeftSection>
-        <RightSection>
-          <LogoWrapper>
-            <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-          </LogoWrapper>
-          <HeroTextContainer>
-            <Description>Salinterpret</Description>
-            <Text>
-              A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-            </Text>
-          </HeroTextContainer>
-        </RightSection>
-      </HeroSection>
-    </NavContainer>
-      </>
-  );
-};
+        <HeroSection>
+          <LeftSection>
+            <Title>Welcome!</Title>
+            <ButtonContainer>
+              <FreeTrialButton onClick={handleSignInClick}>Sign In</FreeTrialButton>
+              <SeeMoreButton onClick={onSeeMoreClick}>See More</SeeMoreButton>
+            </ButtonContainer>
+          </LeftSection>
+          <RightSection>
+            <LogoWrapper>
+              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
+            </LogoWrapper>
+            <HeroTextContainer>
+              <Description>Salinterpret</Description>
+              <Text>
+                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
+              </Text>
+            </HeroTextContainer>
+          </RightSection>
+        </HeroSection>
 
-const AboutSection = () => {
-  const { ref: sectionRef, inView } = useInView({ triggerOnce: true });
-
-  return (
-    <Section id="about" ref={sectionRef}>
-      <h2>About Us</h2>
-      <ImagesContainer>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Hacker} alt="" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Hispter} alt="" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Member} alt="" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Mentor} alt="" />
-        </ImageWrapper>
-      </ImagesContainer>
-      <p><strong><i>Meet the Team Numbros: The Team Behind Salinterpret </i></strong></p>
-      <p>
-        <ul>
-          <li>Justine Dimalanta: Hacker & Hustler, leading technical development</li>
-          <li>Lara Jane Acar: Hipster, designing an intuitive user experience.</li>
-          <li>Jerson Mamangun: Co-Hacker, refining the app’s performance.</li>
-          <li>Mr. Chris Allen Pineda: Project Adviser, guiding our mission.</li>
-        </ul>
-      </p>
-    </Section>
-  );
-};
-
-const PricingSection = () => (
-  <Section id="pricing">
-    <p style={{ fontSize: '28px' }}> <strong>Surprise!!! </strong></p>
-    <p>
-      Salinterpret is a free web app designed to bridge communication gaps. Our app offers essential features without any cost, ensuring that you have access to real-time translation and sign-to-word language features at no charge. You just need to have mobile data to access the app. Whether you're looking to communicate with the hearing-impaired or enhance your own understanding, Salinterpret is here to support you without any fees. Explore our features and experience the power of inclusive communication today!
-    </p>
-  </Section>
-);
-
-const FeaturesSection = () => (
-  <Section id="features">
-    <h2>Features</h2>
-    <p> Salinterpret is a cutting-edge platform designed to revolutionize the way individuals learn sign language. Combining interactive courses, gamification, and comprehensive video tutorials with support for multiple languages, Salinterpret is the most engaging, accessible, and effective way to master sign language.
-
-</p>
-  </Section>
-);
-
-const ContactSection = () => (
-  <Section id="contact">
-    <h2>Contact Us</h2>
-    <p>Have questions or feedback? Reach out to us at salinterpret@gmail.com.</p>
-  </Section>
-);
-
-const Popup = ({ show, onClose }) => {
-  if (!show) return null;
-
-  return (
-    <PopupOverlay>
-      <PopupContainer>
-        <CloseButton onClick={onClose}>Close</CloseButton>
-        <h2>Salinterpret</h2>
-        <p>We're on a mission to connect hearing-impaired and non-hearing-impaired communities like never before. With Salinterpret, sign language transforms into words, making communication effortless and inclusive. Dive into our ASL courses, tutorials, and fun interactive games that make learning exciting and accessible for everyone.
-        Join us in building a world where everyone can connect and understand each other, one sign at a time! ✋💬</p>
-      </PopupContainer>
-    </PopupOverlay>
+        {/* Terms and Conditions Modal */}
+        {modalVisible && (
+          <ModalOverlay>
+            <ModalContainer>
+              <h2>Terms and Conditions</h2>
+              <p>By signing in, you agree to the following terms...</p>
+              <CheckboxContainer>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={() => setTermsAccepted(!termsAccepted)}
+                />
+                <label>I accept the Terms and Conditions</label>
+              </CheckboxContainer>
+              <ButtonContainer>
+                <ActionButton onClick={handleCloseModal}>Cancel</ActionButton>
+                <ActionButton
+                  onClick={handleAcceptTerms}
+                  disabled={!termsAccepted} // Disable until terms are accepted
+                >
+                  Proceed to Sign In
+                </ActionButton>
+              </ButtonContainer>
+            </ModalContainer>
+          </ModalOverlay>
+        )}
+      </NavContainer>
+    </>
   );
 };
 
@@ -247,21 +204,6 @@ const MenuIcon = styled(FaBars)`
 
   @media (max-width: 768px) {
     display: block;
-  }
-`;
-
-const MobileNavMenu = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: block;
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    background: white;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
   }
 `;
 
@@ -370,10 +312,76 @@ const KaliwaLogoImg = styled.img`
 `;
 
 const HeroTextContainer = styled.div`
-  max-width: 500px;
   text-align: center;
+  max-width: 500px;
 `;
 
+const Description = styled.h2`
+  font-size: 24px;
+  margin-bottom: 20px;
+`;
+
+const Text = styled.p`
+  font-size: 18px;
+  line-height: 1.6;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContainer = styled.div`
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 500px;
+  text-align: center;
+
+  h2 {
+    font-size: 24px;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 20px 0;
+  }
+`;
+
+const CheckboxContainer = styled.div`
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ActionButton = styled.button`
+  background: #41bfde;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 10px;
+
+  &:hover {
+    background: #3a2ba0;
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+`;
 const Description = styled.h2`
   font-size: 28px;
   margin-bottom: 10px;
@@ -433,7 +441,6 @@ const ImageWrapper = styled.div`
   }
 `;
 
-
 const PopupOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -452,7 +459,7 @@ const PopupContainer = styled.div`
   padding: 20px;
   border-radius: 10px;
   max-width: 500px;
-  color:black;
+  color: black;
   width: 100%;
   text-align: center;
 
@@ -482,6 +489,20 @@ const CloseButton = styled.button`
     background: #c62828;
   }
 `;
+
+const Popup = ({ show, onClose }) => {
+  if (!show) return null;
+
+  return (
+    <PopupOverlay>
+      <PopupContainer>
+        <CloseButton onClick={onClose}>Close</CloseButton>
+        <h2>More Information</h2>
+        <p>This is some more information shown in a popup!</p>
+      </PopupContainer>
+    </PopupOverlay>
+  );
+};
 
 const App = () => {
   const [popupVisible, setPopupVisible] = useState(false);
