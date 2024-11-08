@@ -83,25 +83,28 @@ function ASLTranslationPage() {
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const snapshotUrl = canvas.toDataURL('image/png');
-    fetchTranslation(snapshotUrl);
+
+    // Convert the canvas image to a Blob for uploading as FormData
+    canvas.toBlob((blob) => {
+      fetchTranslation(blob);
+    }, 'image/png');
   };
 
   // Fetch translation based on the captured image
-  const fetchTranslation = async (image) => {
+  const fetchTranslation = async (imageBlob) => {
     try {
+      const formData = new FormData();
+      formData.append('image', imageBlob);
+
       const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: image.split(',')[1] }),
-        mode: 'cors', // CORS mode
+        body: formData,
       });
 
       if (!response.ok) {
         throw new Error('Failed to fetch translation');
       }
+
       const data = await response.json();
       if (data.translation) {
         setTranslation((prevTranslation) => prevTranslation + data.translation);
