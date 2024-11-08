@@ -192,6 +192,13 @@ const Popup = styled.div`
     border-radius: 5px;
     cursor: pointer;
   }
+  h2{
+  font-size:20px;
+  }
+  p{
+  font-size:15px;
+  }
+  
 `;
 
 const QuizButton = styled.button`
