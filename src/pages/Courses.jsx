@@ -193,11 +193,11 @@ const Popup = styled.div`
     cursor: pointer;
   }
   h2{
-  font-size:20px;
-  color:red;
+  font-size:30px;
+
   }
   p{
-  font-size:15px;
+  font-size:25px;
   }
   
 `;
