@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
-const TranslationContainer = styled.div`
+const TranslationContainer = styled.div
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: white;
   height: 100vh;
-`;
+;
 
-const CameraPlaceholder = styled.div`
+const CameraPlaceholder = styled.div
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
@@ -18,53 +18,51 @@ const CameraPlaceholder = styled.div`
   justify-content: center;
   align-items: center;
   background-color: black;
+;
 
-  @media (max-width: 768px) {
-    width: 90%;
-    height: 40vh;
-  }
-`;
-
-const CameraFeed = styled.video`
+const CameraFeed = styled.img
   max-width: 100%;
   max-height: 100%;
-`;
+;
 
-const TranslationText = styled.div`
+const TranslationText = styled.div
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
-  max-height: 200px;
-  overflow-y: auto;
-  width: 80%;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
-`;
+;
 
-const CaptureButton = styled.button`
+const Instructions = styled.div
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  text-align: center;
+  color: black;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+;
+
+const CaptureButton = styled.button
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
-`;
+;
 
-const ClearButton = styled.button`
+const ClearButton = styled.button
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
-`;
+;
 
 function ASLTranslationPage() {
   const videoRef = useRef(null);
   const [translation, setTranslation] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  // Initialize webcam stream
+  // Function to start the webcam stream
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -74,17 +72,11 @@ function ASLTranslationPage() {
         })
         .catch((err) => {
           console.error("Error accessing webcam: ", err);
-          setError("Could not access the webcam. Please check your camera permissions.");
         });
     }
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject;
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
   }, []);
 
+  // Capture a snapshot when the "Capture" button is clicked
   const captureSnapshot = () => {
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
@@ -92,14 +84,14 @@ function ASLTranslationPage() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
+    // Convert the canvas image to a Blob for uploading as FormData
     canvas.toBlob((blob) => {
       fetchTranslation(blob);
     }, 'image/png');
   };
 
+  // Fetch translation based on the captured image
   const fetchTranslation = async (imageBlob) => {
-    setLoading(true);
-    setError('');
     try {
       const formData = new FormData();
       formData.append('image', imageBlob);
@@ -107,7 +99,6 @@ function ASLTranslationPage() {
       const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
         method: 'POST',
         body: formData,
-        headers: { 'Access-Control-Allow-Origin': '*' },
       });
 
       if (!response.ok) {
@@ -116,36 +107,38 @@ function ASLTranslationPage() {
 
       const data = await response.json();
       if (data.translation) {
-        setTranslation((prev) => prev + data.translation);
-      } else {
-        setError('No translation found');
+        setTranslation((prevTranslation) => prevTranslation + data.translation);
       }
     } catch (error) {
-      console.error('Error fetching translation:', error);
-      setError(error.message || 'An error occurred');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching translation:', error.message);
     }
   };
 
-  const handleClearTranslation = () => setTranslation('');
+  const handleClearTranslation = () => {
+    setTranslation('');
+  };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <CameraFeed ref={videoRef} autoPlay width="640" height="480" />
+        <video ref={videoRef} autoPlay width="640" height="480" />
       </CameraPlaceholder>
       <CaptureButton onClick={captureSnapshot}>Capture</CaptureButton>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
       {translation && <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>}
+      <Instructions>
+        <h2>Instructions:</h2>
+        <p>1. Place your hand in front of the camera.</p>
+        <p>2. Click the "Capture" button to capture a snapshot.</p>
+        <p>Note: This app only translates the alphabet for now.</p>
+      </Instructions>
     </TranslationContainer>
   );
 }
 
 export default ASLTranslationPage;
+
