@@ -20,6 +20,11 @@ const CameraPlaceholder = styled.div`
   background-color: black;
 `;
 
+const CameraFeed = styled.img`
+  max-width: 100%;
+  max-height: 100%;
+`;
+
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
@@ -41,6 +46,12 @@ const Instructions = styled.div`
   }
 `;
 
+const CaptureButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
 const ClearButton = styled.button`
   margin-top: 1rem;
   padding: 0.5rem 1rem;
@@ -48,66 +59,82 @@ const ClearButton = styled.button`
 `;
 
 function ASLTranslationPage() {
-  const [translation, setTranslation] = useState('');
   const videoRef = useRef(null);
+  const [translation, setTranslation] = useState('');
 
+  // Function to start the webcam stream
   useEffect(() => {
-    // Access the camera and stream to the video element
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
+    if (videoRef.current) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
           videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-      }
-    };
-
-    startCamera();
-
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://flasky-d9sr.onrender.com//translate');
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
-        }
-        const data = await response.json();
-        if (data.translation !== '') {
-          setTranslation((prevTranslation) => prevTranslation + data.translation);
-        }
-      } catch (error) {
-        console.error('Error fetching translation:', error.message);
-      }
-    };
-
-    const intervalId = setInterval(fetchData, 1000);
-
-    return () => clearInterval(intervalId);
+        })
+        .catch((err) => {
+          console.error("Error accessing webcam: ", err);
+        });
+    }
   }, []);
 
+  // Capture a snapshot when the "Capture" button is clicked
+  const captureSnapshot = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    // Convert the canvas image to a Blob for uploading as FormData
+    canvas.toBlob((blob) => {
+      fetchTranslation(blob);
+    }, 'image/png');
+  };
+
+  // Fetch translation based on the captured image
+  const fetchTranslation = async (imageBlob) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', imageBlob);
+
+      const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch translation');
+      }
+
+      const data = await response.json();
+      if (data.translation) {
+        setTranslation((prevTranslation) => prevTranslation + data.translation);
+      }
+    } catch (error) {
+      console.error('Error fetching translation:', error.message);
+    }
+  };
+
   const handleClearTranslation = () => {
-    setTranslation((prevTranslation) => prevTranslation.slice(0, -1));
+    setTranslation('');
   };
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} autoPlay playsInline width="100%" height="100%" />
+        <video ref={videoRef} autoPlay width="640" height="480" />
       </CameraPlaceholder>
+      <CaptureButton onClick={captureSnapshot}>Capture</CaptureButton>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
-      {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-      )}
+      {translation && <ClearButton onClick={handleClearTranslation}>Clear Translation</ClearButton>}
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app currently only translates the alphabet.</p>
+        <p>2. Click the "Capture" button to capture a snapshot.</p>
+        <p>Note: This app only translates the alphabet for now.</p>
       </Instructions>
     </TranslationContainer>
   );
