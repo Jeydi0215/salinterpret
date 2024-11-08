@@ -147,15 +147,15 @@ const Popup = ({ show, onClose }) => {
 };
 
 // Styles
-const NavContainer = styled.div
+const NavContainer = styled.div`
   position: relative;
   height: 100vh;
   overflow: auto;
   position: sticky;
   scroll-snap-type: y mandatory;
-;
+`;
 
-const BackgroundBlur = styled.div
+const BackgroundBlur = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -164,9 +164,9 @@ const BackgroundBlur = styled.div
   background: url(${BackgroundImage}) no-repeat center center/cover;
   filter: blur(3px);
   z-index: -1;
-;
+`;
 
-const Nav = styled.nav
+const Nav = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -176,9 +176,9 @@ const Nav = styled.nav
   width: 100%;
   top: 0;
   z-index: 100;
-;
+`;
 
-const Logo = styled.div
+const Logo = styled.div`
   font-size: 24px;
   font-weight: bold;
   display: flex;
@@ -191,8 +191,7 @@ const Logo = styled.div
   @media (max-width: 768px) {
     font-size: 18px;
   }
-;
-
+`;
 const NavMenu = styled.ul
   display: flex;
   list-style: none;
