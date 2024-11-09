@@ -203,9 +203,11 @@ const Popup = styled.div`
 `;
 
 const QuizButton = styled.button`
-  padding: 10px 20px;
-  background-color: #ff6600;
-  color: #fff;
+  padding: 20px 30px;
+  background-color: #41bfde;
+  font-size: 20px;
+  font-weight:bold;
+  color: black;
   border: none;
   border-radius: 5px;
   cursor: pointer;
