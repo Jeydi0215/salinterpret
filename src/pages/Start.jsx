@@ -95,13 +95,39 @@ const Navbar = ({ onSeeMoreClick }) => {
         <PopupOverlay>
           <PopupContainer>
             <h2>Terms and Conditions</h2>
+            <ScrollableContent>
             <p>
-            Welcome to Salinterpret! By accessing or using Salinterpret, a web-based sign language translation app, you agree to be bound by these Terms and Conditions. Please read them carefully. If you do not agree with these Terms, please do not use Salinterpret. You confirm that you are at least 18 years old, or you have parental/guardian permission if younger. Account registration may be required for certain features, and you are responsible for keeping your account details secure and notifying us of any unauthorized use. You agree to provide accurate information when using the app, and you may not misuse Salinterpret, interfere with its functionality, or engage in unlawful activities.
+            Welcome to Salinterpret! By accessing or using Salinterpret, a web-based sign language translation app, you agree to these Terms and Conditions. If you do not agree, please do not use Salinterpret. <br/>
 
-Salinterpret values your privacy, and by using the app, you consent to the collection and use of your data as outlined in our Privacy Policy. All content, design, and code in Salinterpret are the intellectual property of Numbros, protected by copyright and trademark laws. Duplication, distribution, or use of our content without permission is prohibited. Salinterpret is provided “as is” without any warranties, express or implied. We do not guarantee error-free, secure, or uninterrupted operation and cannot ensure translation accuracy. Salinterpret will not be liable for damages arising from your use or inability to use the app.
+1. Acceptance of Terms:<br/>
 
-These Terms may be updated from time to time, and your continued use of Salinterpret following changes signifies your acceptance. These Terms are governed by the laws, and any disputes will fall under the exclusive jurisdiction of the court. If you have questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!
+ - You confirm that you are at least 18 years old, or you have parental/guardian permission if younger.<br/>
+  -Account registration may be required for certain features. You are responsible for keeping your account details secure and notifying us of any unauthorized use.<br/>
+
+2. User Responsibilities:<br/>
+
+- Provide accurate information when using the app.<br/>
+Misuse of Salinterpret, interference with its functionality, or engagement in unlawful activities is prohibited.<br/>
+
+3. Privacy:<br/>
+
+- By using the app, you consent to data collection and usage as outlined in our [Privacy Policy].<br/>
+
+4. Intellectual Property:<br/>
+
+- All content, design, and code are the intellectual property of Numbros.<br/>
+Duplication, distribution, or unauthorized use of our content is prohibited.<br/>
+
+5. Disclaimer of Warranties:<br/>
+
+- Salinterpret is provided “as is” without any express or implied warranties.<br/>
+- We do not guarantee error-free, secure, or uninterrupted operation and cannot ensure translation accuracy.<br/>
+
+
+If you have any questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!<br/>
+
             </p>
+            </ScrollableContent>
             <CheckboxContainer>
               <input type="checkbox" id="termsCheckbox" checked={isAgreed} onChange={() => setIsAgreed(!isAgreed)} />
               <label htmlFor="termsCheckbox">I agree to the Terms and Conditions</label>
@@ -585,4 +611,11 @@ const PopupButton = styled.button`
   font-size: 16px;
   margin-top: 10px;
 `;
+
+const ScrollableContent = styled.div`
+ 
+    max-height: 350px;
+    overflow-y: auto; 
+    padding-right: 10px; 
+  `;
 export default Navbar;
