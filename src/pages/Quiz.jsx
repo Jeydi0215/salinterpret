@@ -27,14 +27,16 @@ const ImageContainer = styled.div`
 const AnswerButton = styled.button`
   padding: 10px 20px;
   margin: 10px;
-  background-color: #333;
+  background-color: ${({ isCorrect, isSelected }) =>
+    isSelected ? (isCorrect ? 'green' : 'red') : '#333'};
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 
   &:hover {
-    background-color: #555;
+    background-color: ${({ isCorrect, isSelected }) =>
+      isSelected ? (isCorrect ? 'green' : 'red') : '#555'};
   }
 `;
 
@@ -50,6 +52,7 @@ const QuizPage = () => {
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [answerChoices, setAnswerChoices] = useState([]);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,16 +60,18 @@ const QuizPage = () => {
       try {
         const listRef = ref(imageDb, 'courses');
         const res = await listAll(listRef);
-        const fileUrls = await Promise.all(res.items.map(async (item) => {
-          const url = await getDownloadURL(item);
-          const metadata = await getMetadata(item);
-          return { 
-            id: item.name,
-            title: metadata.customMetadata?.title || item.name,
-            tags: metadata.customMetadata?.tags || 'No tags available',
-            thumbnailUrl: url,
-          };
-        }));
+        const fileUrls = await Promise.all(
+          res.items.map(async (item) => {
+            const url = await getDownloadURL(item);
+            const metadata = await getMetadata(item);
+            return {
+              id: item.name,
+              title: metadata.customMetadata?.title || item.name,
+              tags: metadata.customMetadata?.tags || 'No tags available',
+              thumbnailUrl: url,
+            };
+          })
+        );
 
         // Shuffle and select 7 random images
         const shuffled = fileUrls.sort(() => 0.5 - Math.random()).slice(0, 7);
@@ -81,33 +86,37 @@ const QuizPage = () => {
   }, []);
 
   const generateChoices = (imageList) => {
-    // Extract titles from images
-    const titles = imageList.map(image => image.title);
+    const titles = imageList.map((image) => image.title);
 
-    // Generate choices for each question
-    return imageList.map(image => {
-      // Get 3 random incorrect choices
-      const incorrectChoices = titles.filter(title => title !== image.title)
-                                     .sort(() => 0.5 - Math.random())
-                                     .slice(0, 3);
+    return imageList.map((image) => {
+      const incorrectChoices = titles
+        .filter((title) => title !== image.title)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
 
-      // Combine the correct choice with incorrect choices and shuffle
-      const choices = [image.title, ...incorrectChoices].sort(() => 0.5 - Math.random());
+      const choices = [image.title, ...incorrectChoices].sort(
+        () => 0.5 - Math.random()
+      );
       return { image, choices };
     });
   };
 
   const handleAnswer = (selectedAnswer) => {
+    setSelectedAnswer(selectedAnswer);
+
     if (selectedAnswer === images[currentIndex]?.title) {
       setScore(score + 1);
     }
 
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < images.length) {
-      setCurrentIndex(nextIndex);
-    } else {
-      setQuizCompleted(true);
-    }
+    setTimeout(() => {
+      const nextIndex = currentIndex + 1;
+      if (nextIndex < images.length) {
+        setCurrentIndex(nextIndex);
+        setSelectedAnswer(null);
+      } else {
+        setQuizCompleted(true);
+      }
+    }, 2000);
   };
 
   const handleReturnToCourses = () => {
@@ -136,7 +145,12 @@ const QuizPage = () => {
               </ImageContainer>
               <div>
                 {answerChoices[currentIndex]?.choices.map((choice, index) => (
-                  <AnswerButton key={index} onClick={() => handleAnswer(choice)}>
+                  <AnswerButton
+                    key={index}
+                    onClick={() => handleAnswer(choice)}
+                    isSelected={selectedAnswer === choice}
+                    isCorrect={choice === images[currentIndex]?.title}
+                  >
                     {choice}
                   </AnswerButton>
                 ))}
