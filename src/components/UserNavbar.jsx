@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import logo from '../assets/logo.png';
-import { FaPowerOff, FaUserCircle } from 'react-icons/fa';
+import { FaPowerOff } from 'react-icons/fa';
 import { firebaseAuth } from '../utils/firebase-config';
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export default function Navbar({ isScrolled }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -16,6 +16,7 @@ export default function Navbar({ isScrolled }) {
   ];
 
   const navigate = useNavigate();
+  const location = useLocation(); // Get the current path
 
   useEffect(() => {
     const handleResize = () => {
@@ -50,7 +51,12 @@ export default function Navbar({ isScrolled }) {
                 <ul className="dropdown-menu">
                   {links.map(({ name, link }) => (
                     <li key={name}>
-                      <Link to={link}>{name}</Link>
+                      <Link
+                        to={link}
+                        className={location.pathname.includes(link) ? 'active' : ''}
+                      >
+                        {name}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -60,7 +66,12 @@ export default function Navbar({ isScrolled }) {
             <ul className="links flex">
               {links.map(({ name, link }) => (
                 <li key={name}>
-                  <Link to={link}>{name}</Link>
+                  <Link
+                    to={link}
+                    className={location.pathname.includes(link) ? 'active' : ''}
+                  >
+                    {name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -88,12 +99,12 @@ const Container = styled.div`
     justify-content: space-between;
     position: fixed;
     top: 0;
-    left:0;
+    left: 0;
     z-index: 2;
     padding: 0 4rem;
     align-items: center;
     transition: 0.3s ease-in-out;
-    
+
     .left {
       gap: 2rem;
       .brand {
@@ -108,6 +119,11 @@ const Container = styled.div`
           a {
             color: gray;
             text-decoration: none;
+            &.active {
+              color: white;
+              font-weight: bold;
+              border-bottom: 2px solid white; /* Highlighting effect */
+            }
           }
         }
       }
@@ -135,6 +151,10 @@ const Container = styled.div`
               text-decoration: none;
               display: block;
               padding: 8px 0;
+              &.active {
+                color: white;
+                font-weight: bold;
+              }
               &:hover {
                 color: #007bff;
               }
@@ -156,11 +176,6 @@ const Container = styled.div`
           color: #f34242;
           font-size: 1.2rem;
         }
-      }
-      .user-profile {
-        color: white;
-        font-size: 1.5rem;
-        margin-right:7px;
       }
     }
   }
