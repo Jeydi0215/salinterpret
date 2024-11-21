@@ -120,9 +120,9 @@ const Container = styled.div`
             color: gray;
             text-decoration: none;
             &.active {
-              color: white;
+              color: yellow;
               font-weight: bold;
-              border-bottom: 2px solid white; /* Highlighting effect */
+              border-bottom: 2px solid yellow; /* Highlighting effect */
             }
           }
         }
