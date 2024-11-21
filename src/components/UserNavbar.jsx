@@ -11,7 +11,7 @@ export default function Navbar({ isScrolled }) {
   const [isOpen, setIsOpen] = useState(false);
   const links = [
     { name: 'Home', link: '/UserMain' },
-    { name: 'Courses', link: '../Courses' },
+    { name: 'Courses', link: '/Courses' },
     { name: 'Translate', link: '/Translation' },
   ];
 
