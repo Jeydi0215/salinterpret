@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
@@ -100,6 +99,10 @@ function ASLTranslationPage() {
       const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
         method: 'POST',
         body: formData,
+        headers: {
+          // Add any additional headers here if needed
+        },
+        credentials: 'include', // Include cookies or authentication tokens
       });
 
       if (!response.ok) {
