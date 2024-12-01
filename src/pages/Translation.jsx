@@ -1,4 +1,68 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import styled from 'styled-components';
+import Navbar from '../components/UserNavbar';
+
+// Debounce utility function
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
+const TranslationContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  height: 100vh;
+`;
+
+const CameraPlaceholder = styled.div`
+  width: 80%;
+  height: 50vh;
+  margin-top: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: black;
+`;
+
+const TranslationText = styled.div`
+  margin-top: 2rem;
+  font-size: 1.5rem;
+  color: black;
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
+`;
+
+const Instructions = styled.div`
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  text-align: center;
+  color: black;
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
+const CaptureButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
+
+const ClearButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+`;
 
 function ASLTranslationPage() {
   const videoRef = useRef(null);
@@ -6,44 +70,46 @@ function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
 
-  // Create a debounced translation function to prevent rapid-fire requests
+  // Memoized debounced fetch translation
   const debouncedFetchTranslation = useCallback(
     debounce((imageBlob) => {
       fetchTranslation(imageBlob);
-    }, 1000), // 1 second between translations
+    }, 1000),
     []
   );
 
-  // Continuous capture method
+  // Capture and translate method
   const captureAndTranslate = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const video = videoRef.current;
 
-    // Set canvas size to match video
+    // Ensure video has dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Convert to blob and fetch translation
     canvas.toBlob((blob) => {
-      debouncedFetchTranslation(blob);
+      if (blob) {
+        debouncedFetchTranslation(blob);
+      }
     }, 'image/png');
   }, [debouncedFetchTranslation]);
 
-  // Start/stop translation
+  // Toggle translation
   const toggleTranslation = () => {
     setIsTranslating(prev => !prev);
   };
 
-  // Effect for continuous capture when translating
+  // Continuous capture effect
   useEffect(() => {
     let intervalId;
     if (isTranslating) {
-      // Capture and translate every second
       intervalId = setInterval(captureAndTranslate, 1000);
     }
     
@@ -54,11 +120,14 @@ function ASLTranslationPage() {
 
   // Webcam setup
   useEffect(() => {
-    if (videoRef.current) {
+    // Check if running in browser
+    if (typeof window !== 'undefined' && videoRef.current) {
       navigator.mediaDevices
         .getUserMedia({ video: true })
         .then((stream) => {
-          videoRef.current.srcObject = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
         })
         .catch((err) => {
           console.error("Error accessing webcam: ", err);
@@ -94,14 +163,17 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} autoPlay width="640" height="480" />
-        <canvas 
-          ref={canvasRef} 
-          style={{ display: 'none' }} 
-        />
+        {typeof window !== 'undefined' && (
+          <>
+            <video ref={videoRef} autoPlay playsInline width="640" height="480" />
+            <canvas 
+              ref={canvasRef} 
+              style={{ display: 'none' }} 
+            />
+          </>
+        )}
       </CameraPlaceholder>
       
-      {/* Replace Capture button with Toggle Translation */}
       <CaptureButton onClick={toggleTranslation}>
         {isTranslating ? 'Stop Translating' : 'Start Translating'}
       </CaptureButton>
@@ -125,19 +197,6 @@ function ASLTranslationPage() {
       </Instructions>
     </TranslationContainer>
   );
-}
-
-// Debounce utility function
-function debounce(func, delay) {
-  let timeoutId;
-  return (...args) => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
 }
 
 export default ASLTranslationPage;
