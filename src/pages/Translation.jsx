@@ -139,11 +139,12 @@ function ASLTranslationPage() {
   const fetchTranslation = async (imageBlob) => {
     try {
       const formData = new FormData();
-      formData.append('image', imageBlob);
+      formData.append('image', imageBlob, 'capture.png');
+      
       const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
         method: 'POST',
         body: formData,
-        credentials: 'include',
+        mode: 'cors', // Add CORS mode
       });
       
       if (!response.ok) {
