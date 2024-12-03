@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/AdminNavbar';
 
@@ -17,7 +17,7 @@ const CameraPlaceholder = styled.div`
   align-items: center;
 `;
 
-const CameraFeed = styled.img`
+const CameraFeed = styled.canvas`
   max-width: 100%;
   max-height: 100%;
 `;
@@ -31,67 +31,65 @@ const TranslationText = styled.div`
   }
 `;
 
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
 function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append('image', file);
-
+  useEffect(() => {
+    const initCamera = async () => {
       try {
-        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
-
-        const data = await response.json();
-        setCameraImage(data.img); // If you process and return the image
-        setTranslation(data.translation);
       } catch (error) {
-        console.error('Error uploading image:', error.message);
-        alert('Failed to upload image. Please try again.');
+        console.error('Error accessing the camera:', error);
       }
-    }
-  };
+    };
+
+    initCamera();
+
+    const intervalId = setInterval(async () => {
+      if (canvasRef.current && videoRef.current) {
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+        const frame = canvas.toDataURL('image/jpeg'); // Capture frame as Base64
+        try {
+          const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: frame }), // Send Base64 image to backend
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setTranslation(data.translation);
+          } else {
+            console.error('Translation failed:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error translating frame:', error);
+        }
+      }
+    }, 1000); // Send frame every second
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>No camera feed available. Upload an image to start translation.</p>
-        )}
-        <input type="file" accept="image/*" onChange={handleFileChange} />
+        <video ref={videoRef} autoPlay muted style={{ display: 'none' }}></video>
+        <CameraFeed ref={canvasRef} width={224} height={224}></CameraFeed>
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation || 'No translation yet'}</p>
+        <p>{translation}</p>
       </TranslationText>
-      <Instructions>
-        <h2>Instructions:</h2>
-        <p>1. Upload an image of your hand making a sign.</p>
-        <p>2. Wait for the translation to appear below.</p>
-        <p>Note: This app currently translates the alphabet only.</p>
-      </Instructions>
     </TranslationContainer>
   );
 }
