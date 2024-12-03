@@ -49,7 +49,7 @@ function ASLTranslationPage() {
     const fetchData = async () => {
       try {
         // Replace with your middleman server URL on Vercel
-        const response = await fetch(https://middleman-psi-five.vercel.app//translate', {
+        const response = await fetch(https://middleman-psi-five.vercel.app/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
