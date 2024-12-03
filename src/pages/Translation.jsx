@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/AdminNavbar';
 
@@ -10,14 +10,14 @@ const TranslationContainer = styled.div`
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh;
+  height: 50vh; 
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-`;
+`;  
 
-const CameraFeed = styled.canvas`
+const CameraFeed = styled.img`
   max-width: 100%;
   max-height: 100%;
 `;
@@ -31,50 +31,41 @@ const TranslationText = styled.div`
   }
 `;
 
+const Instructions = styled.div`
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
 function ASLTranslationPage() {
+  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   useEffect(() => {
-    const initCamera = async () => {
+    const fetchData = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        const response = await fetch('https://your-backend-domain.com/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
         }
+        const data = await response.json();
+        setCameraImage(data.img);
+        setTranslation(data.translation);
       } catch (error) {
-        console.error('Error accessing the camera:', error);
+        console.error('Error fetching translation:', error.message);
       }
     };
 
-    initCamera();
-
-    const intervalId = setInterval(async () => {
-      if (canvasRef.current && videoRef.current) {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-        const frame = canvas.toDataURL('image/jpeg'); // Capture frame as Base64
-        try {
-          const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: frame }), // Send Base64 image to backend
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setTranslation(data.translation);
-          } else {
-            console.error('Translation failed:', response.statusText);
-          }
-        } catch (error) {
-          console.error('Error translating frame:', error);
-        }
-      }
-    }, 1000); // Send frame every second
+    const intervalId = setInterval(fetchData, 1000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -83,13 +74,22 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <video ref={videoRef} autoPlay muted style={{ display: 'none' }}></video>
-        <CameraFeed ref={canvasRef} width={224} height={224}></CameraFeed>
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
       </TranslationText>
+      <Instructions>
+        <h2>Instructions:</h2>
+        <p>1. Place your right hand in front of the camera.</p>
+        <p>2. Wait for the translation to appear.</p>
+        <p>Note: This app for now only translates the alphabet.</p>
+      </Instructions>
     </TranslationContainer>
   );
 }
