@@ -10,12 +10,12 @@ const TranslationContainer = styled.div`
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh; 
+  height: 50vh;
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-`;  
+`;
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -41,14 +41,13 @@ const Instructions = styled.div`
   }
 `;
 
-function ASLTranslationPage() {
+function Translation() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Replace with your middleman server URL on Vercel
         const response = await fetch('https://middleman-psi-five.vercel.app/translate', {
           method: 'POST',
           headers: {
@@ -57,21 +56,21 @@ function ASLTranslationPage() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch from middleman server');
+          throw new Error('Failed to fetch from the server');
         }
 
         const data = await response.json();
-        setCameraImage(data.img); // Set the image from the Flask response (via the middleman)
-        setTranslation(data.translation); // Set the translation text from the Flask response
+        setCameraImage(data.img); // Set the image from the response
+        setTranslation(data.translation); // Set the translation text from the response
       } catch (error) {
         console.error('Error fetching translation:', error.message);
       }
     };
 
-    const intervalId = setInterval(fetchData, 2000);  // Update every second
+    const intervalId = setInterval(fetchData, 2000); // Fetch data every 2 seconds
 
-    return () => clearInterval(intervalId);  // Clean up the interval on component unmount
-  }, []);  // Empty dependency array means this effect runs only once when the component mounts
+    return () => clearInterval(intervalId); // Clean up the interval on component unmount
+  }, []);
 
   return (
     <TranslationContainer>
@@ -97,4 +96,4 @@ function ASLTranslationPage() {
   );
 }
 
-export default ASLTranslationPage;
+export default Translation;
