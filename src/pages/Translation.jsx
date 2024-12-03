@@ -48,26 +48,31 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://your-backend-domain.com/translate', {
+        // Replace with your middleman server URL on Vercel
+        const response = await fetch(https://middleman-psi-five.vercel.app//translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          // Optionally, you can send the camera feed image or any other data in the body
+          // body: JSON.stringify({ image: cameraImage })
         });
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch');
+          throw new Error('Failed to fetch from middleman server');
         }
+        
         const data = await response.json();
-        setCameraImage(data.img);
-        setTranslation(data.translation);
+        setCameraImage(data.img);  // Set the image from the Flask response (via the middleman)
+        setTranslation(data.translation);  // Set the translation text from the Flask response
       } catch (error) {
         console.error('Error fetching translation:', error.message);
       }
     };
 
-    const intervalId = setInterval(fetchData, 1000);
+    const intervalId = setInterval(fetchData, 1000);  // Update every second
 
-    return () => clearInterval(intervalId);
+    return () => clearInterval(intervalId);  // Clean up the interval on component unmount
   }, []);
 
   return (
