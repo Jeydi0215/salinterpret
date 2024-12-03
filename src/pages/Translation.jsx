@@ -48,7 +48,7 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://your-backend-domain.com/translate', {
+        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
