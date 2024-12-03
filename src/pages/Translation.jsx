@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/AdminNavbar';
 
@@ -10,12 +10,12 @@ const TranslationContainer = styled.div`
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh; 
+  height: 50vh;
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-`;  
+`;
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -45,30 +45,31 @@ function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+
       try {
         const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          body: formData,
         });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch');
+          throw new Error(`Error: ${response.status}`);
         }
+
         const data = await response.json();
-        setCameraImage(data.img);
+        setCameraImage(data.img); // If you process and return the image
         setTranslation(data.translation);
       } catch (error) {
-        console.error('Error fetching translation:', error.message);
+        console.error('Error uploading image:', error.message);
+        alert('Failed to upload image. Please try again.');
       }
-    };
-
-    const intervalId = setInterval(fetchData, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+    }
+  };
 
   return (
     <TranslationContainer>
@@ -77,18 +78,19 @@ function ASLTranslationPage() {
         {cameraImage ? (
           <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
         ) : (
-          <p>Loading camera...</p>
+          <p>No camera feed available. Upload an image to start translation.</p>
         )}
+        <input type="file" accept="image/*" onChange={handleFileChange} />
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation}</p>
+        <p>{translation || 'No translation yet'}</p>
       </TranslationText>
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your right hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
+        <p>1. Upload an image of your hand making a sign.</p>
+        <p>2. Wait for the translation to appear below.</p>
+        <p>Note: This app currently translates the alphabet only.</p>
       </Instructions>
     </TranslationContainer>
   );
