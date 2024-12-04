@@ -78,7 +78,7 @@ function Translation() {
     const fetchData = async () => {
       try {
         // Fetch translation data periodically from the backend
-        const response = await fetch('https://your-backend-url/translate', {
+        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
