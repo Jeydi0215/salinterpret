@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -17,10 +17,9 @@ const CameraPlaceholder = styled.div`
   align-items: center;
 `;
 
-const VideoFeed = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+const CameraFeed = styled.img`
+  max-width: 100%;
+  max-height: 100%;
 `;
 
 const TranslationText = styled.div`
@@ -43,42 +42,13 @@ const Instructions = styled.div`
 `;
 
 function Translation() {
+  const [cameraImage, setCameraImage] = useState(''); // Stores the image from the backend
   const [translation, setTranslation] = useState(''); // Stores the translation from the backend
-  const videoRef = useRef(null); // Reference to the video element
-
-  useEffect(() => {
-    // Access the user's webcam
-    const openCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true, // Request video feed
-          audio: false, // No audio needed
-        });
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error.message);
-      }
-    };
-
-    openCamera();
-
-    return () => {
-      // Clean up: Stop the camera stream when component unmounts
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = videoRef.current.srcObject.getTracks();
-        tracks.forEach((track) => track.stop());
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch translation data periodically from the backend
-        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+        const response = await fetch('https://your-backend-url/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -90,6 +60,7 @@ function Translation() {
         }
 
         const data = await response.json();
+        setCameraImage(data.img); // Update camera image with the base64 string from the backend
         setTranslation(data.translation); // Update translation text
       } catch (error) {
         console.error('Error fetching translation:', error.message);
@@ -105,7 +76,11 @@ function Translation() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        <VideoFeed ref={videoRef} autoPlay playsInline />
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
@@ -122,3 +97,4 @@ function Translation() {
 }
 
 export default Translation;
+
