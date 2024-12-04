@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Navbar from '../components/AdminNavbar';
+import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
   display: flex;
@@ -42,13 +42,13 @@ const Instructions = styled.div`
 `;
 
 function Translation() {
-  const [cameraImage, setCameraImage] = useState('');
-  const [translation, setTranslation] = useState('');
+  const [cameraImage, setCameraImage] = useState(''); // Stores the image from the backend
+  const [translation, setTranslation] = useState(''); // Stores the translation from the backend
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://middleman-psi-five.vercel.app/translate', {
+        const response = await fetch('https://your-backend-url/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -60,16 +60,16 @@ function Translation() {
         }
 
         const data = await response.json();
-        setCameraImage(data.img); // Set the image from the response
-        setTranslation(data.translation); // Set the translation text from the response
+        setCameraImage(data.img); // Update camera image with the base64 string from the backend
+        setTranslation(data.translation); // Update translation text
       } catch (error) {
         console.error('Error fetching translation:', error.message);
       }
     };
 
-    const intervalId = setInterval(fetchData, 2000); // Fetch data every 2 seconds
+    const intervalId = setInterval(fetchData, 2000); // Fetch translation data every 2 seconds
 
-    return () => clearInterval(intervalId); // Clean up the interval on component unmount
+    return () => clearInterval(intervalId); // Clear interval on unmount
   }, []);
 
   return (
