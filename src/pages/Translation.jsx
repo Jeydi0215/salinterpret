@@ -12,13 +12,13 @@ const TranslationContainer = styled.div`
 
 const CameraPlaceholder = styled.div`
   width: 80%;
-  height: 50vh; 
+  height: 50vh;
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: black;
-`;  
+`;
 
 const CameraFeed = styled.img`
   max-width: 100%;
@@ -59,17 +59,21 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Replace with the backend URL where you handle the translation (Azure Dev Tunnels in this case)
-        const response = await fetch('https://dczln96x-5000.asse.devtunnels.ms/translate');
+        // Replace localhost URL with your Azure Dev Tunnels or correct backend URL
+        const response = await fetch('https://dczln96x-5000.asse.devtunnels.ms/translate', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
-        const data = await response.json();
 
-        // Update the camera image and translation
+        const data = await response.json();
         setCameraImage(data.img);
+
         if (data.translation !== '') {
-          // Append the new translation to the existing one
           setTranslation((prevTranslation) => prevTranslation + data.translation);
         }
       } catch (error) {
@@ -77,15 +81,12 @@ function ASLTranslationPage() {
       }
     };
 
-    // Set an interval to fetch data every second
     const intervalId = setInterval(fetchData, 1000);
 
-    // Cleanup the interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
 
   const handleClearTranslation = () => {
-    // Remove the last translated letter
     setTranslation((prevTranslation) => prevTranslation.slice(0, -1));
   };
 
@@ -110,7 +111,7 @@ function ASLTranslationPage() {
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app currently only translates the alphabet.</p>
+        <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
