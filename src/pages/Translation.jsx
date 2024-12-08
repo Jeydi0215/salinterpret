@@ -52,6 +52,20 @@ const ClearButton = styled.button`
   font-size: 1rem;
 `;
 
+const ClearAllButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ff1a1a;
+  }
+`;
+
 function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
@@ -90,6 +104,10 @@ function ASLTranslationPage() {
     setTranslation((prevTranslation) => prevTranslation.slice(0, -1));
   };
 
+  const handleClearAllTranslation = () => {
+    setTranslation('');
+  };
+
   return (
     <TranslationContainer>
       <Navbar />
@@ -105,7 +123,10 @@ function ASLTranslationPage() {
         <p>{translation}</p>
       </TranslationText>
       {translation && (
-        <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+        <>
+          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
+        </>
       )}
       <Instructions>
         <h2>Instructions:</h2>
