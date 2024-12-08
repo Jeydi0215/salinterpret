@@ -6,8 +6,8 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color:white;
-  height:100vh ;
+  background-color: white;
+  height: 100vh;
 `;
 
 const CameraPlaceholder = styled.div`
@@ -17,7 +17,7 @@ const CameraPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color:black;
+  background-color: black;
 `;  
 
 const CameraFeed = styled.img`
@@ -28,7 +28,7 @@ const CameraFeed = styled.img`
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
-  color:black;
+  color: black;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -39,7 +39,7 @@ const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
   text-align: center;
-  color:black;
+  color: black;
 
   @media (max-width: 768px) {
     font-size: 1rem;
@@ -56,11 +56,11 @@ function ASLTranslationPage() {
   const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/translate');
+        // Replace localhost URL with the Azure Dev Tunnels URL
+        const response = await fetch('https://dczln96x-5000.asse.devtunnels.ms/translate');
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
