@@ -74,7 +74,7 @@ function ASLTranslationPage() {
     const fetchData = async () => {
       try {
         // Replace localhost URL with your Azure Dev Tunnels or correct backend URL
-        const response = await fetch('http://127.0.0.1:5000/translate', {
+        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           headers: {
             'Content-Type': 'application/json',
           },
