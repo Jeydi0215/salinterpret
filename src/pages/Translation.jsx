@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -20,7 +20,7 @@ const CameraPlaceholder = styled.div`
   background-color: black;
 `;
 
-const CameraFeed = styled.img`
+const CameraFeed = styled.video`
   max-width: 100%;
   max-height: 100%;
 `;
@@ -67,13 +67,29 @@ const ClearAllButton = styled.button`
 `;
 
 function ASLTranslationPage() {
-  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
+  const videoRef = useRef(null);
 
   useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false,
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error.message);
+      }
+    };
+
+    startCamera();
+
     const fetchData = async () => {
       try {
-        // Replace localhost URL with your Azure Dev Tunnels or correct backend URL
         const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           headers: {
             'Content-Type': 'application/json',
@@ -85,8 +101,6 @@ function ASLTranslationPage() {
         }
 
         const data = await response.json();
-        setCameraImage(data.img);
-
         if (data.translation !== '') {
           setTranslation((prevTranslation) => prevTranslation + data.translation);
         }
@@ -112,11 +126,7 @@ function ASLTranslationPage() {
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
-        {cameraImage ? (
-          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
-        ) : (
-          <p>Loading camera...</p>
-        )}
+        <CameraFeed ref={videoRef} />
       </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
