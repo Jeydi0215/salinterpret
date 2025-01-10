@@ -9,33 +9,21 @@ const TranslationContainer = styled.div`
   justify-content: center;
   background-color: white;
   height: 100vh;
-  text-align: center;
-`;
-
-const PlaceholderImage = styled.div`
-  width: 80%;
-  height: 50vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-  background-color: #d3d3d3;
-  border: 2px dashed #888;
-  color: #555;
-  font-size: 1.5rem;
 `;
 
 const TranslationImage = styled.img`
-  width: 80%;
-  height: 50vh;
-  margin-top: 2rem;
-  object-fit: cover;
+  width: 300px;
+  height: 300px;
   background-color: black;
+  object-fit: cover;
+  border: 2px solid gray;
+  margin-bottom: 2rem;
 `;
 
 const TranslationText = styled.div`
-  margin-top: 2rem;
+  margin-top: 1rem;
   font-size: 1.5rem;
+  text-align: center;
   color: black;
 
   @media (max-width: 768px) {
@@ -46,6 +34,7 @@ const TranslationText = styled.div`
 const Instructions = styled.div`
   margin-top: 2rem;
   font-size: 1.2rem;
+  text-align: center;
   color: black;
 
   @media (max-width: 768px) {
@@ -116,14 +105,10 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      {image ? (
-        <TranslationImage src={image} alt="Camera feed" />
-      ) : (
-        <PlaceholderImage>Camera Placeholder</PlaceholderImage>
-      )}
+      <TranslationImage src={image || ''} alt="Camera feed placeholder" />
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation}</p>
+        <p>{translation || 'No translation available yet.'}</p>
       </TranslationText>
       {translation && (
         <>
