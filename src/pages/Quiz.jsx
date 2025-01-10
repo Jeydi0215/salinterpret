@@ -1,183 +1,149 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
-import styled from 'styled-components';
-import { imageDb } from '../utils/firebase-config';
+import React, { useState, useEffect } from "react";
+import styled from "styled-components";
 
-// Styled components
 const QuizContainer = styled.div`
-  margin-top: 60px;
-  padding: 20px;
-  background: black;
-  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7f7f7;
+  height: 100vh;
   font-family: Arial, sans-serif;
-  text-align: center;
 `;
 
-const ImageContainer = styled.div`
+const Timer = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: purple;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
   margin-bottom: 20px;
+`;
+
+const Question = styled.h1`
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+`;
+
+const MediaContainer = styled.div`
+  width: 80%;
+  max-width: 500px;
+  height: 200px;
+  background-color: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  border-radius: 8px;
 
   img {
-    width: 80%;
-    max-width: 500px;
-    border-radius: 8px;
+    max-width: 100%;
+    max-height: 100%;
   }
+`;
+
+const AnswerOptions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 80%;
+  max-width: 500px;
 `;
 
 const AnswerButton = styled.button`
-  padding: 10px 20px;
-  margin: 10px;
-  background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
-    isSelected
-      ? isCorrect
-        ? 'green' // Correctly selected answer
-        : 'red' // Incorrectly selected answer
-      : highlightCorrect
-      ? 'orange' // Highlight the correct answer
-      : '#333'};
-  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
   border: none;
-  border-radius: 5px;
-  cursor: ${({ isSelected }) => (isSelected ? 'not-allowed' : 'pointer')};
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: ${({ color }) => color || "#333"};
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? "none" : "auto")};
 
   &:hover {
-    background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
-      isSelected
-        ? isCorrect
-          ? 'green'
-          : 'red'
-        : highlightCorrect
-        ? 'orange'
-        : '#555'};
+    opacity: 0.9;
   }
 `;
 
-const QuizButtonContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-`;
-
 const QuizPage = () => {
-  const [images, setImages] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [answerChoices, setAnswerChoices] = useState([]);
+  const [questions] = useState([
+    {
+      question: "When did the first cornea transplant take place?",
+      media: null, // Add media URL if needed
+      options: [
+        { text: "1888", isCorrect: false, color: "red" },
+        { text: "1905", isCorrect: true, color: "blue" },
+        { text: "1912", isCorrect: false, color: "orange" },
+        { text: "1942", isCorrect: false, color: "green" },
+      ],
+    },
+  ]);
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [highlightCorrect, setHighlightCorrect] = useState(false); // Tracks whether to highlight the correct answer
-  const navigate = useNavigate();
+  const [timer, setTimer] = useState(20);
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const listRef = ref(imageDb, 'courses');
-        const res = await listAll(listRef);
-        const fileUrls = await Promise.all(
-          res.items.map(async (item) => {
-            const url = await getDownloadURL(item);
-            const metadata = await getMetadata(item);
-            return {
-              id: item.name,
-              title: metadata.customMetadata?.title || item.name,
-              tags: metadata.customMetadata?.tags || 'No tags available',
-              thumbnailUrl: url,
-            };
-          })
-        );
-
-        // Shuffle and select 7 random images
-        const shuffled = fileUrls.sort(() => 0.5 - Math.random()).slice(0, 7);
-        setImages(shuffled);
-        setAnswerChoices(generateChoices(shuffled));
-      } catch (error) {
-        console.error('Error fetching images:', error);
-      }
-    };
-
-    fetchImages();
-  }, []);
-
-  const generateChoices = (imageList) => {
-    const titles = imageList.map((image) => image.title);
-
-    return imageList.map((image) => {
-      const incorrectChoices = titles
-        .filter((title) => title !== image.title)
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
-
-      const choices = [image.title, ...incorrectChoices].sort(
-        () => 0.5 - Math.random()
-      );
-      return { image, choices };
-    });
-  };
-
-  const handleAnswer = (selectedAnswer) => {
-    setSelectedAnswer(selectedAnswer);
-
-    if (selectedAnswer === images[currentIndex]?.title) {
-      setScore(score + 1);
-    } else {
-      setHighlightCorrect(true); // Highlight the correct answer when a wrong answer is selected
+    if (timer > 0) {
+      const countdown = setInterval(() => setTimer((prev) => prev - 1), 1000);
+      return () => clearInterval(countdown);
     }
+  }, [timer]);
 
+  const handleAnswerClick = (answer) => {
+    setSelectedAnswer(answer);
     setTimeout(() => {
-      const nextIndex = currentIndex + 1;
-      if (nextIndex < images.length) {
-        setCurrentIndex(nextIndex);
-        setSelectedAnswer(null);
-        setHighlightCorrect(false); // Reset highlight for the next question
-      } else {
-        setQuizCompleted(true);
-      }
+      setSelectedAnswer(null);
+      setCurrentQuestionIndex((prev) => (prev + 1) % questions.length);
+      setTimer(20);
     }, 2000);
   };
 
-  const handleReturnToCourses = () => {
-    navigate('/courses');
+  const getButtonColor = (option) => {
+    if (selectedAnswer) {
+      if (option.isCorrect) return "green";
+      if (option === selectedAnswer) return "red";
+    }
+    return option.color;
   };
 
   return (
     <QuizContainer>
-      {quizCompleted ? (
-        <>
-          <h2>Quiz Completed!</h2>
-          <p>Your score: {score} out of {images.length}</p>
-          <QuizButtonContainer>
-            <AnswerButton onClick={handleReturnToCourses}>
-              Return to Courses
-            </AnswerButton>
-          </QuizButtonContainer>
-        </>
-      ) : (
-        <>
-          <h2>Question {currentIndex + 1}</h2>
-          {images[currentIndex] && (
-            <>
-              <ImageContainer>
-                <img src={images[currentIndex].thumbnailUrl} alt={`Question ${currentIndex + 1}`} />
-              </ImageContainer>
-              <div>
-                {answerChoices[currentIndex]?.choices.map((choice, index) => (
-                  <AnswerButton
-                    key={index}
-                    onClick={() => handleAnswer(choice)}
-                    isSelected={selectedAnswer === choice}
-                    isCorrect={choice === images[currentIndex]?.title}
-                    highlightCorrect={
-                      highlightCorrect && choice === images[currentIndex]?.title
-                    }
-                  >
-                    {choice}
-                  </AnswerButton>
-                ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
+      <Timer>{timer}</Timer>
+      <Question>{currentQuestion.question}</Question>
+      <MediaContainer>
+        {currentQuestion.media ? (
+          <img src={currentQuestion.media} alt="Question Media" />
+        ) : (
+          <p>Kahoot!</p>
+        )}
+      </MediaContainer>
+      <AnswerOptions>
+        {currentQuestion.options.map((option, index) => (
+          <AnswerButton
+            key={index}
+            color={getButtonColor(option)}
+            onClick={() => handleAnswerClick(option)}
+            disabled={!!selectedAnswer}
+          >
+            {option.text}
+          </AnswerButton>
+        ))}
+      </AnswerOptions>
     </QuizContainer>
   );
 };
