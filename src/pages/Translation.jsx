@@ -8,18 +8,17 @@ const TranslationContainer = styled.div`
   align-items: center;
   justify-content: center; /* Center vertically */
   background-color: white;
-  height: 100vh;
+  height: 100vh; /* Full height of the viewport */
 `;
 
 const TranslationImage = styled.img`
-  width: 1000px;
+  width: 600px;
   height: 600px;
   background-color: black;
   object-fit: cover;
   border: 2px solid gray;
   margin-bottom: 2rem;
 `;
-
 
 const TranslationText = styled.div`
   margin-top: 1rem;
