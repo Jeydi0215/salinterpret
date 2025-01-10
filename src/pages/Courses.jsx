@@ -1,4 +1,4 @@
-fimport React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
@@ -220,7 +220,7 @@ const Popup = styled.div`
     color: #fff;
     border: none;
     border-radius: 5px;
-    cursor: pointer;
+    cursor: pointer; /* Added missing semicolon here */
   }
 
   h2 {
