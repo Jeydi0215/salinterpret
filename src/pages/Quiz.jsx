@@ -27,16 +27,28 @@ const ImageContainer = styled.div`
 const AnswerButton = styled.button`
   padding: 10px 20px;
   margin: 10px;
-  background-color: ${({ isCorrect, isSelected }) =>
-    isSelected ? (isCorrect ? 'green' : 'red') : '#333'};
+  background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
+    isSelected
+      ? isCorrect
+        ? 'green' // Correctly selected answer
+        : 'red' // Incorrectly selected answer
+      : highlightCorrect
+      ? 'orange' // Highlight the correct answer
+      : '#333'};
   color: #fff;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
+  cursor: ${({ isSelected }) => (isSelected ? 'not-allowed' : 'pointer')};
 
   &:hover {
-    background-color: ${({ isCorrect, isSelected }) =>
-      isSelected ? (isCorrect ? 'green' : 'red') : '#555'};
+    background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
+      isSelected
+        ? isCorrect
+          ? 'green'
+          : 'red'
+        : highlightCorrect
+        ? 'orange'
+        : '#555'};
   }
 `;
 
@@ -53,6 +65,7 @@ const QuizPage = () => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [answerChoices, setAnswerChoices] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [highlightCorrect, setHighlightCorrect] = useState(false); // Tracks whether to highlight the correct answer
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -106,6 +119,8 @@ const QuizPage = () => {
 
     if (selectedAnswer === images[currentIndex]?.title) {
       setScore(score + 1);
+    } else {
+      setHighlightCorrect(true); // Highlight the correct answer when a wrong answer is selected
     }
 
     setTimeout(() => {
@@ -113,6 +128,7 @@ const QuizPage = () => {
       if (nextIndex < images.length) {
         setCurrentIndex(nextIndex);
         setSelectedAnswer(null);
+        setHighlightCorrect(false); // Reset highlight for the next question
       } else {
         setQuizCompleted(true);
       }
@@ -150,6 +166,9 @@ const QuizPage = () => {
                     onClick={() => handleAnswer(choice)}
                     isSelected={selectedAnswer === choice}
                     isCorrect={choice === images[currentIndex]?.title}
+                    highlightCorrect={
+                      highlightCorrect && choice === images[currentIndex]?.title
+                    }
                   >
                     {choice}
                   </AnswerButton>
