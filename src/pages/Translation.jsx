@@ -6,6 +6,7 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top:50px;
   justify-content: center;
   background-color: white;
   height: 100vh;
