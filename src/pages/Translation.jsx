@@ -10,17 +10,12 @@ const TranslationContainer = styled.div`
   height: 100vh;
 `;
 
-const Placeholder = styled.div`
+const TranslationImage = styled.img`
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: lightgray;
-  color: black;
-  font-size: 1.5rem;
-  font-weight: bold;
+  object-fit: cover;
+  background-color: black;
 `;
 
 const TranslationText = styled.div`
@@ -66,11 +61,12 @@ const ClearAllButton = styled.button`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
+  const [image, setImage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000', {
+        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -81,6 +77,7 @@ function ASLTranslationPage() {
         }
 
         const data = await response.json();
+        setImage(`data:image/jpeg;base64,${data.img}`);
         if (data.translation !== '') {
           setTranslation((prevTranslation) => prevTranslation + data.translation);
         }
@@ -105,9 +102,7 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <Placeholder>
-        <p>Camera is disabled</p>
-      </Placeholder>
+      {image && <TranslationImage src={image} alt="Camera feed" />}
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -120,8 +115,8 @@ function ASLTranslationPage() {
       )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Translation will be fetched periodically.</p>
-        <p>2. Please follow the instructions from the connected input source.</p>
+        <p>1. Place your hand in front of the camera (handled by the backend).</p>
+        <p>2. Wait for the translation to appear.</p>
         <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
