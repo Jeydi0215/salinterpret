@@ -232,8 +232,8 @@ export default function Upload() {
               onChange={(e) => setSubCategory(e.target.value)}
             >
               <option value=''>Select Category</option>
-              <option value='common-phrases'>Common Phrases</option>
-              <option value='alphabets'>Alphabets</option>
+              <option value='Common Phrases'>Common Phrases</option>
+              <option value='Alphabets'>Alphabets</option>
             </InputField>
           )}
 
