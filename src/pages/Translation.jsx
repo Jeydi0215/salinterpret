@@ -6,7 +6,6 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top:50px;
   justify-content: center;
   background-color: white;
   height: 100vh;
@@ -15,6 +14,7 @@ const TranslationContainer = styled.div`
 const TranslationImage = styled.img`
   width: 600px;
   height: 600px;
+  margin-top:50px;
   background-color: black;
   object-fit: cover;
   border: 2px solid gray;
