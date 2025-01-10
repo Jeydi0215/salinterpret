@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Navbar from '../components/UserNavbar';
 
@@ -10,19 +10,17 @@ const TranslationContainer = styled.div`
   height: 100vh;
 `;
 
-const CameraPlaceholder = styled.div`
+const Placeholder = styled.div`
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
-`;
-
-const CameraFeed = styled.video`
-  max-width: 100%;
-  max-height: 100%;
+  background-color: lightgray;
+  color: black;
+  font-size: 1.5rem;
+  font-weight: bold;
 `;
 
 const TranslationText = styled.div`
@@ -68,26 +66,8 @@ const ClearAllButton = styled.button`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
-  const videoRef = useRef(null);
 
   useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user' },
-          audio: false,
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error.message);
-      }
-    };
-
-    startCamera();
-
     const fetchData = async () => {
       try {
         const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
@@ -125,9 +105,9 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <CameraPlaceholder>
-        <CameraFeed ref={videoRef} />
-      </CameraPlaceholder>
+      <Placeholder>
+        <p>Camera is disabled</p>
+      </Placeholder>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -140,8 +120,8 @@ function ASLTranslationPage() {
       )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear.</p>
+        <p>1. Translation will be fetched periodically.</p>
+        <p>2. Please follow the instructions from the connected input source.</p>
         <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
