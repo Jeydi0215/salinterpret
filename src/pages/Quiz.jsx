@@ -8,7 +8,7 @@ import { imageDb } from '../utils/firebase-config';
 const QuizContainer = styled.div`
   margin-top: 60px;
   padding: 20px;
-  background: linear-gradient(135deg, #1e1e2f, #2b2b45);
+  background:black;
   color: #fff;
   font-family: Arial, sans-serif;
   text-align: center;
