@@ -36,11 +36,11 @@ const AnswerButton = styled.button`
   background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
     isSelected
       ? isCorrect
-        ? 'green'
-        : 'red'
+        ? 'green' // Correct answer selected
+        : 'red' // Wrong answer selected
       : highlightCorrect
-      ? 'orange'
-      : '#444'};
+      ? 'orange' // Highlight correct answer after wrong choice
+      : '#444'}; // Default background
   color: #fff;
   border: 2px solid #555;
   border-radius: 5px;
