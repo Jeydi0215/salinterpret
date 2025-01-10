@@ -45,7 +45,9 @@ const ResultGrid = ({ results, onCardClick }) => {
 
 const CoursesPage = () => {
   const [files, setFiles] = useState([]);
+  const [filteredFiles, setFilteredFiles] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [category, setCategory] = useState(''); // State for category filter
   const navigate = useNavigate(); // Hook for navigation
 
   useEffect(() => {
@@ -66,6 +68,7 @@ const CoursesPage = () => {
             id: item.name, 
             title: metadata.customMetadata?.title || item.name,
             tags: metadata.customMetadata?.tags || 'No tags available',
+            category: metadata.customMetadata?.category || 'Uncategorized', // Assume categories are added in metadata
             thumbnailUrl: url,
             timestamp: timestamp
           };
@@ -77,6 +80,7 @@ const CoursesPage = () => {
         console.log('Sorted Images:', fileUrls); // Log sorted images
 
         setFiles(fileUrls);
+        setFilteredFiles(fileUrls); // Initially show all files
       } catch (error) {
         console.error('Error fetching files:', error);
       }
@@ -84,6 +88,14 @@ const CoursesPage = () => {
 
     fetchFiles(); 
   }, []);
+
+  useEffect(() => {
+    if (category === '') {
+      setFilteredFiles(files); // If no category is selected, show all files
+    } else {
+      setFilteredFiles(files.filter(file => file.category === category)); // Filter by category
+    }
+  }, [category, files]); // Update filtered files when category changes
 
   const handleCardClick = (result) => {
     setSelectedResult(result);
@@ -97,11 +109,19 @@ const CoursesPage = () => {
     <>
       <UserNavbar />
       <PageContainer>
-        <ResultGrid results={files} onCardClick={handleCardClick} />
+        {/* Category Dropdown */}
+        <CategorySelect onChange={(e) => setCategory(e.target.value)} value={category}>
+          <option value="">All Categories</option>
+          <option value="Category1">Category 1</option>
+          <option value="Category2">Category 2</option>
+          <option value="Category3">Category 3</option>
+          {/* Add more categories as needed */}
+        </CategorySelect>
+
+        <ResultGrid results={filteredFiles} onCardClick={handleCardClick} />
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
-          
             <p><strong>Instruction:</strong> {selectedResult.tags}</p>
             <button
               onClick={() => setSelectedResult(null)}
@@ -162,6 +182,16 @@ const GridContainer = styled.div`
   }
 `;
 
+const CategorySelect = styled.select`
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  border: none;
+  width: 200px;
+`;
 
 const Popup = styled.div`
   position: fixed;
@@ -192,21 +222,20 @@ const Popup = styled.div`
     border-radius: 5px;
     cursor: pointer;
   }
-  h2{
-  font-size:30px;
 
+  h2 {
+    font-size: 30px;
   }
-  p{
-  font-size:25px;
+  p {
+    font-size: 25px;
   }
-  
 `;
 
 const QuizButton = styled.button`
   padding: 20px 30px;
   background-color: #41bfde;
   font-size: 20px;
-  font-weight:bold;
+  font-weight: bold;
   color: black;
   border: none;
   border-radius: 5px;
