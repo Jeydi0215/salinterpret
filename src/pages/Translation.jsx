@@ -12,8 +12,8 @@ const TranslationContainer = styled.div`
 `;
 
 const TranslationImage = styled.img`
-  width: 300px;
-  height: 300px;
+  width: 600px;
+  height: 600px;
   background-color: black;
   object-fit: cover;
   border: 2px solid gray;
