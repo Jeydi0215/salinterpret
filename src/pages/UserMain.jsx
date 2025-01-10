@@ -3,7 +3,7 @@ import { getStorage, ref, listAll, getDownloadURL, getMetadata } from 'firebase/
 import UserNavbar from '../components/UserNavbar';
 import styled from 'styled-components';
 import background from "../assets/login.jpg";
-import MovieLogo from "../assets/xd.webp";
+import MovieLogo from "../assets/homeTitle.webp";
 import { FaPlay } from 'react-icons/fa';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
