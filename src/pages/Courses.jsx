@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+fimport React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
@@ -112,8 +112,8 @@ const CoursesPage = () => {
         {/* Category Dropdown */}
         <CategorySelect onChange={(e) => setCategory(e.target.value)} value={category}>
           <option value="">All Categories</option>
-          <option value="Category1">Category 1</option>
-          <option value="Category2">Category 2</option>
+          <option value="Category1">Alphabets</option>
+          <option value="Category2">Common Phrases</option>
           <option value="Category3">Category 3</option>
           {/* Add more categories as needed */}
         </CategorySelect>
