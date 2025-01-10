@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { imageDb } from '../utils/firebase-config';
 
 // Styled components
-const QuizContainer = styled.div
+const QuizContainer = styled.div`
   margin-top: 60px;
   padding: 20px;
   background: linear-gradient(135deg, #1e1e2f, #2b2b45);
@@ -17,9 +17,9 @@ const QuizContainer = styled.div
   flex-direction: column;
   align-items: center;
   justify-content: center;
-;
+`;
 
-const ImageContainer = styled.div
+const ImageContainer = styled.div`
   margin-bottom: 20px;
 
   img {
@@ -28,12 +28,11 @@ const ImageContainer = styled.div
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
-;
+`;
 
 const AnswerButton = styled.button`
-  padding: 15px 30px; /* Increased padding for larger buttons */
+  padding: 15px 30px;
   margin: 10px;
-  font-size: 18px; /* Increased font size for better readability */
   background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
     isSelected
       ? isCorrect
@@ -44,7 +43,7 @@ const AnswerButton = styled.button`
       : '#444'};
   color: #fff;
   border: 2px solid #555;
-  border-radius: 8px; /* Slightly larger radius for a smoother look */
+  border-radius: 5px;
   cursor: ${({ isSelected }) => (isSelected ? 'not-allowed' : 'pointer')};
   transition: background-color 0.3s, transform 0.2s;
 
@@ -58,7 +57,8 @@ const AnswerButton = styled.button`
     transform: scale(0.95);
   }
 `;
-const ProgressBarContainer = styled.div
+
+const ProgressBarContainer = styled.div`
   width: 80%;
   max-width: 600px;
   margin: 20px auto;
@@ -67,27 +67,27 @@ const ProgressBarContainer = styled.div
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-;
+`;
 
-const ProgressBar = styled.div
+const ProgressBar = styled.div`
   width: ${({ progress }) => progress}%;
   height: 100%;
   background: linear-gradient(90deg, #ff5722, #ff9800);
   transition: width 0.4s ease;
-;
+`;
 
-const ScoreDisplay = styled.div
+const ScoreDisplay = styled.div`
   margin: 20px 0;
   font-size: 18px;
   color: #ffd700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-;
+`;
 
-const QuizButtonContainer = styled.div
+const QuizButtonContainer = styled.div`
   display: flex;
   justify-content: center;
   margin-top: 20px;
-;
+`;
 
 const QuizPage = () => {
   const [images, setImages] = useState([]);
@@ -191,7 +191,7 @@ const QuizPage = () => {
           {images[currentIndex] && (
             <>
               <ImageContainer>
-                <img src={images[currentIndex].thumbnailUrl} alt={Question ${currentIndex + 1}} />
+                <img src={images[currentIndex].thumbnailUrl} alt={`Question ${currentIndex + 1}`} />
               </ImageContainer>
               <div>
                 {answerChoices[currentIndex]?.choices.map((choice, index) => (
