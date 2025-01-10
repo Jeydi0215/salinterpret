@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
+import { getDownloadURL, listAll, ref, getMetadata, uploadBytesResumable } from 'firebase/storage';
 import styled from 'styled-components';
 import UserNavbar from '../components/UserNavbar';
 import { imageDb } from '../utils/firebase-config'; // Adjust path as needed
+import { v4 as uuidv4 } from 'uuid';  // For generating unique file names
 
 // Styled components
 const PageContainer = styled.div`
@@ -44,31 +45,32 @@ const ResultGrid = ({ results, onCardClick }) => {
 };
 
 const CoursesPage = () => {
+  const [file, setFile] = useState(null);
   const [files, setFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [title, setTitle] = useState('');
+  const [tags, setTags] = useState('');
+  const [location, setLocation] = useState('');
   const [category, setCategory] = useState(''); // State for category filter
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate(); // Hook for navigation
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const listRef = ref(imageDb, 'courses');
+        const listRef = ref(imageDb, 'courses'); // Reference to the courses folder
         const res = await listAll(listRef);
         const fileUrls = await Promise.all(res.items.map(async (item) => {
           const url = await getDownloadURL(item);
           const metadata = await getMetadata(item);
-          const timestamp = new Date(metadata.timeCreated); // Use timeCreated field
-
-          console.log('Image URL:', url); // Log the URL
-          console.log('Metadata:', metadata); // Log metadata
-          console.log('Timestamp:', timestamp); // Log the timestamp
+          const timestamp = new Date(metadata.timeCreated);
 
           return { 
             id: item.name, 
             title: metadata.customMetadata?.title || item.name,
             tags: metadata.customMetadata?.tags || 'No tags available',
-            category: metadata.customMetadata?.category || 'Uncategorized', // Assume categories are added in metadata
+            category: metadata.customMetadata?.category || 'Uncategorized',
             thumbnailUrl: url,
             timestamp: timestamp
           };
@@ -76,8 +78,6 @@ const CoursesPage = () => {
 
         // Sort images from oldest to newest based on timestamp
         fileUrls.sort((a, b) => a.timestamp - b.timestamp);
-
-        console.log('Sorted Images:', fileUrls); // Log sorted images
 
         setFiles(fileUrls);
         setFilteredFiles(fileUrls); // Initially show all files
@@ -95,7 +95,79 @@ const CoursesPage = () => {
     } else {
       setFilteredFiles(files.filter(file => file.category === category)); // Filter by category
     }
-  }, [category, files]); // Update filtered files when category changes
+  }, [category, files]);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value);
+  };
+
+  const handleTagsChange = (e) => {
+    setTags(e.target.value);
+  };
+
+  const handleLocationChange = (e) => {
+    setLocation(e.target.value);
+  };
+
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
+  const handleClick = () => {
+    if (!file) {
+      alert('Please choose a file before uploading.');
+      return;
+    }
+
+    let folderPath = '';
+    if (location === 'alphabets') {
+      folderPath = 'courses/alphabets';
+    } else if (location === 'commonPhrases') {
+      folderPath = 'courses/commonPhrases';
+    } else {
+      folderPath = 'courses/easy'; // Default location for other cases
+    }
+
+    const fileRef = ref(imageDb, `${folderPath}/${uuidv4()}`);
+    const metadata = {
+      customMetadata: {
+        title,
+        tags,
+        category,
+      },
+    };
+
+    const uploadTask = uploadBytesResumable(fileRef, file, metadata);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setProgress(progress);
+      },
+      (error) => {
+        console.error('Error uploading file:', error);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+          console.log('File URL:', url);
+          setFile(null);
+          setTitle('');
+          setTags('');
+          setLocation('');
+          setCategory('');
+          setProgress(0);
+
+          // After uploading, fetch the updated file list
+          fetchFiles(); // Refresh the list of files
+        });
+      }
+    );
+  };
 
   const handleCardClick = (result) => {
     setSelectedResult(result);
@@ -110,15 +182,41 @@ const CoursesPage = () => {
       <UserNavbar />
       <PageContainer>
         {/* Category Dropdown */}
-        <CategorySelect onChange={(e) => setCategory(e.target.value)} value={category}>
+        <CategorySelect onChange={handleCategoryChange} value={category}>
           <option value="">All Categories</option>
-          <option value="Category1">Alphabets</option>
-          <option value="Category2">Common Phrases</option>
-          <option value="Category3">Category 3</option>
+          <option value="alphabets">Alphabets</option>
+          <option value="commonPhrases">Common Phrases</option>
           {/* Add more categories as needed */}
         </CategorySelect>
 
+        {/* File Upload Section */}
+        <FileUploadSection>
+          <input type="file" onChange={handleFileChange} />
+          <input 
+            type="text" 
+            placeholder="Enter Title" 
+            value={title} 
+            onChange={handleTitleChange} 
+          />
+          <input 
+            type="text" 
+            placeholder="Enter Tags" 
+            value={tags} 
+            onChange={handleTagsChange} 
+          />
+          <select value={location} onChange={handleLocationChange}>
+            <option value="">Select Location</option>
+            <option value="alphabets">Alphabets</option>
+            <option value="commonPhrases">Common Phrases</option>
+          </select>
+          <button onClick={handleClick}>Upload</button>
+          <progress value={progress} max="100" />
+        </FileUploadSection>
+
+        {/* File Grid */}
         <ResultGrid results={filteredFiles} onCardClick={handleCardClick} />
+
+        {/* Selected File Popup */}
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
@@ -131,6 +229,8 @@ const CoursesPage = () => {
             </button>
           </Popup>
         )}
+
+        {/* Quiz Button */}
         <QuizButton onClick={goToQuiz}>
           Go to Quiz
         </QuizButton>
@@ -140,8 +240,8 @@ const CoursesPage = () => {
 };
 
 const CardContainer = styled.div`
-  flex: 1 1 calc(25% - 20px); // Each card takes up 25% width with some gap
-  max-width: 300px;           // Optional max width for cards
+  flex: 1 1 calc(25% - 20px); 
+  max-width: 300px;           
   cursor: pointer;
 
   .thumbnail {
@@ -168,18 +268,6 @@ const GridContainer = styled.div`
   padding: 20px;
   gap: 20px;                    
   justify-content: space-between; 
-
-  @media (max-width: 1024px) {
-    gap: 15px;                  
-  }
-
-  @media (max-width: 768px) {
-    flex: 1 1 calc(50% - 20px); 
-  }
-
-  @media (max-width: 480px) {
-    flex: 1 1 100%;              
-  }
 `;
 
 const CategorySelect = styled.select`
@@ -191,6 +279,22 @@ const CategorySelect = styled.select`
   border-radius: 5px;
   border: none;
   width: 200px;
+`;
+
+const FileUploadSection = styled.div`
+  margin-bottom: 20px;
+  input, select {
+    margin: 5px 0;
+    padding: 10px;
+    font-size: 16px;
+  }
+  button {
+    padding: 10px;
+    background-color: #41bfde;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
 `;
 
 const Popup = styled.div`
@@ -205,30 +309,6 @@ const Popup = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   max-width: 80vw;
-
-  .popup-image {
-    width: 100%;
-    border-radius: 8px;
-    max-height: 400px;
-    object-fit: cover;
-  }
-
-  .close-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: black;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer; /* Added missing semicolon here */
-  }
-
-  h2 {
-    font-size: 30px;
-  }
-  p {
-    font-size: 25px;
-  }
 `;
 
 const QuizButton = styled.button`
