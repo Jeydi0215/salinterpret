@@ -142,6 +142,7 @@ export default function Upload() {
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
   const [location, setLocation] = useState('');
+  const [subCategory, setSubCategory] = useState('');  // New state for the second dropdown
   const [progress, setProgress] = useState(0);
 
   const handleFileChange = (e) => {
@@ -156,13 +157,14 @@ export default function Upload() {
       return;
     }
 
-    const folderPath = location === 'courses' ? 'courses' : 'easy';
+    const folderPath = location === 'courses' ? `${location}/${subCategory}` : location;
     const fileRef = ref(imageDb, `${folderPath}/${v4()}`);
     const metadata = {
       customMetadata: {
         title,
         tags,
         location,
+        subCategory,
       },
     };
 
@@ -184,6 +186,7 @@ export default function Upload() {
           setTitle('');
           setTags('');
           setLocation('');
+          setSubCategory('');
           setProgress(0);
         });
       }
@@ -212,12 +215,28 @@ export default function Upload() {
           <InputField
             as='select'
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setSubCategory(''); // Reset subcategory when location changes
+            }}
           >
             <option value=''>Select Location</option>
             <option value='courses'>Courses</option>
             <option value='main'>Main</option>
           </InputField>
+
+          {location === 'courses' && (
+            <InputField
+              as='select'
+              value={subCategory}
+              onChange={(e) => setSubCategory(e.target.value)}
+            >
+              <option value=''>Select Category</option>
+              <option value='common-phrases'>Common Phrases</option>
+              <option value='alphabets'>Alphabets</option>
+            </InputField>
+          )}
+
           <InputFile
             type='file'
             onChange={handleFileChange}
