@@ -70,7 +70,7 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://flasky-d9sr.onrender.com/translate', {
+        const response = await fetch('http://127.0.0.1:5000', {
           headers: {
             'Content-Type': 'application/json',
           },
