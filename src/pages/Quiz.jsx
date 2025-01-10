@@ -8,15 +8,10 @@ import { imageDb } from '../utils/firebase-config';
 const QuizContainer = styled.div`
   margin-top: 60px;
   padding: 20px;
-  background: linear-gradient(135deg, #1e1e2f, #2b2b45);
+  background: black;
   color: #fff;
   font-family: Arial, sans-serif;
   text-align: center;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 `;
 
 const ImageContainer = styled.div`
@@ -26,66 +21,34 @@ const ImageContainer = styled.div`
     width: 80%;
     max-width: 500px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
 `;
 
-const AnswerButton = styled.button`
-  padding: 10px 20px;
+const KahootButton = styled.button`
+  width: 45%;
+  padding: 15px;
   margin: 10px;
-  background-color: ${({ isCorrect, isSelected, highlightCorrect }) =>
-    isSelected
-      ? isCorrect
-        ? 'green'
-        : 'red'
-      : highlightCorrect
-      ? 'orange'
-      : '#444'};
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
   color: #fff;
-  border: 2px solid #555;
-  border-radius: 5px;
   cursor: ${({ isSelected }) => (isSelected ? 'not-allowed' : 'pointer')};
-  transition: background-color 0.3s, transform 0.2s;
+  background-color: ${({ color }) => color};
+  box-shadow: ${({ isSelected }) =>
+    isSelected ? '0 0 10px rgba(0, 255, 0, 0.8)' : '0 4px 6px rgba(0, 0, 0, 0.2)'};
+  transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: ${({ isSelected, highlightCorrect }) =>
-      isSelected ? '#555' : highlightCorrect ? 'orange' : '#666'};
-    transform: scale(1.05);
+    background-color: ${({ isSelected, color }) =>
+      isSelected ? color : 'rgba(255, 255, 255, 0.7)'};
   }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const ProgressBarContainer = styled.div`
-  width: 80%;
-  max-width: 600px;
-  margin: 20px auto;
-  height: 20px;
-  background: #333;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-`;
-
-const ProgressBar = styled.div`
-  width: ${({ progress }) => progress}%;
-  height: 100%;
-  background: linear-gradient(90deg, #ff5722, #ff9800);
-  transition: width 0.4s ease;
-`;
-
-const ScoreDisplay = styled.div`
-  margin: 20px 0;
-  font-size: 18px;
-  color: #ffd700;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 `;
 
 const QuizButtonContainer = styled.div`
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   margin-top: 20px;
 `;
 
@@ -98,6 +61,8 @@ const QuizPage = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [highlightCorrect, setHighlightCorrect] = useState(false);
   const navigate = useNavigate();
+
+  const buttonColors = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50']; // Red, Blue, Yellow, Green
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -117,6 +82,7 @@ const QuizPage = () => {
           })
         );
 
+        // Shuffle and select 7 random images
         const shuffled = fileUrls.sort(() => 0.5 - Math.random()).slice(0, 7);
         setImages(shuffled);
         setAnswerChoices(generateChoices(shuffled));
@@ -176,38 +142,31 @@ const QuizPage = () => {
           <h2>Quiz Completed!</h2>
           <p>Your score: {score} out of {images.length}</p>
           <QuizButtonContainer>
-            <AnswerButton onClick={handleReturnToCourses}>
+            <KahootButton onClick={handleReturnToCourses} color="#333">
               Return to Courses
-            </AnswerButton>
+            </KahootButton>
           </QuizButtonContainer>
         </>
       ) : (
         <>
           <h2>Question {currentIndex + 1}</h2>
-          <ProgressBarContainer>
-            <ProgressBar progress={((currentIndex + 1) / images.length) * 100} />
-          </ProgressBarContainer>
-          <ScoreDisplay>Score: {score}</ScoreDisplay>
           {images[currentIndex] && (
             <>
               <ImageContainer>
                 <img src={images[currentIndex].thumbnailUrl} alt={`Question ${currentIndex + 1}`} />
               </ImageContainer>
-              <div>
+              <QuizButtonContainer>
                 {answerChoices[currentIndex]?.choices.map((choice, index) => (
-                  <AnswerButton
+                  <KahootButton
                     key={index}
                     onClick={() => handleAnswer(choice)}
                     isSelected={selectedAnswer === choice}
-                    isCorrect={choice === images[currentIndex]?.title}
-                    highlightCorrect={
-                      highlightCorrect && choice === images[currentIndex]?.title
-                    }
+                    color={buttonColors[index % buttonColors.length]}
                   >
                     {choice}
-                  </AnswerButton>
+                  </KahootButton>
                 ))}
-              </div>
+              </QuizButtonContainer>
             </>
           )}
         </>
