@@ -165,9 +165,18 @@ const QuizPage = () => {
           setQuizCompleted(true);
         } else {
           alert('You need at least 5 points to move to the next course!');
+          resetQuiz();
         }
       }
     }, 2000);
+  };
+
+  const resetQuiz = () => {
+    setCurrentIndex(0);
+    setScore(0);
+    setSelectedAnswer(null);
+    setHighlightCorrect(false);
+    setQuizCompleted(false);
   };
 
   const handleReturnToCourses = () => {
