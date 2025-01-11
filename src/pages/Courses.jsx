@@ -196,12 +196,14 @@ const GridContainer = styled.div`
 const CategorySelect = styled.select`
   padding: 10px;
   font-size: 16px;
-  margin-bottom: 20px;
   background-color: #333;
   color: white;
   border-radius: 5px;
   border: none;
   width: 200px;
+  position: absolute;
+  right: 20px;  
+  top: 20px;    
 `;
 
 const Popup = styled.div`
