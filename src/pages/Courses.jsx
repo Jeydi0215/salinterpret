@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
 import UserNavbar from '../components/UserNavbar';
-import { imageDb } from '../utils/firebase-config'; // Adjust the path as needed
+import { imageDb } from '../utils/firebase-config'; // Adjust path as needed
 
 // Styled components
 const PageContainer = styled.div`
@@ -21,7 +21,11 @@ const PageContainer = styled.div`
 const ResultCard = ({ result, onClick }) => {
   return (
     <CardContainer onClick={() => onClick(result)}>
-      <img src={result.thumbnailUrl} alt={result.title} className="thumbnail" />
+      <img
+        src={result.thumbnailUrl}
+        alt={result.title}
+        className="thumbnail"
+      />
       <div className="title">
         <h4>{result.title}</h4>
       </div>
@@ -33,7 +37,7 @@ const ResultGrid = ({ results, onCardClick }) => {
   return (
     <GridContainer>
       {results.map((result) => (
-        <ResultCard key={result.id} result={result} onClick={onCardClick} />
+        <ResultCard key={result.id} result={result} onCardClick={onCardClick} />
       ))}
     </GridContainer>
   );
@@ -44,9 +48,9 @@ const CoursesPage = () => {
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
   const [category, setCategory] = useState(''); // State for category filter
+  const [categories, setCategories] = useState([]); // State for unique categories
   const navigate = useNavigate(); // Hook for navigation
 
-  // Fetch files from Firebase Storage
   useEffect(() => {
     const fetchFiles = async () => {
       try {
@@ -56,13 +60,13 @@ const CoursesPage = () => {
           res.items.map(async (item) => {
             const url = await getDownloadURL(item);
             const metadata = await getMetadata(item);
-            const timestamp = new Date(metadata.timeCreated);
+            const timestamp = new Date(metadata.timeCreated); // Use timeCreated field
 
             return {
               id: item.name,
               title: metadata.customMetadata?.title || item.name,
               tags: metadata.customMetadata?.tags || 'No tags available',
-              category: metadata.customMetadata?.category || 'Uncategorized',
+              category: metadata.customMetadata?.category || 'Uncategorized', // Assume categories are added in metadata
               thumbnailUrl: url,
               timestamp: timestamp,
             };
@@ -71,8 +75,15 @@ const CoursesPage = () => {
 
         // Sort images from oldest to newest based on timestamp
         fileUrls.sort((a, b) => a.timestamp - b.timestamp);
+
         setFiles(fileUrls);
         setFilteredFiles(fileUrls); // Initially show all files
+
+        // Extract unique categories
+        const uniqueCategories = [
+          ...new Set(fileUrls.map((file) => file.category)),
+        ];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error('Error fetching files:', error);
       }
@@ -81,16 +92,14 @@ const CoursesPage = () => {
     fetchFiles();
   }, []);
 
-  // Update the displayed files when the category changes
   useEffect(() => {
     if (category === '') {
       setFilteredFiles(files); // If no category is selected, show all files
     } else {
       setFilteredFiles(files.filter((file) => file.category === category)); // Filter by category
     }
-  }, [category, files]);
+  }, [category, files]); // Update filtered files when category changes
 
-  // Handle card click to display the popup
   const handleCardClick = (result) => {
     setSelectedResult(result);
   };
@@ -103,29 +112,34 @@ const CoursesPage = () => {
     <>
       <UserNavbar />
       <PageContainer>
-        {/* Category Dropdown */}
-        <CategorySelect onChange={(e) => setCategory(e.target.value)} value={category}>
+        {/* Dynamic Category Dropdown */}
+        <CategorySelect
+          onChange={(e) => setCategory(e.target.value)}
+          value={category}
+        >
           <option value="">All Categories</option>
-          <option value="Alphabet">Alphabets</option>
-          <option value="Common Phrases">Common Phrases</option>
-          {/* Add more categories as needed */}
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
         </CategorySelect>
 
         <ResultGrid results={filteredFiles} onCardClick={handleCardClick} />
-
-        {/* Popup for displaying details */}
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
             <p>
               <strong>Instruction:</strong> {selectedResult.tags}
             </p>
-            <button onClick={() => setSelectedResult(null)} className="close-button">
+            <button
+              onClick={() => setSelectedResult(null)}
+              className="close-button"
+            >
               Close
             </button>
           </Popup>
         )}
-
         <QuizButton onClick={goToQuiz}>Go to Quiz</QuizButton>
       </PageContainer>
     </>
@@ -134,13 +148,13 @@ const CoursesPage = () => {
 
 const CardContainer = styled.div`
   flex: 1 1 calc(25% - 20px); // Each card takes up 25% width with some gap
-  max-width: 300px;
+  max-width: 300px;           // Optional max width for cards
   cursor: pointer;
 
   .thumbnail {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
+    width: 100%;               
+    height: auto;              
+    object-fit: cover;         
     border-radius: 8px;
   }
 
@@ -159,19 +173,19 @@ const GridContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   padding: 20px;
-  gap: 20px;
-  justify-content: space-between;
+  gap: 20px;                    
+  justify-content: space-between; 
 
   @media (max-width: 1024px) {
-    gap: 15px;
+    gap: 15px;                  
   }
 
   @media (max-width: 768px) {
-    flex: 1 1 calc(50% - 20px);
+    flex: 1 1 calc(50% - 20px); 
   }
 
   @media (max-width: 480px) {
-    flex: 1 1 100%;
+    flex: 1 1 100%;              
   }
 `;
 
@@ -190,7 +204,7 @@ const Popup = styled.div`
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   background-color: #fff;
   color: #000;
   padding: 30px;
@@ -199,6 +213,13 @@ const Popup = styled.div`
   z-index: 1000;
   max-width: 80vw;
 
+  .popup-image {
+    width: 100%;
+    border-radius: 8px;
+    max-height: 400px;
+    object-fit: cover;
+  }
+
   .close-button {
     margin-top: 10px;
     padding: 10px 20px;
@@ -206,13 +227,12 @@ const Popup = styled.div`
     color: #fff;
     border: none;
     border-radius: 5px;
-    cursor: pointer;
+    cursor: pointer; /* Added missing semicolon here */
   }
 
   h2 {
     font-size: 30px;
   }
-
   p {
     font-size: 25px;
   }
