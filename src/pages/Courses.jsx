@@ -7,7 +7,7 @@ import { imageDb } from '../utils/firebase-config'; // Adjust path as needed
 
 // Styled components
 const PageContainer = styled.div`
-  margin-top: 60px; 
+  margin-top: 60px;
   padding: 20px;
   background: black;
   color: #fff;
@@ -37,7 +37,7 @@ const ResultGrid = ({ results, onCardClick }) => {
   return (
     <GridContainer>
       {results.map((result) => (
-        <ResultCard key={result.id} result={result} onClick={onCardClick} />
+        <ResultCard key={result.id} result={result} onCardClick={onCardClick} />
       ))}
     </GridContainer>
   );
@@ -48,6 +48,7 @@ const CoursesPage = () => {
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
   const [category, setCategory] = useState(''); // State for category filter
+  const [categories, setCategories] = useState([]); // State for unique categories
   const navigate = useNavigate(); // Hook for navigation
 
   useEffect(() => {
@@ -55,45 +56,47 @@ const CoursesPage = () => {
       try {
         const listRef = ref(imageDb, 'courses'); // Referring to the "courses" folder in Firebase Storage
         const res = await listAll(listRef);
-        const fileUrls = await Promise.all(res.items.map(async (item) => {
-          const url = await getDownloadURL(item);
-          const metadata = await getMetadata(item);
-          const timestamp = new Date(metadata.timeCreated); // Use timeCreated field
+        const fileUrls = await Promise.all(
+          res.items.map(async (item) => {
+            const url = await getDownloadURL(item);
+            const metadata = await getMetadata(item);
+            const timestamp = new Date(metadata.timeCreated); // Use timeCreated field
 
-          console.log('Image URL:', url); // Log the URL
-          console.log('Metadata:', metadata); // Log metadata
-          console.log('Timestamp:', timestamp); // Log the timestamp
-
-          return { 
-            id: item.name, 
-            title: metadata.customMetadata?.title || item.name,
-            tags: metadata.customMetadata?.tags || 'No tags available',
-            category: metadata.customMetadata?.category || 'Uncategorized', // Assume categories are added in metadata
-            thumbnailUrl: url,
-            timestamp: timestamp
-          };
-        }));
+            return {
+              id: item.name,
+              title: metadata.customMetadata?.title || item.name,
+              tags: metadata.customMetadata?.tags || 'No tags available',
+              category: metadata.customMetadata?.category || 'Uncategorized', // Assume categories are added in metadata
+              thumbnailUrl: url,
+              timestamp: timestamp,
+            };
+          })
+        );
 
         // Sort images from oldest to newest based on timestamp
         fileUrls.sort((a, b) => a.timestamp - b.timestamp);
 
-        console.log('Sorted Images:', fileUrls); // Log sorted images
-
         setFiles(fileUrls);
         setFilteredFiles(fileUrls); // Initially show all files
+
+        // Extract unique categories
+        const uniqueCategories = [
+          ...new Set(fileUrls.map((file) => file.category)),
+        ];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error('Error fetching files:', error);
       }
     };
 
-    fetchFiles(); 
+    fetchFiles();
   }, []);
 
   useEffect(() => {
     if (category === '') {
       setFilteredFiles(files); // If no category is selected, show all files
     } else {
-      setFilteredFiles(files.filter(file => file.category === category)); // Filter by category
+      setFilteredFiles(files.filter((file) => file.category === category)); // Filter by category
     }
   }, [category, files]); // Update filtered files when category changes
 
@@ -109,19 +112,26 @@ const CoursesPage = () => {
     <>
       <UserNavbar />
       <PageContainer>
-        {/* Category Dropdown */}
-        <CategorySelect onChange={(e) => setCategory(e.target.value)} value={category}>
+        {/* Dynamic Category Dropdown */}
+        <CategorySelect
+          onChange={(e) => setCategory(e.target.value)}
+          value={category}
+        >
           <option value="">All Categories</option>
-          <option value="Alphabet">Alphabets</option>
-          <option value="Common Phrases">Common Phrases</option>
-          {/* Add more categories as needed */}
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
         </CategorySelect>
 
         <ResultGrid results={filteredFiles} onCardClick={handleCardClick} />
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
-            <p><strong>Instruction:</strong> {selectedResult.tags}</p>
+            <p>
+              <strong>Instruction:</strong> {selectedResult.tags}
+            </p>
             <button
               onClick={() => setSelectedResult(null)}
               className="close-button"
@@ -130,9 +140,7 @@ const CoursesPage = () => {
             </button>
           </Popup>
         )}
-        <QuizButton onClick={goToQuiz}>
-          Go to Quiz
-        </QuizButton>
+        <QuizButton onClick={goToQuiz}>Go to Quiz</QuizButton>
       </PageContainer>
     </>
   );
