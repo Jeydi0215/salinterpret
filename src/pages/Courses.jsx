@@ -18,9 +18,9 @@ const PageContainer = styled.div`
   justify-content: space-between;
 `;
 
-const ResultCard = ({ result, onClick }) => {
+const ResultCard = ({ result, onCardClick }) => {
   return (
-    <CardContainer onClick={() => onClick(result)}>
+    <CardContainer onClick={() => onCardClick(result)}>
       <img
         src={result.thumbnailUrl}
         alt={result.title}
