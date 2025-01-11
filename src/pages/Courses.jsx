@@ -101,11 +101,15 @@ const CoursesPage = () => {
   }, [category, files]); // Update filtered files when category changes
 
   const handleCardClick = (result) => {
-    setSelectedResult(result);
+    setSelectedResult(result); // Set selected result to trigger popup
   };
 
   const goToQuiz = () => {
     navigate('/quiz'); // Navigate to the quiz page
+  };
+
+  const closePopup = () => {
+    setSelectedResult(null); // Close popup
   };
 
   return (
@@ -126,20 +130,20 @@ const CoursesPage = () => {
         </CategorySelect>
 
         <ResultGrid results={filteredFiles} onCardClick={handleCardClick} />
+        
+        {/* Popup Logic */}
         {selectedResult && (
           <Popup>
             <h2>{selectedResult.title}</h2>
             <p>
               <strong>Instruction:</strong> {selectedResult.tags}
             </p>
-            <button
-              onClick={() => setSelectedResult(null)}
-              className="close-button"
-            >
+            <button onClick={closePopup} className="close-button">
               Close
             </button>
           </Popup>
         )}
+        
         <QuizButton onClick={goToQuiz}>Go to Quiz</QuizButton>
       </PageContainer>
     </>
@@ -213,11 +217,11 @@ const Popup = styled.div`
   z-index: 1000;
   max-width: 80vw;
 
-  .popup-image {
-    width: 100%;
-    border-radius: 8px;
-    max-height: 400px;
-    object-fit: cover;
+  h2 {
+    font-size: 30px;
+  }
+  p {
+    font-size: 25px;
   }
 
   .close-button {
@@ -227,14 +231,7 @@ const Popup = styled.div`
     color: #fff;
     border: none;
     border-radius: 5px;
-    cursor: pointer; /* Added missing semicolon here */
-  }
-
-  h2 {
-    font-size: 30px;
-  }
-  p {
-    font-size: 25px;
+    cursor: pointer;
   }
 `;
 
