@@ -28,9 +28,9 @@ const UploadContainer = styled.div`
   max-width: 1200px;
   padding: 20px;
   border-radius: 12px;
-  background: #FAF9F6;
+  background: #faf9f6;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  
+
   @media (min-width: 768px) {
     flex-direction: row;
   }
@@ -120,10 +120,10 @@ const ProgressBar = styled.progress`
   height: 20px;
   border-radius: 10px;
   appearance: none;
-  background: #FAF9F6;
+  background: #faf9f6;
 
   ::-webkit-progress-bar {
-    background: #FAF9F6;
+    background: #faf9f6;
   }
   ::-webkit-progress-value {
     background: #007bff;
@@ -142,7 +142,7 @@ export default function Upload() {
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
   const [location, setLocation] = useState('');
-  const [subCategory, setSubCategory] = useState('');  // New state for the second dropdown
+  const [subCategory, setSubCategory] = useState(''); // New state for the second dropdown
   const [progress, setProgress] = useState(0);
 
   const handleFileChange = (e) => {
@@ -157,14 +157,13 @@ export default function Upload() {
       return;
     }
 
-    const folderPath = location === 'courses' ? `${location}/${subCategory}` : location;
-    const fileRef = ref(imageDb, `${folderPath}/${v4()}`);
+    const fileRef = ref(imageDb, `courses/${v4()}`); // Store all files in a single folder or bucket
     const metadata = {
       customMetadata: {
         title,
         tags,
-        location,
-        subCategory,
+        location: location === 'courses' ? 'Courses' : 'Main', // Assign location
+        category: subCategory, // Assign the selected category as metadata
       },
     };
 
