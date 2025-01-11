@@ -203,7 +203,8 @@ const CategorySelect = styled.select`
   width: 200px;
   position: absolute;
   right: 20px;  
-  top: 20px;    
+  top: 60px;    
+  z-index: 10;   
 `;
 
 const Popup = styled.div`
