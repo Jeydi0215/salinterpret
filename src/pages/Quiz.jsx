@@ -8,7 +8,7 @@ import { imageDb } from '../utils/firebase-config';
 const QuizContainer = styled.div`
   margin-top: 60px;
   padding: 20px;
-  background:black;
+  background: black;
   color: #fff;
   font-family: Arial, sans-serif;
   text-align: center;
@@ -117,7 +117,10 @@ const QuizPage = () => {
           })
         );
 
-        const shuffled = fileUrls.sort(() => 0.5 - Math.random()).slice(0, 7);
+        // Filter images where title starts with an alphabet (A-Z)
+        const filteredImages = fileUrls.filter((image) => /^[a-zA-Z]/.test(image.title));
+
+        const shuffled = filteredImages.sort(() => 0.5 - Math.random()).slice(0, 7);
         setImages(shuffled);
         setAnswerChoices(generateChoices(shuffled));
       } catch (error) {
@@ -137,9 +140,7 @@ const QuizPage = () => {
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
 
-      const choices = [image.title, ...incorrectChoices].sort(
-        () => 0.5 - Math.random()
-      );
+      const choices = [image.title, ...incorrectChoices].sort(() => 0.5 - Math.random());
       return { image, choices };
     });
   };
@@ -160,7 +161,11 @@ const QuizPage = () => {
         setSelectedAnswer(null);
         setHighlightCorrect(false);
       } else {
-        setQuizCompleted(true);
+        if (score >= 5) {
+          setQuizCompleted(true);
+        } else {
+          alert('You need at least 5 points to move to the next course!');
+        }
       }
     }, 2000);
   };
@@ -200,9 +205,7 @@ const QuizPage = () => {
                     onClick={() => handleAnswer(choice)}
                     isSelected={selectedAnswer === choice}
                     isCorrect={choice === images[currentIndex]?.title}
-                    highlightCorrect={
-                      highlightCorrect && choice === images[currentIndex]?.title
-                    }
+                    highlightCorrect={highlightCorrect && choice === images[currentIndex]?.title}
                   >
                     {choice}
                   </AnswerButton>
