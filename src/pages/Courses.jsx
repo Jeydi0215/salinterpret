@@ -7,7 +7,7 @@ import { imageDb } from '../utils/firebase-config'; // Adjust path as needed
 
 // Styled components
 const PageContainer = styled.div`
-  margin-top: 60px;
+  margin-top: 80px;
   padding: 20px;
   background: black;
   color: #fff;
@@ -203,7 +203,7 @@ const CategorySelect = styled.select`
   width: 200px;
   position: absolute;
   right: 20px;  
-  top: 60px;    
+  top: 70px;    
   z-index: 10;   
 `;
 
