@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDownloadURL, listAll, ref, getMetadata } from 'firebase/storage';
 import styled from 'styled-components';
 import UserNavbar from '../components/UserNavbar';
-import { imageDb } from '../utils/firebase-config'; // Adjust path as needed
+import { imageDb } from '../utils/firebase-config'; // Adjust the path as needed
 
 // Styled components
 const PageContainer = styled.div`
@@ -46,6 +46,7 @@ const CoursesPage = () => {
   const [category, setCategory] = useState(''); // State for category filter
   const navigate = useNavigate(); // Hook for navigation
 
+  // Fetch files from Firebase Storage
   useEffect(() => {
     const fetchFiles = async () => {
       try {
@@ -80,6 +81,7 @@ const CoursesPage = () => {
     fetchFiles();
   }, []);
 
+  // Update the displayed files when the category changes
   useEffect(() => {
     if (category === '') {
       setFilteredFiles(files); // If no category is selected, show all files
@@ -88,6 +90,7 @@ const CoursesPage = () => {
     }
   }, [category, files]);
 
+  // Handle card click to display the popup
   const handleCardClick = (result) => {
     setSelectedResult(result);
   };
