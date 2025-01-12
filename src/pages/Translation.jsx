@@ -69,7 +69,7 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/translate', {
+        const response = await fetch('http://159.223.51.62/translate', {
           headers: {
             'Content-Type': 'application/json',
           },
