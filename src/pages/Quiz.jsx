@@ -93,14 +93,14 @@ const QuizButtonContainer = styled.div`
 const LegendContainer = styled.div`
   position: absolute;
   top: 50%;
-  right: 20px;
+  right: 10px;
   transform: translateY(-50%);
   background: #222;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   color: #fff;
-  font-size: 14px;
+  font-size: 17px;
   width: 250px;
   display: flex;
   flex-direction: column;
@@ -119,7 +119,7 @@ const LegendItem = styled.div`
 
   & div {
     width: 15px;
-    height: 15px;
+    height: 25px;
     border-radius: 50%;
   }
 `;
