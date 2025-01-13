@@ -17,6 +17,7 @@ const QuizContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 `;
 
 const ImageContainer = styled.div`
@@ -39,7 +40,7 @@ const AnswerButton = styled.button`
         ? 'green' // Correct answer selected
         : 'red' // Wrong answer selected
       : highlightCorrect
-      ? 'orange' // Highlight correct answer after wrong choice
+      ? 'green' // Highlight correct answer after wrong choice
       : '#444'}; // Default background
   color: #fff;
   border: 2px solid #555;
@@ -87,6 +88,38 @@ const QuizButtonContainer = styled.div`
   display: flex;
   justify-content: center;
   margin-top: 20px;
+`;
+
+const LegendContainer = styled.div`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 14px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const LegendItem = styled.div`
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+
+  & span {
+    margin-left: 8px;
+  }
+
+  & div {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+  }
 `;
 
 const QuizPage = () => {
@@ -185,6 +218,23 @@ const QuizPage = () => {
 
   return (
     <QuizContainer>
+      <LegendContainer>
+        <h3>Legend</h3>
+        <LegendItem>
+          <div style={{ backgroundColor: 'green' }}></div>
+          <span>Right Answer</span>
+        </LegendItem>
+        <LegendItem>
+          <div style={{ backgroundColor: 'red' }}></div>
+          <span>Wrong Answer</span>
+        </LegendItem>
+        <LegendItem>
+          <div style={{ backgroundColor: 'orange' }}></div>
+          <span>Correct Answer Highlighted (after wrong choice)</span>
+        </LegendItem>
+        <div>Passing score: 5</div>
+      </LegendContainer>
+
       {quizCompleted ? (
         <>
           <h2>Quiz Completed!</h2>
