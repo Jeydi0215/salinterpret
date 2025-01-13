@@ -93,7 +93,7 @@ const QuizButtonContainer = styled.div`
 const LegendContainer = styled.div`
   position: absolute;
   top: 50%;
-  right: 10px;
+  right: -40px;
   transform: translateY(-50%);
   background: #222;
   padding: 15px;
@@ -231,8 +231,6 @@ const QuizPage = () => {
           <span>Wrong Answer</span>
         </LegendItem>
         <LegendItem>
-          <div style={{ backgroundColor: 'orange' }}></div>
-          <span>Correct Answer Highlighted (after wrong choice)</span>
         </LegendItem>
         <div>Passing score: 5</div>
       </LegendContainer>
