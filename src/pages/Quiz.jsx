@@ -93,7 +93,7 @@ const QuizButtonContainer = styled.div`
 const LegendContainer = styled.div`
   position: absolute;
   top: 50%;
-  right: -40px;
+  right: 60px;
   transform: translateY(-50%);
   background: #222;
   padding: 15px;
