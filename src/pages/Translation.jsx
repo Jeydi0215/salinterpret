@@ -69,7 +69,7 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://159.223.51.62/translate', {
+        const response = await fetch('http://127.0.0.1:5000/translate', {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -118,9 +118,8 @@ function ASLTranslationPage() {
       )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera (handled by the backend).</p>
+        <p>1. Place your hand in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
       </Instructions>
     </TranslationContainer>
   );
