@@ -6,24 +6,28 @@ const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Center vertically */
   background-color: white;
-  height: 100vh; /* Full height of the viewport */
+  height: 100vh;
 `;
 
-const TranslationImage = styled.img`
-  width: 600px;
-  height: 600px;
+const CameraPlaceholder = styled.div`
+  width: 80%;
+  height: 50vh; 
+  margin-top: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: black;
-  object-fit: cover;
-  border: 2px solid gray;
-  margin-bottom: 2rem;
+`;
+
+const CameraFeed = styled.img`
+  max-width: 100%;
+  max-height: 100%;
 `;
 
 const TranslationText = styled.div`
-  margin-top: 1rem;
+  margin-top: 2rem;
   font-size: 1.5rem;
-  text-align: center;
   color: black;
 
   @media (max-width: 768px) {
@@ -42,14 +46,18 @@ const Instructions = styled.div`
   }
 `;
 
-const ClearButton = styled.button`
+const ClearButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
   margin-top: 1rem;
+`;
+
+const ClearButton = styled.button`
   padding: 0.5rem 1rem;
   font-size: 1rem;
 `;
 
 const ClearAllButton = styled.button`
-  margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
   background-color: #ff4d4d;
@@ -63,26 +71,20 @@ const ClearAllButton = styled.button`
 `;
 
 function ASLTranslationPage() {
+  const [cameraImage, setCameraImage] = useState('');
   const [translation, setTranslation] = useState('');
-  const [image, setImage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/translate', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
+        const response = await fetch('http://127.0.0.1:5000/translate');
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
-
         const data = await response.json();
-        setImage(`data:image/jpeg;base64,${data.img}`);
+        setCameraImage(data.img);
         if (data.translation !== '') {
-          setTranslation((prevTranslation) => prevTranslation + data.translation);
+          setTranslation(prevTranslation => prevTranslation + data.translation);
         }
       } catch (error) {
         console.error('Error fetching translation:', error.message);
@@ -95,7 +97,7 @@ function ASLTranslationPage() {
   }, []);
 
   const handleClearTranslation = () => {
-    setTranslation((prevTranslation) => prevTranslation.slice(0, -1));
+    setTranslation(prevTranslation => prevTranslation.slice(0, -1));
   };
 
   const handleClearAllTranslation = () => {
@@ -105,16 +107,22 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <TranslationImage src={image || ''} alt="Camera feed placeholder" />
+      <CameraPlaceholder>
+        {cameraImage ? (
+          <CameraFeed src={`data:image/jpeg;base64,${cameraImage}`} alt="Camera Feed" />
+        ) : (
+          <p>Loading camera...</p>
+        )}
+      </CameraPlaceholder>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation || 'No translation available yet.'}</p>
+        <p>{translation}</p>
       </TranslationText>
       {translation && (
-        <>
+        <ClearButtonContainer>
           <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
           <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
-        </>
+        </ClearButtonContainer>
       )}
       <Instructions>
         <h2>Instructions:</h2>
