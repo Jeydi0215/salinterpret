@@ -77,7 +77,7 @@ function ASLTranslationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://192.168.100.58:5000/translate');
+        const response = await fetch('https://f634-143-44-224-49.ngrok-free.app/translate');
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
