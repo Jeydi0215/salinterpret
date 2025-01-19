@@ -6,7 +6,12 @@
     "@clerk/clerk-react": "^4.30.7",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@hookform/resolvers": "^3.3.4",
+    "@mediapipe/hands": "^0.4.1675469240",
     "@reduxjs/toolkit": "^2.1.0",
+    "@teachablemachine/image": "^0.8.5",
+    "@tensorflow-models/handpose": "^0.1.0",
+    "@tensorflow/tfjs": "^1.7.4",
+    "@tensorflow/tfjs-data": "^4.22.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -55,8 +60,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": "18.x"
   }
 }
