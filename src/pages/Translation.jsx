@@ -78,7 +78,7 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null); // Ref for the webcam container
   const webcamRef = useRef(null);
 
-  const URL = "https://teachablemachine.withgoogle.com/models/LZLnNMPWq/";  
+  const URL = "https://teachablemachine.withgoogle.com/models/EnbSd9wbS/";  
   let model, webcam, maxPredictions;
 
   // Load model and webcam setup
