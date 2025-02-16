@@ -78,7 +78,7 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null); // Ref for the webcam container
   const webcamRef = useRef(null);
 
-  const URL = "https://teachablemachine.withgoogle.com/models/EnbSd9wbS/";  
+  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret.h5?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
   let model, webcam, maxPredictions;
 
   // Load model and webcam setup
