@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import * as tf from '@tensorflow/tfjs'; // TensorFlow.js for loading .h5 model
-import * as handpose from '@tensorflow-models/handpose'; // Handpose model for webcam usage
+import * as tmImage from '@teachablemachine/image';
 import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
@@ -21,6 +20,12 @@ const CameraContainer = styled.div`
   align-items: center;
   position: relative;
   background-color: black;
+`;
+
+const WebcamCanvas = styled.canvas`
+  position: absolute;
+  width: 100%;
+  height: 100%;
 `;
 
 const TranslationText = styled.div`
@@ -73,215 +78,43 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null); // Ref for the webcam container
   const webcamRef = useRef(null);
 
-  // Example of a URL for the model (change it according to your needs)
-  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2Fmodel.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
-  let model, webcam, handModel;
-
-  // Load model and webcam setup
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        // Load the model (you may need to adjust depending on the type of model)
-        model = await tf.loadGraphModel(URL); // Use loadGraphModel for TensorFlow.js models
-        console.log('Model loaded successfully');
-
-        // Set up webcam using @tensorflow-models/handpose
-        webcam = await navigator.mediaDevices.getUserMedia({ video: true });
-        const videoElement = document.createElement('video');
-        videoElement.srcObject = webcam;
-        videoElement.play();
-
-        // Handpose model for detecting hand positions
-        handModel = await handpose.load();
-
-        // Update video and predictions
-        videoElement.onloadeddata = () => {
-          setInterval(async () => {
-            const predictions = await handModel.estimateHands(videoElement);
-            if (predictions.length > 0) {
-              console.log(predictions); // Logging predictions (for debugging)
-              await predict(predictions); // You can pass hand poses to the model
-            }
-          }, 100); // Checking every 100ms
-        };
-
-        if (webcamContainerRef.current) {
-          webcamContainerRef.current.appendChild(videoElement); // Attach the video to the container
-        }
-      } catch (error) {
-        console.error('Error loading model:', error);
-      }
-    };
-
-    loadModel();
-
-    return () => {
-      if (webcam) {
-        webcam.getTracks().forEach(track => track.stop()); // Stop webcam when component unmounts
-      }
-    };
-  }, []);
-
-  const predict = async (predictions) => {
-    if (model) {
-      // Use the handpose data (e.g., keypoints) to feed to your model
-      const handData = predictions[0].landmarks; // You can experiment with landmarks or other features
-
-      // Example: you can convert this to tensor and feed it to your model
-      const inputTensor = tf.tensor(handData); // Assuming handData fits your model input
-      const prediction = await model.predict(inputTensor);
-      console.log('Prediction:', prediction);
-
-      // Update the translation text (assuming your model's output is text)
-      setTranslation((prev) => prev + prediction); // Update translation state with prediction
-    }
-  };
-
-  const handleClearTranslation = () => {
-    setTranslation((prev) => prev.slice(0, -1)); // Remove last letter
-  };
-
-  const handleClearAllTranslation = () => {
-    setTranslation(''); // Clear all translation
-  };
-
-  return (
-    <TranslationContainer>
-      <Navbar />
-      <CameraContainer ref={webcamContainerRef}>
-        {/* Webcam video will be appended here */}
-      </CameraContainer>
-      <TranslationText>
-        <h2>Translation:</h2>
-        <p>{translation}</p>
-      </TranslationText>
-      {translation && (
-        <ClearButtonContainer>
-          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
-        </ClearButtonContainer>
-      )}
-      <Instructions>
-        <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear every 5 seconds.</p>
-        <p>Note: This only translates alphabets for now!</p>
-      </Instructions>
-    </TranslationContainer>
-  );
-}
-
-export default ASLTranslationPage;
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
-import * as tf from '@tensorflow/tfjs'; // TensorFlow.js for loading .h5 model
-import * as handpose from '@tensorflow-models/handpose'; // Handpose model for webcam usage
-import Navbar from '../components/UserNavbar';
-
-const TranslationContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-  height: 100vh;
-`;
-
-const CameraContainer = styled.div`
-  width: 80%;
-  height: 50vh;
-  margin-top: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  background-color: black;
-`;
-
-const TranslationText = styled.div`
-  margin-top: 2rem;
-  font-size: 1.5rem;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
-
-const ClearButtonContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-`;
-
-const ClearButton = styled.button`
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-`;
-
-const ClearAllButton = styled.button`
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #ff1a1a;
-  }
-`;
-
-const Instructions = styled.div`
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color: black;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
-
-function ASLTranslationPage() {
-  const [translation, setTranslation] = useState('');
-  const webcamContainerRef = useRef(null); // Ref for the webcam container
-  const webcamRef = useRef(null);
-
-  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2Fmodel.h5?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
+const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2Fmodel.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
   let model, webcam, maxPredictions;
+  let hands, handCanvas;
 
   // Load model and webcam setup
   useEffect(() => {
     const loadModel = async () => {
       try {
-        // Load the .h5 model directly from Firebase Storage
-        model = await tf.loadLayersModel(URL);
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
         console.log('Model loaded successfully');
-        
-        // Set up webcam using @tensorflow-models/handpose
-        webcam = await navigator.mediaDevices.getUserMedia({ video: true });
-        const videoElement = document.createElement('video');
-        videoElement.srcObject = webcam;
-        videoElement.play();
 
-        // Handpose model for detecting hand positions
-        const handModel = await handpose.load();
-        
-        // Update video and predictions
-        videoElement.onloadeddata = () => {
-          setInterval(async () => {
-            const predictions = await handModel.estimateHands(videoElement);
-            if (predictions.length > 0) {
-              // Handle hand pose predictions here, for now we're logging them
-              console.log(predictions);
-              await predict(predictions); // You can pass hand poses to the model
-            }
-          }, 100); // Checking every 100ms
-        };
+        // Setup webcam
+        const flip = true; // Flip the webcam
+        webcam = new tmImage.Webcam(450, 450, flip);
 
-        if (webcamContainerRef.current) {
-          webcamContainerRef.current.appendChild(videoElement); // Attach the video to the container
+        try {
+          await webcam.setup(); // Request webcam access
+          await webcam.play(); // Play the webcam stream
+          window.requestAnimationFrame(loop); // Start looping
+          console.log('Webcam setup successful');
+
+          // Append webcam canvas to DOM
+          if (webcam.canvas && webcamContainerRef.current) {
+            webcamContainerRef.current.appendChild(webcam.canvas);
+          }
+        } catch (webcamError) {
+          console.error('Webcam setup failed:', webcamError);
         }
+
+        // Setup MediaPipe hands
+        hands = new window.handpose.HandPose(webcam.canvas);
+        handCanvas = webcam.canvas;
+        detectHands();
       } catch (error) {
         console.error('Error loading model:', error);
       }
@@ -291,18 +124,46 @@ function ASLTranslationPage() {
 
     return () => {
       if (webcam) {
-        webcam.getTracks().forEach(track => track.stop()); // Stop webcam when component unmounts
+        webcam.stop(); // Stop webcam when component unmounts
       }
     };
   }, []);
 
-  const predict = async (predictions) => {
-    if (model) {
-      const tensorInput = tf.browser.fromPixels(predictions[0].boundingBox); // Example of using bounding box data
-      const prediction = await model.predict(tensorInput);
-      console.log('Prediction:', prediction);
-      
-      setTranslation((prev) => prev + prediction); // Update translation state with prediction
+  const loop = () => {
+    if (webcam) {
+      webcam.update(); // Update the webcam feed
+    }
+    window.requestAnimationFrame(loop); // Keep looping
+  };
+
+  useEffect(() => {
+    // Set an interval to predict every 5 seconds
+    const predictionInterval = setInterval(async () => {
+      await predict();
+    }, 5000); // Every 5 seconds
+
+    return () => clearInterval(predictionInterval); // Clear interval on unmount
+  }, []);
+
+  const predict = async () => {
+    if (model && webcam) {
+      const predictions = await model.predict(webcam.canvas);
+      console.log('Predictions:', predictions); // Log predictions for debugging
+
+      // Filter out predictions with a low probability (e.g., below 0.3)
+      const validPredictions = predictions.filter(prediction => prediction.probability > 0.3);
+
+      if (validPredictions.length > 0) {
+        // Sort predictions by probability (highest first)
+        const highestPrediction = validPredictions.reduce((prev, current) =>
+          prev.probability > current.probability ? prev : current
+        );
+
+        if (highestPrediction) {
+          setTranslation((prev) => prev + highestPrediction.className); // Append to translation
+        }
+      }
+      // If no valid predictions, do not update the translation (no change in state)
     }
   };
 
@@ -314,11 +175,40 @@ function ASLTranslationPage() {
     setTranslation(''); // Clear all translation
   };
 
+  const detectHands = async () => {
+    if (hands) {
+      const predictions = await hands.estimateHands(handCanvas);
+      if (predictions.length > 0) {
+        // Draw the bounding box around the detected hand
+        drawBoundingBox(predictions);
+      }
+    }
+    requestAnimationFrame(detectHands); // Keep detecting hands
+  };
+
+  const drawBoundingBox = (predictions) => {
+    const ctx = handCanvas.getContext('2d');
+    ctx.clearRect(0, 0, handCanvas.width, handCanvas.height); // Clear previous frame
+    predictions.forEach(prediction => {
+      const [pinky, indexFinger] = prediction.landmarks; // Example for drawing a box using 2 points
+      const xMin = Math.min(pinky[0], indexFinger[0]);
+      const yMin = Math.min(pinky[1], indexFinger[1]);
+      const width = Math.abs(pinky[0] - indexFinger[0]);
+      const height = Math.abs(pinky[1] - indexFinger[1]);
+
+      ctx.beginPath();
+      ctx.rect(xMin, yMin, width, height);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'red';
+      ctx.stroke();
+    });
+  };
+
   return (
     <TranslationContainer>
       <Navbar />
       <CameraContainer ref={webcamContainerRef}>
-        {/* Webcam video will be appended here */}
+        {/* Webcam canvas will be appended here */}
       </CameraContainer>
       <TranslationText>
         <h2>Translation:</h2>
