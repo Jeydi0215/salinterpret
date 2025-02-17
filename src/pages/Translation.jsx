@@ -78,15 +78,16 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null); // Ref for the webcam container
   const webcamRef = useRef(null);
 
-  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret.h5?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
+  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2F";  
   let model, webcam, maxPredictions;
 
   // Load model and webcam setup
   useEffect(() => {
     const loadModel = async () => {
       try {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+        // Correct URLs for model.json and metadata.json
+        const modelURL = `${URL}model.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b`;
+        const metadataURL = `${URL}metadata.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b`;
 
         model = await tmImage.load(modelURL, metadataURL);
         maxPredictions = model.getTotalClasses();
