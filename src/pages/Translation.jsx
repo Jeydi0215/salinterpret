@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import * as tmImage from '@teachablemachine/image';
+import * as tf from '@tensorflow/tfjs'; // TensorFlow.js for loading .h5 model
 import Navbar from '../components/UserNavbar';
 
 const TranslationContainer = styled.div`
@@ -78,24 +78,20 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null); // Ref for the webcam container
   const webcamRef = useRef(null);
 
-  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2F";  
+  const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2Fmodel.h5?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
   let model, webcam, maxPredictions;
 
   // Load model and webcam setup
   useEffect(() => {
     const loadModel = async () => {
       try {
-        // Correct URLs for model.json and metadata.json
-        const modelURL = `${URL}model.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b`;
-        const metadataURL = `${URL}metadata.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b`;
-
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
+        // Load the .h5 model directly from Firebase Storage
+        model = await tf.loadLayersModel(URL);
         console.log('Model loaded successfully');
-
-        // Setup webcam
+        
+        // Set up webcam
         const flip = true; // Flip the webcam
-        webcam = new tmImage.Webcam(450, 450, flip);
+        webcam = new tf.Webcam(450, 450, flip);
 
         try {
           await webcam.setup(); // Request webcam access
