@@ -22,12 +22,6 @@ const CameraContainer = styled.div`
   background-color: black;
 `;
 
-const WebcamCanvas = styled.canvas`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-`;
-
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
@@ -75,48 +69,35 @@ const Instructions = styled.div`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
-  const webcamContainerRef = useRef(null); // Ref for the webcam container
+  const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
+  const [model, setModel] = useState(null);
+  const [webcam, setWebcam] = useState(null);
 
-const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/salinterpret%2Fmodel.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";  
-  let model, webcam, maxPredictions;
-  let hands, handCanvas;
+  const MODEL_URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmodel.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";
+  const METADATA_URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmetadata.json?alt=media&token=7305db25-8908-4354-a1f7-5dabf8690f1b";
 
-  // Load model and webcam setup
   useEffect(() => {
     const loadModel = async () => {
       try {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+        console.log("Loading model...");
+        const loadedModel = await tmImage.load(MODEL_URL, METADATA_URL);
+        setModel(loadedModel);
+        console.log("Model loaded successfully");
 
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
-        console.log('Model loaded successfully');
+        // Initialize webcam
+        const newWebcam = new tmImage.Webcam(450, 450, true);
+        await newWebcam.setup();
+        await newWebcam.play();
+        setWebcam(newWebcam);
+        window.requestAnimationFrame(loop);
 
-        // Setup webcam
-        const flip = true; // Flip the webcam
-        webcam = new tmImage.Webcam(450, 450, flip);
-
-        try {
-          await webcam.setup(); // Request webcam access
-          await webcam.play(); // Play the webcam stream
-          window.requestAnimationFrame(loop); // Start looping
-          console.log('Webcam setup successful');
-
-          // Append webcam canvas to DOM
-          if (webcam.canvas && webcamContainerRef.current) {
-            webcamContainerRef.current.appendChild(webcam.canvas);
-          }
-        } catch (webcamError) {
-          console.error('Webcam setup failed:', webcamError);
+        // Append webcam canvas
+        if (webcamContainerRef.current) {
+          webcamContainerRef.current.appendChild(newWebcam.canvas);
         }
-
-        // Setup MediaPipe hands
-        hands = new window.handpose.HandPose(webcam.canvas);
-        handCanvas = webcam.canvas;
-        detectHands();
       } catch (error) {
-        console.error('Error loading model:', error);
+        console.error("Error loading model or webcam:", error);
       }
     };
 
@@ -124,92 +105,57 @@ const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.co
 
     return () => {
       if (webcam) {
-        webcam.stop(); // Stop webcam when component unmounts
+        webcam.stop();
       }
     };
   }, []);
 
   const loop = () => {
     if (webcam) {
-      webcam.update(); // Update the webcam feed
+      webcam.update();
     }
-    window.requestAnimationFrame(loop); // Keep looping
+    window.requestAnimationFrame(loop);
   };
 
   useEffect(() => {
-    // Set an interval to predict every 5 seconds
     const predictionInterval = setInterval(async () => {
-      await predict();
-    }, 5000); // Every 5 seconds
+      if (model && webcam) {
+        await predict();
+      }
+    }, 3000);
 
-    return () => clearInterval(predictionInterval); // Clear interval on unmount
-  }, []);
+    return () => clearInterval(predictionInterval);
+  }, [model, webcam]);
 
   const predict = async () => {
     if (model && webcam) {
       const predictions = await model.predict(webcam.canvas);
-      console.log('Predictions:', predictions); // Log predictions for debugging
-
-      // Filter out predictions with a low probability (e.g., below 0.3)
       const validPredictions = predictions.filter(prediction => prediction.probability > 0.3);
 
       if (validPredictions.length > 0) {
-        // Sort predictions by probability (highest first)
         const highestPrediction = validPredictions.reduce((prev, current) =>
           prev.probability > current.probability ? prev : current
         );
 
         if (highestPrediction) {
-          setTranslation((prev) => prev + highestPrediction.className); // Append to translation
+          setTranslation(prev => prev + highestPrediction.className);
         }
       }
-      // If no valid predictions, do not update the translation (no change in state)
     }
   };
 
   const handleClearTranslation = () => {
-    setTranslation((prev) => prev.slice(0, -1)); // Remove last letter
+    setTranslation(prev => prev.slice(0, -1));
   };
 
   const handleClearAllTranslation = () => {
-    setTranslation(''); // Clear all translation
-  };
-
-  const detectHands = async () => {
-    if (hands) {
-      const predictions = await hands.estimateHands(handCanvas);
-      if (predictions.length > 0) {
-        // Draw the bounding box around the detected hand
-        drawBoundingBox(predictions);
-      }
-    }
-    requestAnimationFrame(detectHands); // Keep detecting hands
-  };
-
-  const drawBoundingBox = (predictions) => {
-    const ctx = handCanvas.getContext('2d');
-    ctx.clearRect(0, 0, handCanvas.width, handCanvas.height); // Clear previous frame
-    predictions.forEach(prediction => {
-      const [pinky, indexFinger] = prediction.landmarks; // Example for drawing a box using 2 points
-      const xMin = Math.min(pinky[0], indexFinger[0]);
-      const yMin = Math.min(pinky[1], indexFinger[1]);
-      const width = Math.abs(pinky[0] - indexFinger[0]);
-      const height = Math.abs(pinky[1] - indexFinger[1]);
-
-      ctx.beginPath();
-      ctx.rect(xMin, yMin, width, height);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'red';
-      ctx.stroke();
-    });
+    setTranslation('');
   };
 
   return (
     <TranslationContainer>
       <Navbar />
-      <CameraContainer ref={webcamContainerRef}>
-        {/* Webcam canvas will be appended here */}
-      </CameraContainer>
+      <CameraContainer ref={webcamContainerRef} />
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation}</p>
@@ -223,8 +169,8 @@ const URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.co
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear every 5 seconds.</p>
-        <p>Note this only translates alphabets for now!</p>
+        <p>2. Wait for the translation to appear every 3 seconds.</p>
+        <p>3. This currently supports alphabet recognition only.</p>
       </Instructions>
     </TranslationContainer>
   );
