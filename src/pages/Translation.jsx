@@ -70,23 +70,20 @@ const Instructions = styled.div`
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState('');
   const webcamContainerRef = useRef(null);
-  const webcamRef = useRef(null);
   const [model, setModel] = useState(null);
   const [webcam, setWebcam] = useState(null);
 
   // ✅ Updated Firebase Model URL
   const MODEL_URL =
     "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmodel.json?alt=media&token=80656336-74d8-4777-98df-a1756d02c840";
-  const METADATA_URL =
-    "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmetadata.json?alt=media&token=80656336-74d8-4777-98df-a1756d02c840";
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log("Loading model...");
-        const loadedModel = await tmImage.load(MODEL_URL, METADATA_URL);
+        console.log("🚀 Loading model...");
+        const loadedModel = await tmImage.load(MODEL_URL);
         setModel(loadedModel);
-        console.log("Model loaded successfully");
+        console.log("✅ Model loaded successfully");
 
         // ✅ Initialize webcam
         const newWebcam = new tmImage.Webcam(450, 450, true);
@@ -100,7 +97,10 @@ function ASLTranslationPage() {
           webcamContainerRef.current.appendChild(newWebcam.canvas);
         }
       } catch (error) {
-        console.error("Error loading model or webcam:", error);
+        console.error("❌ Error loading model or webcam:", error);
+        if (error.message.includes("byte length of Float32Array")) {
+          console.error("⚠️ Possible issue: Incorrect .bin file paths in model.json");
+        }
       }
     };
 
@@ -133,6 +133,8 @@ function ASLTranslationPage() {
   const predict = async () => {
     if (model && webcam) {
       const predictions = await model.predict(webcam.canvas);
+      console.log("📊 Predictions:", predictions);
+
       const validPredictions = predictions.filter(prediction => prediction.probability > 0.3);
 
       if (validPredictions.length > 0) {
@@ -141,6 +143,7 @@ function ASLTranslationPage() {
         );
 
         if (highestPrediction) {
+          console.log("✅ Recognized:", highestPrediction.className);
           setTranslation(prev => prev + highestPrediction.className);
         }
       }
