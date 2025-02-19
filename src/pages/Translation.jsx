@@ -22,11 +22,17 @@ const CameraContainer = styled.div`
   background-color: black;
 `;
 
+const VideoElement = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 10;
+`;
+
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
-  text-align: center;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
@@ -39,16 +45,21 @@ const ClearButtonContainer = styled.div`
   margin-top: 1rem;
 `;
 
-const Button = styled.button`
+const ClearButton = styled.button`
   padding: 0.5rem 1rem;
   font-size: 1rem;
-  background-color: ${(props) => (props.clear ? "#ff4d4d" : "#007bff")};
+`;
+
+const ClearAllButton = styled.button`
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #ff4d4d;
   color: white;
   border: none;
   cursor: pointer;
 
   &:hover {
-    background-color: ${(props) => (props.clear ? "#ff1a1a" : "#0056b3")};
+    background-color: #ff1a1a;
   }
 `;
 
@@ -67,7 +78,6 @@ function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
 
   const MODEL_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.json";
@@ -76,42 +86,36 @@ function ASLTranslationPage() {
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log("🔄 Setting backend to WebGL...");
-        await tf.setBackend("webgl"); // Forces TensorFlow.js to use GPU
-
-        console.log("🔄 Loading model...");
+        console.log("🔄 Fetching model JSON...");
         const loadedModel = await tf.loadLayersModel(MODEL_URL);
         setModel(loadedModel);
-        console.log("✅ Model loaded!");
-
-        // Start webcam
-        const video = document.createElement("video");
-        video.width = 224; // Ensure this matches your model's input size
-        video.height = 224;
-        video.autoplay = true;
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 224, height: 224 },
-        });
-
-        video.srcObject = stream;
-        webcamRef.current = video;
-
-        if (webcamContainerRef.current) {
-          webcamContainerRef.current.innerHTML = "";
-          webcamContainerRef.current.appendChild(video);
-        }
-
+        console.log("✅ Model loaded successfully!", loadedModel);
         setLoading(false);
       } catch (error) {
         console.error("❌ Error loading model:", error);
       }
     };
 
+    const startWebcam = async () => {
+      try {
+        const video = webcamRef.current;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 450, height: 450 },
+        });
+
+        video.srcObject = stream;
+        video.play(); // ✅ Ensures webcam starts playing
+      } catch (error) {
+        console.error("❌ Webcam Error:", error);
+      }
+    };
+
     loadModel();
+    startWebcam();
 
     return () => {
-      if (webcamRef.current) {
+      if (webcamRef.current?.srcObject) {
         webcamRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
@@ -137,7 +141,7 @@ function ASLTranslationPage() {
         .resizeNearestNeighbor([224, 224])
         .expandDims()
         .toFloat()
-        .div(tf.scalar(255)); // Normalize pixels to match training
+        .div(tf.scalar(255));
 
       const predictions = await model.predict(tensor).data();
       console.log("🔍 Predictions:", predictions);
@@ -164,17 +168,17 @@ function ASLTranslationPage() {
         <h2>Loading Model...</h2>
       ) : (
         <>
-          <CameraContainer ref={webcamContainerRef} />
+          <CameraContainer>
+            <VideoElement ref={webcamRef} autoPlay playsInline muted />
+          </CameraContainer>
           <TranslationText>
             <h2>Translation:</h2>
             <p>{translation}</p>
           </TranslationText>
           {translation && (
             <ClearButtonContainer>
-              <Button onClick={handleClearTranslation}>Delete Last Letter</Button>
-              <Button clear onClick={handleClearAllTranslation}>
-                Delete All
-              </Button>
+              <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+              <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
             </ClearButtonContainer>
           )}
           <Instructions>
