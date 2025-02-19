@@ -22,13 +22,6 @@ const CameraContainer = styled.div`
   background-color: black;
 `;
 
-const VideoElement = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 10;
-`;
-
 const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
@@ -76,10 +69,9 @@ const Instructions = styled.div`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
-  const [model, setModel] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
-
+  const [model, setModel] = useState(null);
   const MODEL_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.json";
   const WEIGHTS_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.weights.bin";
 
@@ -87,38 +79,54 @@ function ASLTranslationPage() {
     const loadModel = async () => {
       try {
         console.log("🔄 Fetching model JSON...");
-        const loadedModel = await tf.loadLayersModel(MODEL_URL);
+        const modelJsonResponse = await fetch(MODEL_URL);
+        const modelJson = await modelJsonResponse.json();
+
+        console.log("🔄 Fetching weights...");
+        const weightsResponse = await fetch(WEIGHTS_URL);
+        const weightsBuffer = await weightsResponse.arrayBuffer();
+
+        console.log("✅ Model JSON & weights fetched, loading model...");
+        const loadedModel = await tf.loadLayersModel(tf.io.browserFiles([new File([weightsBuffer], "model.weights.bin")]));
+
         setModel(loadedModel);
         console.log("✅ Model loaded successfully!", loadedModel);
-        setLoading(false);
       } catch (error) {
         console.error("❌ Error loading model:", error);
       }
     };
 
+    loadModel();
+  }, []);
+
+  useEffect(() => {
     const startWebcam = async () => {
       try {
-        const video = webcamRef.current;
+        if (!webcamContainerRef.current) {
+          console.error("❌ Webcam container not found.");
+          return;
+        }
+
+        const video = document.createElement("video");
+        video.width = 450;
+        video.height = 450;
+        video.autoplay = true;
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 450, height: 450 },
         });
 
         video.srcObject = stream;
-        video.play(); // ✅ Ensures webcam starts playing
+        webcamRef.current = video;
+
+        webcamContainerRef.current.innerHTML = "";
+        webcamContainerRef.current.appendChild(video);
       } catch (error) {
         console.error("❌ Webcam Error:", error);
       }
     };
 
-    loadModel();
-    startWebcam();
-
-    return () => {
-      if (webcamRef.current?.srcObject) {
-        webcamRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      }
-    };
+    setTimeout(startWebcam, 1000); // ⏳ Ensure the webcam is initialized properly
   }, []);
 
   useEffect(() => {
@@ -164,31 +172,23 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      {loading ? (
-        <h2>Loading Model...</h2>
-      ) : (
-        <>
-          <CameraContainer>
-            <VideoElement ref={webcamRef} autoPlay playsInline muted />
-          </CameraContainer>
-          <TranslationText>
-            <h2>Translation:</h2>
-            <p>{translation}</p>
-          </TranslationText>
-          {translation && (
-            <ClearButtonContainer>
-              <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-              <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
-            </ClearButtonContainer>
-          )}
-          <Instructions>
-            <h2>Instructions:</h2>
-            <p>1. Place your hand in front of the camera.</p>
-            <p>2. Wait for the translation to appear every 3 seconds.</p>
-            <p>3. This currently supports alphabet recognition only.</p>
-          </Instructions>
-        </>
+      <CameraContainer ref={webcamContainerRef} />
+      <TranslationText>
+        <h2>Translation:</h2>
+        <p>{translation}</p>
+      </TranslationText>
+      {translation && (
+        <ClearButtonContainer>
+          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
+        </ClearButtonContainer>
       )}
+      <Instructions>
+        <h2>Instructions:</h2>
+        <p>1. Place your hand in front of the camera.</p>
+        <p>2. Wait for the translation to appear every 3 seconds.</p>
+        <p>3. This currently supports alphabet recognition only.</p>
+      </Instructions>
     </TranslationContainer>
   );
 }
