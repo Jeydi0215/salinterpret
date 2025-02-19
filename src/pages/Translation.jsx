@@ -72,45 +72,79 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
   const [model, setModel] = useState(null);
+  const [webcam, setWebcam] = useState(null);
 
   const MODEL_URL = 'https://huggingface.co/Soleil0215/salinterpret/raw/main/model.json';
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log('Loading model...');
+        console.log('🔄 Loading model from:', MODEL_URL);
         const loadedModel = await tf.loadLayersModel(MODEL_URL);
         setModel(loadedModel);
         console.log('✅ Model loaded successfully!');
+
+        // Initialize webcam
+        const video = document.createElement('video');
+        video.width = 450;
+        video.height = 450;
+        video.autoplay = true;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 450, height: 450 },
+        });
+
+        video.srcObject = stream;
+        webcamRef.current = video;
+
+        if (webcamContainerRef.current) {
+          webcamContainerRef.current.innerHTML = '';
+          webcamContainerRef.current.appendChild(video);
+        }
       } catch (error) {
         console.error('❌ Error loading model:', error);
       }
     };
 
     loadModel();
+
+    return () => {
+      if (webcamRef.current) {
+        webcamRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
-
-  const predict = async () => {
-    if (model && webcamRef.current) {
-      const tensor = tf.browser.fromPixels(webcamRef.current);
-      const resized = tf.image.resizeBilinear(tensor, [224, 224]);
-      const normalized = resized.div(255.0).expandDims(0);
-      const predictions = await model.predict(normalized).data();
-      const maxIndex = predictions.indexOf(Math.max(...predictions));
-
-      setTranslation((prev) => prev + String.fromCharCode(65 + maxIndex));
-    }
-  };
 
   useEffect(() => {
     const predictionInterval = setInterval(async () => {
-      if (model) {
+      if (model && webcamRef.current) {
         await predict();
       }
     }, 3000);
 
     return () => clearInterval(predictionInterval);
-  }, [model]);
+  }, [model, webcam]);
+
+  const predict = async () => {
+    if (!model || !webcamRef.current) return;
+
+    try {
+      const video = webcamRef.current;
+      const tensor = tf.browser.fromPixels(video)
+        .resizeNearestNeighbor([224, 224]) // Adjust size as per your model
+        .expandDims()
+        .toFloat()
+        .div(tf.scalar(255));
+
+      const predictions = await model.predict(tensor).data();
+      console.log('🔍 Predictions:', predictions);
+
+      const highestIndex = predictions.indexOf(Math.max(...predictions));
+      setTranslation((prev) => prev + String.fromCharCode(65 + highestIndex));
+    } catch (error) {
+      console.error('❌ Error during prediction:', error);
+    }
+  };
 
   const handleClearTranslation = () => {
     setTranslation((prev) => prev.slice(0, -1));
@@ -130,8 +164,12 @@ function ASLTranslationPage() {
       </TranslationText>
       {translation && (
         <ClearButtonContainer>
-          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
+          <ClearButton onClick={handleClearTranslation}>
+            Delete Last Letter
+          </ClearButton>
+          <ClearAllButton onClick={handleClearAllTranslation}>
+            Delete All
+          </ClearAllButton>
         </ClearButtonContainer>
       )}
       <Instructions>
