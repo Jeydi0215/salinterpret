@@ -26,6 +26,8 @@ const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
+  text-align: center;
+
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
@@ -37,20 +39,16 @@ const ClearButtonContainer = styled.div`
   margin-top: 1rem;
 `;
 
-const ClearButton = styled.button`
+const Button = styled.button`
   padding: 0.5rem 1rem;
   font-size: 1rem;
-`;
-
-const ClearAllButton = styled.button`
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background-color: #ff4d4d;
+  background-color: ${(props) => (props.clear ? "#ff4d4d" : "#007bff")};
   color: white;
   border: none;
   cursor: pointer;
+
   &:hover {
-    background-color: #ff1a1a;
+    background-color: ${(props) => (props.clear ? "#ff1a1a" : "#0056b3")};
   }
 `;
 
@@ -59,6 +57,7 @@ const Instructions = styled.div`
   font-size: 1.2rem;
   text-align: center;
   color: black;
+
   @media (max-width: 768px) {
     font-size: 1rem;
   }
@@ -66,31 +65,33 @@ const Instructions = styled.div`
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
+  const [model, setModel] = useState(null);
+  const [loading, setLoading] = useState(true);
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
-  const [model, setModel] = useState(null);
-  
-  // ✅ Model path using Hugging Face
+
   const MODEL_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.json";
+  const WEIGHTS_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.weights.bin";
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log("🔄 Loading model...");
-        const loadedModel = await tf.loadLayersModel(MODEL_URL, {
-          headers: { Authorization: "Bearer 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" }
-        });
-        setModel(loadedModel);
-        console.log("✅ Model loaded successfully!", loadedModel);
+        console.log("🔄 Setting backend to WebGL...");
+        await tf.setBackend("webgl"); // Forces TensorFlow.js to use GPU
 
-        // ✅ Initialize webcam
+        console.log("🔄 Loading model...");
+        const loadedModel = await tf.loadLayersModel(MODEL_URL);
+        setModel(loadedModel);
+        console.log("✅ Model loaded!");
+
+        // Start webcam
         const video = document.createElement("video");
-        video.width = 450;
-        video.height = 450;
+        video.width = 224; // Ensure this matches your model's input size
+        video.height = 224;
         video.autoplay = true;
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 450, height: 450 },
+          video: { width: 224, height: 224 },
         });
 
         video.srcObject = stream;
@@ -100,6 +101,8 @@ function ASLTranslationPage() {
           webcamContainerRef.current.innerHTML = "";
           webcamContainerRef.current.appendChild(video);
         }
+
+        setLoading(false);
       } catch (error) {
         console.error("❌ Error loading model:", error);
       }
@@ -134,7 +137,7 @@ function ASLTranslationPage() {
         .resizeNearestNeighbor([224, 224])
         .expandDims()
         .toFloat()
-        .div(tf.scalar(255));
+        .div(tf.scalar(255)); // Normalize pixels to match training
 
       const predictions = await model.predict(tensor).data();
       console.log("🔍 Predictions:", predictions);
@@ -157,23 +160,31 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <CameraContainer ref={webcamContainerRef} />
-      <TranslationText>
-        <h2>Translation:</h2>
-        <p>{translation}</p>
-      </TranslationText>
-      {translation && (
-        <ClearButtonContainer>
-          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
-        </ClearButtonContainer>
+      {loading ? (
+        <h2>Loading Model...</h2>
+      ) : (
+        <>
+          <CameraContainer ref={webcamContainerRef} />
+          <TranslationText>
+            <h2>Translation:</h2>
+            <p>{translation}</p>
+          </TranslationText>
+          {translation && (
+            <ClearButtonContainer>
+              <Button onClick={handleClearTranslation}>Delete Last Letter</Button>
+              <Button clear onClick={handleClearAllTranslation}>
+                Delete All
+              </Button>
+            </ClearButtonContainer>
+          )}
+          <Instructions>
+            <h2>Instructions:</h2>
+            <p>1. Place your hand in front of the camera.</p>
+            <p>2. Wait for the translation to appear every 3 seconds.</p>
+            <p>3. This currently supports alphabet recognition only.</p>
+          </Instructions>
+        </>
       )}
-      <Instructions>
-        <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear every 3 seconds.</p>
-        <p>3. This currently supports alphabet recognition only.</p>
-      </Instructions>
     </TranslationContainer>
   );
 }
