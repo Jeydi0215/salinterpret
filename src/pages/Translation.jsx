@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
-import * as tf from '@tensorflow/tfjs';
-import Navbar from '../components/UserNavbar';
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import * as tf from "@tensorflow/tfjs";
+import Navbar from "../components/UserNavbar";
 
 const TranslationContainer = styled.div`
   display: flex;
@@ -68,28 +68,32 @@ const Instructions = styled.div`
 `;
 
 function ASLTranslationPage() {
-  const [translation, setTranslation] = useState('');
+  const [translation, setTranslation] = useState("");
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
   const [model, setModel] = useState(null);
-  const [webcam, setWebcam] = useState(null);
-
-  const MODEL_URL = 'https://huggingface.co/Soleil0215/salinterpret/raw/main/model.json';
+  const MODEL_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.json";
+  const WEIGHTS_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.weights.bin";
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log('🔄 Loading model from:', MODEL_URL);
-        const loadedModel = await tf.loadLayersModel(MODEL_URL);
-        setModel(loadedModel);
-        console.log('✅ Model loaded successfully!');
+        console.log("🔄 Fetching model JSON...");
+        const modelJsonResponse = await fetch(MODEL_URL);
+        const modelJson = await modelJsonResponse.json();
 
-        // Test model prediction
-        const inputTensor = tf.randomNormal([1, 224, 224, 3]); // Example input (modify based on your model)
-        loadedModel.predict(inputTensor).print();
+        console.log("🔄 Fetching weights...");
+        const weightsResponse = await fetch(WEIGHTS_URL);
+        const weightsBuffer = await weightsResponse.arrayBuffer();
+
+        console.log("✅ Model JSON & weights fetched, loading model...");
+        const loadedModel = await tf.loadLayersModel(tf.io.browserFiles([new File([weightsBuffer], "model.weights.bin")]));
+
+        setModel(loadedModel);
+        console.log("✅ Model loaded successfully!", loadedModel);
 
         // Initialize webcam
-        const video = document.createElement('video');
+        const video = document.createElement("video");
         video.width = 450;
         video.height = 450;
         video.autoplay = true;
@@ -102,11 +106,11 @@ function ASLTranslationPage() {
         webcamRef.current = video;
 
         if (webcamContainerRef.current) {
-          webcamContainerRef.current.innerHTML = '';
+          webcamContainerRef.current.innerHTML = "";
           webcamContainerRef.current.appendChild(video);
         }
       } catch (error) {
-        console.error('❌ Error loading model:', error);
+        console.error("❌ Error loading model:", error);
       }
     };
 
@@ -114,7 +118,7 @@ function ASLTranslationPage() {
 
     return () => {
       if (webcamRef.current) {
-        webcamRef.current.srcObject.getTracks().forEach(track => track.stop());
+        webcamRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -127,26 +131,27 @@ function ASLTranslationPage() {
     }, 3000);
 
     return () => clearInterval(predictionInterval);
-  }, [model, webcam]);
+  }, [model]);
 
   const predict = async () => {
     if (!model || !webcamRef.current) return;
 
     try {
       const video = webcamRef.current;
-      const tensor = tf.browser.fromPixels(video)
-        .resizeNearestNeighbor([224, 224]) // Adjust size as per your model
+      const tensor = tf.browser
+        .fromPixels(video)
+        .resizeNearestNeighbor([224, 224])
         .expandDims()
         .toFloat()
         .div(tf.scalar(255));
 
       const predictions = await model.predict(tensor).data();
-      console.log('🔍 Predictions:', predictions);
+      console.log("🔍 Predictions:", predictions);
 
       const highestIndex = predictions.indexOf(Math.max(...predictions));
       setTranslation((prev) => prev + String.fromCharCode(65 + highestIndex));
     } catch (error) {
-      console.error('❌ Error during prediction:', error);
+      console.error("❌ Error during prediction:", error);
     }
   };
 
@@ -155,7 +160,7 @@ function ASLTranslationPage() {
   };
 
   const handleClearAllTranslation = () => {
-    setTranslation('');
+    setTranslation("");
   };
 
   return (
@@ -168,12 +173,8 @@ function ASLTranslationPage() {
       </TranslationText>
       {translation && (
         <ClearButtonContainer>
-          <ClearButton onClick={handleClearTranslation}>
-            Delete Last Letter
-          </ClearButton>
-          <ClearAllButton onClick={handleClearAllTranslation}>
-            Delete All
-          </ClearAllButton>
+          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
+          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
         </ClearButtonContainer>
       )}
       <Instructions>
