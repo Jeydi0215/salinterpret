@@ -84,6 +84,10 @@ function ASLTranslationPage() {
         setModel(loadedModel);
         console.log('✅ Model loaded successfully!');
 
+        // Test model prediction
+        const inputTensor = tf.randomNormal([1, 224, 224, 3]); // Example input (modify based on your model)
+        loadedModel.predict(inputTensor).print();
+
         // Initialize webcam
         const video = document.createElement('video');
         video.width = 450;
