@@ -74,8 +74,11 @@ function ASLTranslationPage() {
   const [model, setModel] = useState(null);
   const [webcam, setWebcam] = useState(null);
 
-  const MODEL_URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2F80656336-74d8-4777-98df-a1756d02c840%2Fmodel.json?alt=media";
-  const METADATA_URL = "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2F80656336-74d8-4777-98df-a1756d02c840%2Fmetadata.json?alt=media";
+  // ✅ Updated Firebase Model URL
+  const MODEL_URL =
+    "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmodel.json?alt=media&token=80656336-74d8-4777-98df-a1756d02c840";
+  const METADATA_URL =
+    "https://firebasestorage.googleapis.com/v0/b/salinterpret.appspot.com/o/models%2Fmetadata.json?alt=media&token=80656336-74d8-4777-98df-a1756d02c840";
 
   useEffect(() => {
     const loadModel = async () => {
@@ -85,14 +88,14 @@ function ASLTranslationPage() {
         setModel(loadedModel);
         console.log("Model loaded successfully");
 
-        // Initialize webcam
+        // ✅ Initialize webcam
         const newWebcam = new tmImage.Webcam(450, 450, true);
         await newWebcam.setup();
         await newWebcam.play();
         setWebcam(newWebcam);
         window.requestAnimationFrame(loop);
 
-        // Append webcam canvas
+        // ✅ Append webcam canvas
         if (webcamContainerRef.current) {
           webcamContainerRef.current.appendChild(newWebcam.canvas);
         }
