@@ -26,7 +26,6 @@ const TranslationText = styled.div`
   margin-top: 2rem;
   font-size: 1.5rem;
   color: black;
-
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
@@ -50,7 +49,6 @@ const ClearAllButton = styled.button`
   color: white;
   border: none;
   cursor: pointer;
-
   &:hover {
     background-color: #ff1a1a;
   }
@@ -61,7 +59,6 @@ const Instructions = styled.div`
   font-size: 1.2rem;
   text-align: center;
   color: black;
-
   @media (max-width: 768px) {
     font-size: 1rem;
   }
@@ -72,27 +69,21 @@ function ASLTranslationPage() {
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
   const [model, setModel] = useState(null);
+  
+  // ✅ Model path using Hugging Face
   const MODEL_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.json";
-  const WEIGHTS_URL = "https://huggingface.co/Soleil0215/salinterpret/resolve/main/model.weights.bin";
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log("🔄 Fetching model JSON...");
-        const modelJsonResponse = await fetch(MODEL_URL);
-        const modelJson = await modelJsonResponse.json();
-
-        console.log("🔄 Fetching weights...");
-        const weightsResponse = await fetch(WEIGHTS_URL);
-        const weightsBuffer = await weightsResponse.arrayBuffer();
-
-        console.log("✅ Model JSON & weights fetched, loading model...");
-        const loadedModel = await tf.loadLayersModel(tf.io.browserFiles([new File([weightsBuffer], "model.weights.bin")]));
-
+        console.log("🔄 Loading model...");
+        const loadedModel = await tf.loadLayersModel(MODEL_URL, {
+          headers: { Authorization: "Bearer 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" }
+        });
         setModel(loadedModel);
         console.log("✅ Model loaded successfully!", loadedModel);
 
-        // Initialize webcam
+        // ✅ Initialize webcam
         const video = document.createElement("video");
         video.width = 450;
         video.height = 450;
