@@ -71,7 +71,7 @@ function ASLTranslationPage() {
   const [model, setModel] = useState(null);
   
   // ✅ Model path using Hugging Face
-  const MODEL_URL = "https://huggingface.co/Soleil0215/ml/blob/main/model.json";
+  const MODEL_URL = "https://huggingface.co/Soleil0215/ml/resolve/main/model.json";
 
   useEffect(() => {
     const loadModel = async () => {
