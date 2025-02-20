@@ -63,7 +63,7 @@ const Instructions = styled.div`
   }
 `;
 
-const SERVER_URL = "http://139.59.123.213:10000/translate";
+const SERVER_URL = "https://salinterpret-ml.site/translate";
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
