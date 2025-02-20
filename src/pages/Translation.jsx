@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import * as tf from "@tensorflow/tfjs";
 import Navbar from "../components/UserNavbar";
 
 const TranslationContainer = styled.div`
@@ -64,26 +63,16 @@ const Instructions = styled.div`
   }
 `;
 
+const SERVER_URL = "http://139.59.123.213:10000/translate";
+
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
-  const [model, setModel] = useState(null);
-  
-  // ✅ Model path using Hugging Face
-  const MODEL_URL = "https://huggingface.co/Soleil0215/ml/resolve/main/model.json";
 
   useEffect(() => {
-    const loadModel = async () => {
+    const initWebcam = async () => {
       try {
-        console.log("🔄 Loading model...");
-        const loadedModel = await tf.loadLayersModel(MODEL_URL, {
-          headers: { Authorization: "Bearer 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" }
-        });
-        setModel(loadedModel);
-        console.log("✅ Model loaded successfully!", loadedModel);
-
-        // ✅ Initialize webcam
         const video = document.createElement("video");
         video.width = 450;
         video.height = 450;
@@ -101,11 +90,11 @@ function ASLTranslationPage() {
           webcamContainerRef.current.appendChild(video);
         }
       } catch (error) {
-        console.error("❌ Error loading model:", error);
+        console.error("❌ Error accessing webcam:", error);
       }
     };
 
-    loadModel();
+    initWebcam();
 
     return () => {
       if (webcamRef.current) {
@@ -116,33 +105,45 @@ function ASLTranslationPage() {
 
   useEffect(() => {
     const predictionInterval = setInterval(async () => {
-      if (model && webcamRef.current) {
-        await predict();
-      }
+      await predict();
     }, 3000);
 
     return () => clearInterval(predictionInterval);
-  }, [model]);
+  }, []);
 
   const predict = async () => {
-    if (!model || !webcamRef.current) return;
+    if (!webcamRef.current) return;
 
     try {
       const video = webcamRef.current;
-      const tensor = tf.browser
-        .fromPixels(video)
-        .resizeNearestNeighbor([224, 224])
-        .expandDims()
-        .toFloat()
-        .div(tf.scalar(255));
 
-      const predictions = await model.predict(tensor).data();
-      console.log("🔍 Predictions:", predictions);
+      // Convert video frame to image Blob
+      const canvas = document.createElement("canvas");
+      canvas.width = 224;
+      canvas.height = 224;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, 224, 224);
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg")
+      );
 
-      const highestIndex = predictions.indexOf(Math.max(...predictions));
-      setTranslation((prev) => prev + String.fromCharCode(65 + highestIndex));
+      // Send image to Flask API
+      const formData = new FormData();
+      formData.append("image", blob);
+
+      const response = await fetch(SERVER_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      console.log("🔍 Prediction result:", data);
+
+      if (data.prediction) {
+        setTranslation((prev) => prev + data.prediction);
+      }
     } catch (error) {
-      console.error("❌ Error during prediction:", error);
+      console.error("❌ Error during API request:", error);
     }
   };
 
@@ -164,8 +165,12 @@ function ASLTranslationPage() {
       </TranslationText>
       {translation && (
         <ClearButtonContainer>
-          <ClearButton onClick={handleClearTranslation}>Delete Last Letter</ClearButton>
-          <ClearAllButton onClick={handleClearAllTranslation}>Delete All</ClearAllButton>
+          <ClearButton onClick={handleClearTranslation}>
+            Delete Last Letter
+          </ClearButton>
+          <ClearAllButton onClick={handleClearAllTranslation}>
+            Delete All
+          </ClearAllButton>
         </ClearButtonContainer>
       )}
       <Instructions>
