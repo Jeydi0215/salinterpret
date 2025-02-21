@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import * as tmImage from "@teachablemachine/image"; // Import Teachable Machine
 import styled from "styled-components";
 import Navbar from "../components/UserNavbar";
 
@@ -63,12 +64,14 @@ const Instructions = styled.div`
   }
 `;
 
-const SERVER_URL = "https://salinterpret-ml.site/translate";
+// Teachable Machine model URL
+const MODEL_URL = "https://teachablemachine.withgoogle.com/models/yDrtZoDes/";
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
+  const modelRef = useRef(null);
 
   useEffect(() => {
     const initWebcam = async () => {
@@ -94,7 +97,18 @@ function ASLTranslationPage() {
       }
     };
 
+    const loadModel = async () => {
+      try {
+        const modelURL = `${MODEL_URL}model.json`;
+        const metadataURL = `${MODEL_URL}metadata.json`;
+        modelRef.current = await tmImage.load(modelURL, metadataURL);
+      } catch (error) {
+        console.error("❌ Error loading Teachable Machine model:", error);
+      }
+    };
+
     initWebcam();
+    loadModel();
 
     return () => {
       if (webcamRef.current) {
@@ -112,38 +126,17 @@ function ASLTranslationPage() {
   }, []);
 
   const predict = async () => {
-    if (!webcamRef.current) return;
+    if (!webcamRef.current || !modelRef.current) return;
 
     try {
-      const video = webcamRef.current;
+      const prediction = await modelRef.current.predict(webcamRef.current);
+      prediction.sort((a, b) => b.probability - a.probability); // Sort by highest probability
 
-      // Convert video frame to image Blob
-      const canvas = document.createElement("canvas");
-      canvas.width = 224;
-      canvas.height = 224;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, 224, 224);
-      const blob = await new Promise((resolve) =>
-        canvas.toBlob(resolve, "image/jpeg")
-      );
-
-      // Send image to Flask API
-      const formData = new FormData();
-      formData.append("image", blob);
-
-      const response = await fetch(SERVER_URL, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      console.log("🔍 Prediction result:", data);
-
-      if (data.prediction) {
-        setTranslation((prev) => prev + data.prediction);
+      if (prediction[0].probability > 0.7) {
+        setTranslation((prev) => prev + prediction[0].className);
       }
     } catch (error) {
-      console.error("❌ Error during API request:", error);
+      console.error("❌ Error during prediction:", error);
     }
   };
 
