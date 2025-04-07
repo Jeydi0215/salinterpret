@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Navbar from "../components/UserNavbar";
 
@@ -10,7 +10,7 @@ const TranslationContainer = styled.div`
   height: 100vh;
 `;
 
-const CameraContainer = styled.div`
+const ImageContainer = styled.div`
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
@@ -18,7 +18,8 @@ const CameraContainer = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
-  background-color: black;
+  background-color: #f0f0f0;
+  border: 2px dashed #ccc;
 `;
 
 const TranslationText = styled.div`
@@ -63,77 +64,39 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL =  "https://2c0b-143-44-145-81.ngrok-free.app"; // Change to your Flask API
+const FLASK_API_URL = "https://4fdf-143-44-145-81.ngrok-free.app"; // Updated to the new URL
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
-  const webcamContainerRef = useRef(null);
-  const webcamRef = useRef(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const initWebcam = async () => {
-      try {
-        const video = document.createElement("video");
-        video.width = 450;
-        video.height = 450;
-        video.autoplay = true;
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 450, height: 450 },
-        });
-
-        video.srcObject = stream;
-        webcamRef.current = video;
-
-        if (webcamContainerRef.current) {
-          webcamContainerRef.current.innerHTML = "";
-          webcamContainerRef.current.appendChild(video);
-        }
-      } catch (error) {
-        console.error("❌ Error accessing webcam:", error);
-      }
-    };
-
-    initWebcam();
-
-    return () => {
-      if (webcamRef.current) {
-        webcamRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
-
-  const captureAndPredict = async () => {
-    if (!webcamRef.current) return;
-
-    // Capture the video frame to a canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = webcamRef.current.videoWidth;
-    canvas.height = webcamRef.current.videoHeight;
-
-    const context = canvas.getContext("2d");
-    context.drawImage(webcamRef.current, 0, 0, canvas.width, canvas.height);
-
-    // Convert the canvas to a base64 string
-    const imgData = canvas.toDataURL("image/jpeg");
-
-    // Send the base64-encoded image to Flask API for prediction
+  const fetchPrediction = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`${FLASK_API_URL}?image=${imgData}`, {
+      const response = await fetch(FLASK_API_URL, {
         method: "GET",
+        headers: {
+          'Accept': 'application/json',
+        }
       });
 
       const data = await response.json();
       if (data.translation) {
         setTranslation((prev) => prev + data.translation);
       }
+      if (data.image_url) {
+        setImageUrl(data.image_url);
+      }
     } catch (error) {
       console.error("❌ Error during prediction:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const predictionInterval = setInterval(captureAndPredict, 3000); // Predict every 3 seconds
+    const predictionInterval = setInterval(fetchPrediction, 3000); // Fetch every 3 seconds
     return () => clearInterval(predictionInterval);
   }, []);
 
@@ -148,10 +111,20 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <CameraContainer ref={webcamContainerRef} />
+      <ImageContainer>
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt="ASL Prediction" 
+            style={{ maxWidth: '100%', maxHeight: '100%' }}
+          />
+        ) : (
+          <p>{isLoading ? "Loading..." : "No image available"}</p>
+        )}
+      </ImageContainer>
       <TranslationText>
         <h2>Translation:</h2>
-        <p>{translation}</p>
+        <p>{translation || (isLoading ? "Processing..." : "No translation yet")}</p>
       </TranslationText>
       {translation && (
         <ClearButtonContainer>
@@ -165,8 +138,8 @@ function ASLTranslationPage() {
       )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your hand in front of the camera.</p>
-        <p>2. Wait for the translation to appear every 3 seconds.</p>
+        <p>1. The system automatically fetches translations every 3 seconds.</p>
+        <p>2. The latest image and translation will be displayed above.</p>
         <p>3. This currently supports alphabet recognition only.</p>
       </Instructions>
     </TranslationContainer>
