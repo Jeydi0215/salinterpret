@@ -10,7 +10,7 @@ const TranslationContainer = styled.div`
   height: 100vh;
 `;
 
-const ImageContainer = styled.div`
+const CameraFeedContainer = styled.div`
   width: 80%;
   height: 50vh;
   margin-top: 15vh;
@@ -18,8 +18,7 @@ const ImageContainer = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
-  background-color: #f0f0f0;
-  border: 2px dashed #ccc;
+  background-color: black;
 `;
 
 const TranslationText = styled.div`
@@ -64,29 +63,38 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL = "https://4fdf-143-44-145-81.ngrok-free.app"; // Updated to the new URL
+const FLASK_API_URL = "https://4fdf-143-44-145-81.ngrok-free.app";
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchPrediction = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(FLASK_API_URL, {
-        method: "GET",
+      // First get the image from the Flask server
+      const imgResponse = await fetch(`${FLASK_API_URL}/video_feed`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'image/jpeg',
+        },
+      });
+      
+      if (!imgResponse.ok) throw new Error('Failed to get image');
+      
+      // Then get the prediction data
+      const predictionResponse = await fetch(`${FLASK_API_URL}/predict`, {
+        method: 'GET',
         headers: {
           'Accept': 'application/json',
-        }
+        },
       });
 
-      const data = await response.json();
-      if (data.translation) {
-        setTranslation((prev) => prev + data.translation);
-      }
-      if (data.image_url) {
-        setImageUrl(data.image_url);
+      if (!predictionResponse.ok) throw new Error('Failed to get prediction');
+      
+      const predictionData = await predictionResponse.json();
+      if (predictionData.translation) {
+        setTranslation((prev) => prev + predictionData.translation);
       }
     } catch (error) {
       console.error("❌ Error during prediction:", error);
@@ -96,7 +104,7 @@ function ASLTranslationPage() {
   };
 
   useEffect(() => {
-    const predictionInterval = setInterval(fetchPrediction, 3000); // Fetch every 3 seconds
+    const predictionInterval = setInterval(fetchPrediction, 3000);
     return () => clearInterval(predictionInterval);
   }, []);
 
@@ -111,17 +119,13 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      <ImageContainer>
-        {imageUrl ? (
-          <img 
-            src={imageUrl} 
-            alt="ASL Prediction" 
-            style={{ maxWidth: '100%', maxHeight: '100%' }}
-          />
-        ) : (
-          <p>{isLoading ? "Loading..." : "No image available"}</p>
-        )}
-      </ImageContainer>
+      <CameraFeedContainer>
+        <img 
+          src={`${FLASK_API_URL}/video_feed`} 
+          alt="ASL Camera Feed" 
+          style={{ maxWidth: '100%', maxHeight: '100%' }}
+        />
+      </CameraFeedContainer>
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation || (isLoading ? "Processing..." : "No translation yet")}</p>
@@ -138,8 +142,8 @@ function ASLTranslationPage() {
       )}
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. The system automatically fetches translations every 3 seconds.</p>
-        <p>2. The latest image and translation will be displayed above.</p>
+        <p>1. The system automatically processes camera feed every 3 seconds.</p>
+        <p>2. The translation will appear below the camera feed.</p>
         <p>3. This currently supports alphabet recognition only.</p>
       </Instructions>
     </TranslationContainer>
