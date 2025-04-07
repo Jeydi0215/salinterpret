@@ -63,7 +63,7 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL = "https://4fdf-143-44-145-81.ngrok-free.app";
+const FLASK_API_URL = "https://b035-143-44-145-81.ngrok-free.app";
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
@@ -83,7 +83,7 @@ function ASLTranslationPage() {
       if (!imgResponse.ok) throw new Error('Failed to get image');
       
       // Then get the prediction data
-      const predictionResponse = await fetch(`${FLASK_API_URL}/predict`, {
+      const predictionResponse = await fetch(`${FLASK_API_URL}/translate`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
