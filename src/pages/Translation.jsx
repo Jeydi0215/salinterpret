@@ -63,7 +63,7 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL = "https://71c8-175-176-10-241.ngrok-free.app";
+const FLASK_API_URL = "https://a90c-175-176-10-241.ngrok-free.app";
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
