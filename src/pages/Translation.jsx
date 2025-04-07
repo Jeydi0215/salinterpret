@@ -63,7 +63,7 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL =  "https://61d8-143-44-145-81.ngrok-free.app/translate"; // Change to your Flask API
+const FLASK_API_URL =  "https://2c0b-143-44-145-81.ngrok-free.app"; // Change to your Flask API
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
