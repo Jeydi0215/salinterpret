@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import * as tmImage from "@teachablemachine/image"; // Import Teachable Machine
 import styled from "styled-components";
 import Navbar from "../components/UserNavbar";
+
+// Change this to your Ngrok URL
+const FLASK_API_URL = " https://ee47-143-44-145-81.ngrok-free.app"; // Replace with your Ngrok URL
 
 const TranslationContainer = styled.div`
   display: flex;
@@ -64,14 +66,10 @@ const Instructions = styled.div`
   }
 `;
 
-// Teachable Machine model URL
-const MODEL_URL = "https://teachablemachine.withgoogle.com/models/yDrtZoDes/";
-
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
   const webcamContainerRef = useRef(null);
   const webcamRef = useRef(null);
-  const modelRef = useRef(null);
 
   useEffect(() => {
     const initWebcam = async () => {
@@ -97,18 +95,7 @@ function ASLTranslationPage() {
       }
     };
 
-    const loadModel = async () => {
-      try {
-        const modelURL = `${MODEL_URL}model.json`;
-        const metadataURL = `${MODEL_URL}metadata.json`;
-        modelRef.current = await tmImage.load(modelURL, metadataURL);
-      } catch (error) {
-        console.error("❌ Error loading Teachable Machine model:", error);
-      }
-    };
-
     initWebcam();
-    loadModel();
 
     return () => {
       if (webcamRef.current) {
@@ -126,18 +113,35 @@ function ASLTranslationPage() {
   }, []);
 
   const predict = async () => {
-    if (!webcamRef.current || !modelRef.current) return;
+    if (!webcamRef.current) return;
 
     try {
-      const prediction = await modelRef.current.predict(webcamRef.current);
-      prediction.sort((a, b) => b.probability - a.probability); // Sort by highest probability
+      // Sending image from webcam to Flask API for prediction
+      const imageBlob = await captureImage(webcamRef.current);
+      const formData = new FormData();
+      formData.append("image", imageBlob);
 
-      if (prediction[0].probability > 0.7) {
-        setTranslation((prev) => prev + prediction[0].className);
+      const response = await fetch(`https://ee47-143-44-145-81.ngrok-free.app/translate`, {
+    method: "POST",
+    body: formData,
+  });
+
+      const result = await response.json();
+      if (result.translation) {
+        setTranslation((prev) => prev + result.translation);
       }
     } catch (error) {
       console.error("❌ Error during prediction:", error);
     }
+  };
+
+  const captureImage = (videoElement) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 450;
+    canvas.height = 450;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    return canvas.toBlob();
   };
 
   const handleClearTranslation = () => {
