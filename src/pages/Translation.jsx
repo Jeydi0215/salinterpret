@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import Navbar from "../components/UserNavbar";
 
-// Change this to your Ngrok URL
-const FLASK_API_URL = " https://ee47-143-44-145-81.ngrok-free.app"; // Replace with your Ngrok URL
-
 const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -66,6 +63,8 @@ const Instructions = styled.div`
   }
 `;
 
+const FLASK_API_URL = "https://ee47-143-44-145-81.ngrok-free.app/translate";
+
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
   const webcamContainerRef = useRef(null);
@@ -104,45 +103,49 @@ function ASLTranslationPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const predictionInterval = setInterval(async () => {
-      await predict();
-    }, 3000);
-
-    return () => clearInterval(predictionInterval);
-  }, []);
-
-  const predict = async () => {
+  const captureAndPredict = async () => {
     if (!webcamRef.current) return;
 
-    try {
-      // Sending image from webcam to Flask API for prediction
-      const imageBlob = await captureImage(webcamRef.current);
-      const formData = new FormData();
-      formData.append("image", imageBlob);
-
-      const response = await fetch(`https://ee47-143-44-145-81.ngrok-free.app/translate`, {
-    method: "POST",
-    body: formData,
-  });
-
-      const result = await response.json();
-      if (result.translation) {
-        setTranslation((prev) => prev + result.translation);
-      }
-    } catch (error) {
-      console.error("❌ Error during prediction:", error);
-    }
-  };
-
-  const captureImage = (videoElement) => {
+    // Capture the video frame to a canvas
     const canvas = document.createElement("canvas");
-    canvas.width = 450;
-    canvas.height = 450;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-    return canvas.toBlob();
+    canvas.width = webcamRef.current.videoWidth;
+    canvas.height = webcamRef.current.videoHeight;
+
+    const context = canvas.getContext("2d");
+    context.drawImage(webcamRef.current, 0, 0, canvas.width, canvas.height);
+
+    // Convert the canvas to a Blob (image format)
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        console.error("❌ Error converting canvas to blob.");
+        return;
+      }
+
+      // Prepare the image for upload
+      const formData = new FormData();
+      formData.append("image", blob, "frame.jpg");
+
+      // Send the image to Flask API for prediction
+      try {
+        const response = await fetch(FLASK_API_URL, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (data.prediction) {
+          setTranslation((prev) => prev + data.prediction);
+        }
+      } catch (error) {
+        console.error("❌ Error during prediction:", error);
+      }
+    });
   };
+
+  useEffect(() => {
+    const predictionInterval = setInterval(captureAndPredict, 3000); // Predict every 3 seconds
+    return () => clearInterval(predictionInterval);
+  }, []);
 
   const handleClearTranslation = () => {
     setTranslation((prev) => prev.slice(0, -1));
