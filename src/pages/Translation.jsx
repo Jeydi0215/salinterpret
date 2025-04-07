@@ -63,7 +63,7 @@ const Instructions = styled.div`
   }
 `;
 
-const FLASK_API_URL = "https://ee47-143-44-145-81.ngrok-free.app/translate";
+const FLASK_API_URL =  https://61d8-143-44-145-81.ngrok-free.app/translate"; // Change to your Flask API
 
 function ASLTranslationPage() {
   const [translation, setTranslation] = useState("");
@@ -114,32 +114,22 @@ function ASLTranslationPage() {
     const context = canvas.getContext("2d");
     context.drawImage(webcamRef.current, 0, 0, canvas.width, canvas.height);
 
-    // Convert the canvas to a Blob (image format)
-    canvas.toBlob(async (blob) => {
-      if (!blob) {
-        console.error("❌ Error converting canvas to blob.");
-        return;
+    // Convert the canvas to a base64 string
+    const imgData = canvas.toDataURL("image/jpeg");
+
+    // Send the base64-encoded image to Flask API for prediction
+    try {
+      const response = await fetch(`${FLASK_API_URL}?image=${imgData}`, {
+        method: "GET",
+      });
+
+      const data = await response.json();
+      if (data.translation) {
+        setTranslation((prev) => prev + data.translation);
       }
-
-      // Prepare the image for upload
-      const formData = new FormData();
-      formData.append("image", blob, "frame.jpg");
-
-      // Send the image to Flask API for prediction
-      try {
-        const response = await fetch(FLASK_API_URL, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-        if (data.prediction) {
-          setTranslation((prev) => prev + data.prediction);
-        }
-      } catch (error) {
-        console.error("❌ Error during prediction:", error);
-      }
-    });
+    } catch (error) {
+      console.error("❌ Error during prediction:", error);
+    }
   };
 
   useEffect(() => {
