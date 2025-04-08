@@ -150,7 +150,7 @@ const Instructions = styled.div`
 `;
 
 // Default URL that can be overridden
-const DEFAULT_FLASK_API_URL = "https://a90c-175-176-10-241.ngrok-free.app";
+const DEFAULT_FLASK_API_URL = " https://24e4-143-44-145-81.ngrok-free.app";
 
 function ASLTranslationPage() {
   // Get server URL from localStorage or use default
