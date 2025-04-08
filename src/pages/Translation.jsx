@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Navbar from "../components/UserNavbar";
 
+// Styled components for layout
 const TranslationContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -150,14 +151,14 @@ const Instructions = styled.div`
 `;
 
 // Default URL that can be overridden
-const DEFAULT_FLASK_API_URL = " https://24e4-143-44-145-81.ngrok-free.app";
+const DEFAULT_FLASK_API_URL = "https://24e4-143-44-145-81.ngrok-free.app";
 
 function ASLTranslationPage() {
   // Get server URL from localStorage or use default
   const [serverUrl, setServerUrl] = useState(
     localStorage.getItem("aslServerUrl") || DEFAULT_FLASK_API_URL
   );
-  
+
   const [translation, setTranslation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -167,7 +168,7 @@ function ASLTranslationPage() {
 
   const fetchTranslation = async () => {
     if (isLoading || isConfiguring) return; // Don't fetch during config or loading
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`${serverUrl}/translate`, {
@@ -180,19 +181,19 @@ function ASLTranslationPage() {
       });
 
       if (!response.ok) throw new Error('Translation failed');
-      
+
       const data = await response.json();
-      
+
       // Handle the image data from the response
       if (data.img) {
         setCurrentImage(`data:image/jpeg;base64,${data.img}`);
       }
-      
+
       // Add new translation to the existing text if it's not empty
       if (data.translation && data.translation.trim() !== '') {
         setTranslation(prev => prev + data.translation + ' ');
       }
-      
+
       setIsConnected(true);
     } catch (error) {
       console.error("❌ Error during translation:", error);
@@ -205,13 +206,13 @@ function ASLTranslationPage() {
   useEffect(() => {
     // Skip fetching if in configuration mode
     if (isConfiguring) return;
-    
+
     // Initial fetch
     fetchTranslation();
-    
+
     // Set up regular polling
     const translationInterval = setInterval(fetchTranslation, 3000);
-    
+
     return () => {
       clearInterval(translationInterval);
     };
@@ -236,13 +237,13 @@ function ASLTranslationPage() {
 
   const handleConfigSubmit = (e) => {
     e.preventDefault();
-    
+
     // Save URL to localStorage
     localStorage.setItem("aslServerUrl", serverUrl);
-    
+
     // Exit configuration mode
     setIsConfiguring(false);
-    
+
     // Trigger a connection attempt
     setConnectionAttempts(prev => prev + 1);
   };
@@ -254,7 +255,7 @@ function ASLTranslationPage() {
   return (
     <TranslationContainer>
       <Navbar />
-      
+
       {isConfiguring ? (
         <ConfigContainer>
           <h2>ASL Translation Server Configuration</h2>
@@ -262,11 +263,11 @@ function ASLTranslationPage() {
           <ServerForm onSubmit={handleConfigSubmit}>
             <FormGroup>
               <label htmlFor="serverUrl">Server URL:</label>
-              <Input 
+              <Input
                 id="serverUrl"
-                type="text" 
-                value={serverUrl} 
-                onChange={(e) => setServerUrl(e.target.value)} 
+                type="text"
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
                 placeholder="https://your-ngrok-url.ngrok-free.app"
               />
               <small>This should be your current ngrok URL or server address</small>
@@ -278,9 +279,9 @@ function ASLTranslationPage() {
         <>
           <CameraFeedContainer>
             {currentImage ? (
-              <img 
-                src={currentImage} 
-                alt="ASL Camera Feed" 
+              <img
+                src={currentImage}
+                alt="ASL Camera Feed"
                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
               />
             ) : (
@@ -300,7 +301,7 @@ function ASLTranslationPage() {
               {isConnected ? "Connected" : "Disconnected"}
             </StatusIndicator>
           </CameraFeedContainer>
-          
+
           <TranslationText>
             <h2>Translation:</h2>
             <p>
@@ -309,7 +310,7 @@ function ASLTranslationPage() {
                 : translation || (isLoading ? "Processing..." : "No translation yet")}
             </p>
           </TranslationText>
-          
+
           <ButtonContainer>
             {translation && (
               <>
@@ -325,16 +326,15 @@ function ASLTranslationPage() {
               Change Server URL
             </Button>
           </ButtonContainer>
-          
+
           <Instructions>
             <h2>Instructions:</h2>
             <p>1. The system automatically processes signs every 3 seconds.</p>
-            <p>2. Show one of these signs: {'"What", "Where", "When", "Who", "Why", "How", "Hello", "Thank You", "I Love You", "Name"'}</p>
             <p>3. Hold your hand in view of the camera until recognition occurs.</p>
             <p>4. The system needs 5 seconds between recognitions of new signs.</p>
             <p>
-              <strong>Server URL:</strong> {serverUrl} 
-              <button 
+              <strong>Server URL:</strong> {serverUrl}
+              <button
                 onClick={handleEditServerUrl}
                 style={{ marginLeft: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
               >
