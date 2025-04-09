@@ -1,24 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
 
-// Styled components
 const Container = styled.div`
   text-align: center;
   margin-top: 2rem;
 `;
 
-const Frame = styled.img`
+const Video = styled.video`
   width: 320px;
-  height: auto;
-  border: 4px solid #0d6efd;
-  border-radius: 10px;
-  margin-top: 1rem;
+  border: 3px solid #0d6efd;
+  border-radius: 12px;
 `;
 
 const Translation = styled.h2`
-  font-size: 2rem;
+  margin-top: 1rem;
+  font-size: 1.8rem;
   color: #0d6efd;
-  margin-top: 1.5rem;
 `;
 
 const Error = styled.p`
@@ -26,59 +23,76 @@ const Error = styled.p`
   margin-top: 1rem;
 `;
 
-function ASLViewer() {
-  const [imgData, setImgData] = useState("");
-  const [translation, setTranslation] = useState("");
-  const [error, setError] = useState(null);
+function CameraTranslator() {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [translation, setTranslation] = useState("Waiting...");
+  const [error, setError] = useState("");
 
-  // 🔗 Replace with your ngrok URL
-  const serverUrl = "http://127.0.0.1:5000";
-
-  const fetchTranslation = async () => {
-    try {
-      const res = await fetch(`${serverUrl}/translate`);
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-
-      // Server may return empty during delay
-      if (data.translation || data.img) {
-        setTranslation(data.translation || "");
-        setImgData(data.img ? `data:image/jpeg;base64,${data.img}` : "");
-      } else {
-        setTranslation("Waiting...");
-      }
-
-      setError(null);
-    } catch (err) {
-      console.error("Error:", err);
-      setError("Unable to fetch translation. Please check the server.");
-    }
-  };
+  const serverUrl = " https://5205-143-44-145-81.ngrok-free.app"; 
 
   useEffect(() => {
-    fetchTranslation(); // Initial fetch
-    const interval = setInterval(fetchTranslation, 3000); // Every 3 seconds
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setError("");
+      } catch (err) {
+        setError("Camera access denied or not available.");
+        console.error(err);
+      }
+    };
+
+    startCamera();
+
+    const interval = setInterval(captureAndSend, 3000); // every 3 seconds
     return () => clearInterval(interval);
   }, []);
 
+  const captureAndSend = async () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(async (blob) => {
+      const formData = new FormData();
+      formData.append("file", blob, "frame.jpg");
+
+      try {
+        const res = await fetch(`${serverUrl}/translate`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.translation) {
+          setTranslation(data.translation);
+        } else {
+          setTranslation("No sign detected");
+        }
+      } catch (err) {
+        console.error("Error sending frame:", err);
+        setError("Server error. Check backend or ngrok.");
+      }
+    }, "image/jpeg");
+  };
+
   return (
     <Container>
-      <h1>ASL Real-Time Translator</h1>
-
-      {imgData ? (
-        <Frame src={imgData} alt="Camera Feed" />
-      ) : (
-        <p>No camera feed yet...</p>
-      )}
-
-      <Translation>
-        {translation ? `Translation: ${translation}` : "Analyzing..."}
-      </Translation>
-
+      <h1>ASL Translator via Phone Camera</h1>
+      <Video ref={videoRef} autoPlay playsInline muted />
+      <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
+      <Translation>{translation}</Translation>
       {error && <Error>{error}</Error>}
     </Container>
   );
 }
 
-export default ASLViewer;
+export default CameraTranslator;
