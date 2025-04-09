@@ -1,73 +1,84 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
+// Styled components
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 3rem;
+  text-align: center;
+  margin-top: 2rem;
 `;
 
-const VideoStream = styled.img`
-  width: 720px;
+const Frame = styled.img`
+  width: 320px;
   height: auto;
   border: 4px solid #0d6efd;
-  border-radius: 12px;
-`;
-
-const TranslationBox = styled.div`
-  margin-top: 2rem;
-  padding: 1rem 2rem;
-  background-color: #f8f9fa;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #0d6efd;
-`;
-
-const ErrorText = styled.div`
+  border-radius: 10px;
   margin-top: 1rem;
-  color: red;
 `;
 
-function LiveASL() {
+const Translation = styled.h2`
+  font-size: 2rem;
+  color: #0d6efd;
+  margin-top: 1.5rem;
+`;
+
+const Error = styled.p`
+  color: red;
+  margin-top: 1rem;
+`;
+
+function ASLViewer() {
+  const [imgData, setImgData] = useState("");
   const [translation, setTranslation] = useState("");
   const [error, setError] = useState(null);
 
-  const serverUrl = "https://b347-143-44-145-81.ngrok-free.app"; // change to your current ngrok URL
+  // 🔗 Replace with your ngrok URL
+  const serverUrl = "https://c0e9-143-44-145-81.ngrok-free.app";
+
+  const fetchTranslation = async () => {
+    try {
+      const res = await fetch(`${serverUrl}/translate`);
+      if (!res.ok) throw new Error("Failed to fetch");
+
+      const data = await res.json();
+
+      // Server may return empty during delay
+      if (data.translation || data.img) {
+        setTranslation(data.translation || "");
+        setImgData(data.img ? `data:image/jpeg;base64,${data.img}` : "");
+      } else {
+        setTranslation("Waiting...");
+      }
+
+      setError(null);
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Unable to fetch translation. Please check the server.");
+    }
+  };
 
   useEffect(() => {
-    const fetchTranslation = async () => {
-      try {
-        const res = await fetch(`${serverUrl}/last_prediction`);
-
-        const contentType = res.headers.get("content-type");
-        if (!res.ok || !contentType?.includes("application/json")) {
-          throw new Error("Unexpected response format (not JSON)");
-        }
-
-        const data = await res.json();
-        setTranslation(data.translation || "No hand detected");
-        setError(null); // Clear previous error
-      } catch (err) {
-        console.error("Error fetching translation:", err);
-        setError("Cannot fetch translation. Is the server online?");
-      }
-    };
-
-    const interval = setInterval(fetchTranslation, 2000);
+    fetchTranslation(); // Initial fetch
+    const interval = setInterval(fetchTranslation, 3000); // Every 3 seconds
     return () => clearInterval(interval);
-  }, [serverUrl]);
+  }, []);
 
   return (
     <Container>
-      <h1>Live ASL Translator</h1>
-      <VideoStream src={`${serverUrl}/videofeed`} alt="ASL Video Stream" />
-      <TranslationBox>{translation}</TranslationBox>
-      {error && <ErrorText>{error}</ErrorText>}
+      <h1>ASL Real-Time Translator</h1>
+
+      {imgData ? (
+        <Frame src={imgData} alt="Camera Feed" />
+      ) : (
+        <p>No camera feed yet...</p>
+      )}
+
+      <Translation>
+        {translation ? `Translation: ${translation}` : "Analyzing..."}
+      </Translation>
+
+      {error && <Error>{error}</Error>}
     </Container>
   );
 }
 
-export default LiveASL;
+export default ASLViewer;
