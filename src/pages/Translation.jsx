@@ -32,7 +32,7 @@ function ASLViewer() {
   const [error, setError] = useState(null);
 
   // 🔗 Replace with your ngrok URL
-  const serverUrl = "https://c0e9-143-44-145-81.ngrok-free.app";
+  const serverUrl = "http://127.0.0.1:5000";
 
   const fetchTranslation = async () => {
     try {
