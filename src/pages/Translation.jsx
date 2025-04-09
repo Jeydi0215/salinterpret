@@ -12,10 +12,32 @@ const Video = styled.video`
   border-radius: 12px;
 `;
 
-const Translation = styled.h2`
-  margin-top: 1rem;
-  font-size: 1.8rem;
+const TranslationWord = styled.h2`
+  margin-top: 1.5rem;
+  font-size: 2.5rem;
   color: #0d6efd;
+  letter-spacing: 3px;
+`;
+
+const ButtonContainer = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const Button = styled.button`
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0b5ed7;
+  }
 `;
 
 const Error = styled.p`
@@ -27,9 +49,10 @@ function CameraTranslator() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [translation, setTranslation] = useState("Waiting...");
+  const [word, setWord] = useState("");
   const [error, setError] = useState("");
 
-  const serverUrl = " https://5205-143-44-145-81.ngrok-free.app"; 
+  const serverUrl = " https://5205-143-44-145-81.ngrok-free.app"; // 🔁 update to match your ngrok
 
   useEffect(() => {
     const startCamera = async () => {
@@ -46,7 +69,6 @@ function CameraTranslator() {
     };
 
     startCamera();
-
     const interval = setInterval(captureAndSend, 3000); // every 3 seconds
     return () => clearInterval(interval);
   }, []);
@@ -74,6 +96,7 @@ function CameraTranslator() {
         const data = await res.json();
         if (data.translation) {
           setTranslation(data.translation);
+          setWord((prev) => prev + data.translation);
         } else {
           setTranslation("No sign detected");
         }
@@ -84,12 +107,28 @@ function CameraTranslator() {
     }, "image/jpeg");
   };
 
+  const handleDeleteLast = () => {
+    setWord((prev) => prev.slice(0, -1));
+  };
+
+  const handleClearAll = () => {
+    setWord("");
+  };
+
   return (
     <Container>
       <h1>ASL Translator via Phone Camera</h1>
+
       <Video ref={videoRef} autoPlay playsInline muted />
       <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-      <Translation>{translation}</Translation>
+
+      <TranslationWord>{word || "No word yet"}</TranslationWord>
+
+      <ButtonContainer>
+        <Button onClick={handleDeleteLast}>Delete Last</Button>
+        <Button onClick={handleClearAll}>Clear All</Button>
+      </ButtonContainer>
+
       {error && <Error>{error}</Error>}
     </Container>
   );
