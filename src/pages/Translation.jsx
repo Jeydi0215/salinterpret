@@ -1,31 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
+  text-align: center;
+  margin-top: 2rem;
 `;
 
-const Stream = styled.img`
-  width: 720px;
-  height: auto;
-  border-radius: 12px;
-  border: 4px solid #0d6efd;
-  margin-top: 1rem;
+const Translation = styled.h2`
+  font-size: 2rem;
+  color: #0d6efd;
 `;
 
-function LiveFeed() {
-  const streamUrl = "https://your-ngrok-url.ngrok-free.app/video_feed";
+function LiveTextDisplay() {
+  const [translation, setTranslation] = useState("");
+  const serverUrl = "https://b347-143-44-145-81.ngrok-free.app";
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${serverUrl}/last_prediction`);
+        const data = await res.json();
+        setTranslation(data.translation || "");
+      } catch (err) {
+        console.error("Error fetching translation", err);
+      }
+    }, 2000); // Fetch every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Container>
-      <h1>Real-Time ASL Translation</h1>
-      <p>This is a live camera feed processed by Flask (via OpenCV).</p>
-      <Stream src={streamUrl} alt="Live Camera Feed" />
+      <h1>Live ASL Translation</h1>
+      <Translation>{translation || "Waiting for sign..."}</Translation>
     </Container>
   );
 }
 
-export default LiveFeed;
+export default LiveTextDisplay;
