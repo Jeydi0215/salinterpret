@@ -52,7 +52,7 @@ function CameraTranslator() {
   const [word, setWord] = useState("");
   const [error, setError] = useState("");
 
-  const serverUrl = "https://a91d-143-44-145-81.ngrok-free.app"; // 🔁 update to match your ngrok
+  const serverUrl = "https://d9e7-143-44-145-81.ngrok-free.app"; // 🔁 update to match your ngrok
 
   useEffect(() => {
     const startCamera = async () => {
