@@ -193,31 +193,10 @@ function CameraTranslator() {
   const [isCapturing, setIsCapturing] = useState(false);
   
   // Update this URL to your current ngrok URL
-  const serverUrl = "https://your-new-ngrok-url.ngrok-free.app"; 
+  const serverUrl = "https://be2d-143-44-224-17.ngrok-free.app"; 
 
   useEffect(() => {
-    // Check server connection
-    const checkServerConnection = async () => {
-      try {
-        const response = await fetch(`${serverUrl}/health`, { 
-          method: 'GET',
-          timeout: 5000 // 5 second timeout
-        });
-        
-        if (response.ok) {
-          setIsServerConnected(true);
-          setError("");
-        } else {
-          setIsServerConnected(false);
-          setError("Server is running but returned an error. Check backend logs.");
-        }
-      } catch (err) {
-        setIsServerConnected(false);
-        setError("Cannot connect to server. Check if ngrok and backend are running.");
-        console.error("Server connection error:", err);
-      }
-    };
-
+    // Start camera
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -237,18 +216,17 @@ function CameraTranslator() {
     };
 
     startCamera();
-    checkServerConnection();
     
-    // Only start the capture interval if server is connected
-    let interval;
-    if (isServerConnected) {
-      interval = setInterval(captureAndSend, 3000); // every 3 seconds
-    }
+    // Assume server is connected initially and will be tested on first capture
+    setIsServerConnected(true);
+    
+    // Start capture interval
+    const interval = setInterval(captureAndSend, 3000); // every 3 seconds
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isServerConnected, serverUrl]);
+  }, []);
 
   const captureAndSend = async () => {
     const video = videoRef.current;
@@ -270,6 +248,10 @@ function CameraTranslator() {
         const res = await fetch(`${serverUrl}/translate`, {
           method: "POST",
           body: formData,
+          mode: 'cors', // Explicitly set CORS mode
+          headers: {
+            'Accept': 'application/json',
+          },
         });
         
         if (!res.ok) {
@@ -284,6 +266,7 @@ function CameraTranslator() {
           setTranslation("No sign detected");
         }
         setError("");
+        setIsServerConnected(true); // Confirm connection on successful request
       } catch (err) {
         console.error("Error sending frame:", err);
         setError("Server error. Check backend or ngrok connection.");
@@ -304,17 +287,9 @@ function CameraTranslator() {
 
   const handleRetryConnection = async () => {
     setError("Trying to reconnect to server...");
-    try {
-      const response = await fetch(`${serverUrl}/health`);
-      if (response.ok) {
-        setIsServerConnected(true);
-        setError("");
-      } else {
-        setError("Server is running but returned an error. Check backend logs.");
-      }
-    } catch (err) {
-      setError("Still cannot connect to server. Make sure ngrok and backend are running.");
-    }
+    // Instead of checking health endpoint, set as connected and let the next capture attempt verify
+    setIsServerConnected(true);
+    setError("");
   };
 
   return (
