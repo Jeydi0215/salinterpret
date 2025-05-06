@@ -265,15 +265,22 @@ function CameraTranslator() {
         const data = await res.json();
         console.log("Server response:", data);
         
-        if (data.translation) {
-          setTranslation(data.translation);
-          setWord((prev) => prev + data.translation);
-          // Show feedback when a translation is received
-          console.log("Translation received:", data.translation);
+        if (data.label) {
+          const letter = data.label;
+          const confidence = data.confidence;
+          
+          setTranslation(`${letter} (${(confidence * 100).toFixed(0)}%)`);
+          setWord((prev) => prev + letter);
+          
+          console.log(`Translation received: ${letter} with ${(confidence * 100).toFixed(0)}% confidence`);
+        } else if (data.error) {
+          setTranslation(`Error: ${data.error}`);
+          console.log("Server error:", data.error);
         } else {
           setTranslation("No sign detected");
           console.log("No sign detected in the frame");
         }
+        
         setError("");
         setIsServerConnected(true); // Confirm connection on successful request
       } catch (err) {
@@ -335,9 +342,6 @@ function CameraTranslator() {
         </Button>
         <Button danger onClick={handleClearAll}>
           <ClearIcon /> Clear All
-        </Button>
-        <Button success onClick={handleTestTranslation}>
-          Test Translation
         </Button>
         {!isServerConnected && (
           <Button success onClick={() => {
