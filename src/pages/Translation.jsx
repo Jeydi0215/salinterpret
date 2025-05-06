@@ -245,6 +245,9 @@ function CameraTranslator() {
       formData.append("file", blob, "frame.jpg");
       
       try {
+        // Log the request details
+        console.log("Sending request to:", `${serverUrl}/translate`);
+        
         const res = await fetch(`${serverUrl}/translate`, {
           method: "POST",
           body: formData,
@@ -258,18 +261,24 @@ function CameraTranslator() {
           throw new Error(`Server returned ${res.status}`);
         }
         
+        // Log the response
         const data = await res.json();
+        console.log("Server response:", data);
+        
         if (data.translation) {
           setTranslation(data.translation);
           setWord((prev) => prev + data.translation);
+          // Show feedback when a translation is received
+          console.log("Translation received:", data.translation);
         } else {
           setTranslation("No sign detected");
+          console.log("No sign detected in the frame");
         }
         setError("");
         setIsServerConnected(true); // Confirm connection on successful request
       } catch (err) {
         console.error("Error sending frame:", err);
-        setError("Server error. Check backend or ngrok connection.");
+        setError(`Server error: ${err.message}. Check backend or ngrok connection.`);
         setIsServerConnected(false);
       } finally {
         setIsCapturing(false);
@@ -285,11 +294,13 @@ function CameraTranslator() {
     setWord("");
   };
 
-  const handleRetryConnection = async () => {
-    setError("Trying to reconnect to server...");
-    // Instead of checking health endpoint, set as connected and let the next capture attempt verify
-    setIsServerConnected(true);
-    setError("");
+  // Test translation - uncomment the button section below to see if translations are working
+  const handleTestTranslation = () => {
+    // Simulate receiving a translation from the server
+    const testLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter A-Z
+    setTranslation(testLetter);
+    setWord((prev) => prev + testLetter);
+    console.log("Test translation added:", testLetter);
   };
 
   return (
@@ -325,8 +336,14 @@ function CameraTranslator() {
         <Button danger onClick={handleClearAll}>
           <ClearIcon /> Clear All
         </Button>
+        <Button success onClick={handleTestTranslation}>
+          Test Translation
+        </Button>
         {!isServerConnected && (
-          <Button success onClick={handleRetryConnection}>
+          <Button success onClick={() => {
+            setIsServerConnected(true);
+            setError("");
+          }}>
             <RetryIcon /> Retry Connection
           </Button>
         )}
