@@ -194,7 +194,7 @@ function ASLTranslator() {
   const [isCapturing, setIsCapturing] = useState(false);
   
   // Update this URL to your current ngrok URL
-  const serverUrl = "https://be2d-143-44-224-17.ngrok-free.app"; 
+  const serverUrl = "https://1eb1-143-44-224-17.ngrok-free.app"; 
 
   useEffect(() => {
     // Start camera
