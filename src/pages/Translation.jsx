@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
 
@@ -183,13 +184,13 @@ const RetryIcon = () => (
   </svg>
 );
 
-function CameraTranslator() {
+function ASLTranslator() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [translation, setTranslation] = useState("Waiting...");
   const [word, setWord] = useState("");
   const [error, setError] = useState("");
-  const [isServerConnected, setIsServerConnected] = useState(false);
+  const [isServerConnected, setIsServerConnected] = useState(true);
   const [isCapturing, setIsCapturing] = useState(false);
   
   // Update this URL to your current ngrok URL
@@ -208,17 +209,15 @@ function CameraTranslator() {
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          console.log("Camera started successfully");
         }
       } catch (err) {
-        setError("Camera access denied or not available.");
         console.error("Camera error:", err);
+        setError("Camera access denied or not available.");
       }
     };
 
     startCamera();
-    
-    // Assume server is connected initially and will be tested on first capture
-    setIsServerConnected(true);
     
     // Start capture interval
     const interval = setInterval(captureAndSend, 3000); // every 3 seconds
@@ -231,7 +230,7 @@ function CameraTranslator() {
   const captureAndSend = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || !isServerConnected) return;
+    if (!video || !canvas) return;
     
     setIsCapturing(true);
     
@@ -245,13 +244,11 @@ function CameraTranslator() {
       formData.append("file", blob, "frame.jpg");
       
       try {
-        // Log the request details
-        console.log("Sending request to:", `${serverUrl}/translate`);
-        
+        console.log("Sending image to server...");
         const res = await fetch(`${serverUrl}/translate`, {
           method: "POST",
           body: formData,
-          mode: 'cors', // Explicitly set CORS mode
+          mode: 'cors',
           headers: {
             'Accept': 'application/json',
           },
@@ -261,7 +258,6 @@ function CameraTranslator() {
           throw new Error(`Server returned ${res.status}`);
         }
         
-        // Log the response
         const data = await res.json();
         console.log("Server response:", data);
         
@@ -269,28 +265,27 @@ function CameraTranslator() {
           const letter = data.label;
           const confidence = data.confidence;
           
+          console.log(`Translation: ${letter} (${(confidence * 100).toFixed(0)}%)`);
           setTranslation(`${letter} (${(confidence * 100).toFixed(0)}%)`);
           setWord((prev) => prev + letter);
-          
-          console.log(`Translation received: ${letter} with ${(confidence * 100).toFixed(0)}% confidence`);
         } else if (data.error) {
-          setTranslation(`Error: ${data.error}`);
           console.log("Server error:", data.error);
+          setTranslation(`Error: ${data.error}`);
         } else {
+          console.log("No translation in response");
           setTranslation("No sign detected");
-          console.log("No sign detected in the frame");
         }
         
         setError("");
-        setIsServerConnected(true); // Confirm connection on successful request
+        setIsServerConnected(true);
       } catch (err) {
         console.error("Error sending frame:", err);
-        setError(`Server error: ${err.message}. Check backend or ngrok connection.`);
+        setError(`Server error: ${err.message}`);
         setIsServerConnected(false);
       } finally {
         setIsCapturing(false);
       }
-    }, "image/jpeg", 0.8);
+    }, "image/jpeg", 0.9);
   };
 
   const handleDeleteLast = () => {
@@ -301,13 +296,9 @@ function CameraTranslator() {
     setWord("");
   };
 
-  // Test translation - uncomment the button section below to see if translations are working
-  const handleTestTranslation = () => {
-    // Simulate receiving a translation from the server
-    const testLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter A-Z
-    setTranslation(testLetter);
-    setWord((prev) => prev + testLetter);
-    console.log("Test translation added:", testLetter);
+  const handleRetryConnection = () => {
+    setIsServerConnected(true);
+    setError("");
   };
 
   return (
@@ -344,10 +335,7 @@ function CameraTranslator() {
           <ClearIcon /> Clear All
         </Button>
         {!isServerConnected && (
-          <Button success onClick={() => {
-            setIsServerConnected(true);
-            setError("");
-          }}>
+          <Button success onClick={handleRetryConnection}>
             <RetryIcon /> Retry Connection
           </Button>
         )}
@@ -360,4 +348,4 @@ function CameraTranslator() {
   );
 }
 
-export default CameraTranslator;
+export default ASLTranslator;
