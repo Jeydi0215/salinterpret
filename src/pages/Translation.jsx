@@ -1,10 +1,9 @@
-
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
-// Modern styled components with improved aesthetics
+// Reusing your styled components with some modifications
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -28,277 +27,274 @@ const SubTitle = styled.p`
   font-size: 1.1rem;
 `;
 
-const VideoContainer = styled.div`
-  position: relative;
-  margin: 0 auto 2rem;
-  width: 100%;
-  max-width: 420px;
-`;
-
-const Video = styled.video`
-  width: 100%;
-  border-radius: 16px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  border: 4px solid #3182ce;
-  transition: border-color 0.3s ease;
+const Hero = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 3rem;
   
-  &:hover {
-    border-color: #4299e1;
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: stretch;
+    text-align: left;
   }
 `;
 
-const VideoOverlay = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+const HeroContent = styled.div`
+  flex: 1;
+  padding: 1rem;
+  @media (min-width: 768px) {
+    padding-right: 2rem;
+  }
+`;
+
+const HeroTitle = styled.h2`
+  color: #2c5282;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+`;
+
+const HeroDescription = styled.p`
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+`;
+
+const FeatureList = styled.ul`
+  list-style-type: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+  
+  li {
+    padding: 0.5rem 0;
+    position: relative;
+    padding-left: 1.8rem;
+    text-align: left;
+    
+    &:before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #38a169;
+      font-weight: bold;
+    }
+  }
+`;
+
+const HeroImage = styled.div`
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 1rem;
   
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: ${props => props.isConnected ? '#48bb78' : '#f56565'};
-    border-radius: 50%;
-    margin-right: 6px;
+  img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
 `;
 
-const TranslationSection = styled.div`
+const DownloadSection = styled.div`
+  background-color: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+`;
+
+const SectionTitle = styled.h2`
+  color: #2c5282;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+`;
+
+const DownloadOptions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+`;
+
+const DownloadOption = styled.div`
+  flex: 1;
+  min-width: 200px;
+  max-width: 250px;
+  padding: 1.5rem;
+  background-color: ${props => props.highlighted ? '#ebf8ff' : '#f7fafc'};
+  border-radius: 12px;
+  border: 2px solid ${props => props.highlighted ? '#4299e1' : 'transparent'};
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(66, 153, 225, 0.2);
+  }
+`;
+
+const PlatformIcon = styled.div`
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #3182ce;
+`;
+
+const PlatformName = styled.h3`
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+`;
+
+const PlatformDetails = styled.p`
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+`;
+
+const DownloadButton = styled.a`
+  display: inline-block;
+  background-color: #4299e1;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+  
+  &:hover {
+    background-color: #3182ce;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3);
+  }
+`;
+
+const RecommendedBadge = styled.span`
+  display: inline-block;
+  background-color: #38a169;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+`;
+
+const InstallationSteps = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+`;
+
+const Step = styled.div`
+  flex: 1;
+  min-width: 200px;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  text-align: center;
+  
+  @media (min-width: 768px) {
+    min-width: 150px;
+  }
+`;
+
+const StepNumber = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #4299e1;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+`;
+
+const StepTitle = styled.h3`
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+`;
+
+const StepDescription = styled.p`
+  color: #718096;
+  font-size: 0.9rem;
+`;
+
+const FAQSection = styled.div`
+  margin-top: 3rem;
+  padding: 1rem;
+`;
+
+const FAQItem = styled.div`
+  margin-bottom: 1.5rem;
+  text-align: left;
   background-color: white;
   padding: 1.5rem;
   border-radius: 12px;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
-const TranslationLabel = styled.h3`
-  color: #4a5568;
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
-`;
-
-const TranslationWord = styled.div`
-  font-size: 2.8rem;
-  color: #2b6cb0;
-  font-weight: 700;
-  letter-spacing: 3px;
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-`;
-
-const Button = styled.button`
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+const FAQQuestion = styled.h3`
+  color: #2d3748;
+  margin-bottom: 0.75rem;
   font-weight: 600;
-  background-color: ${props => props.primary ? '#3182ce' : props.danger ? '#e53e3e' : props.success ? '#38a169' : '#718096'};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    background-color: ${props => props.primary ? '#2c5282' : props.danger ? '#c53030' : props.success ? '#2f855a' : '#4a5568'};
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  svg {
-    margin-right: 6px;
-  }
+  font-size: 1.1rem;
 `;
 
-const StatusMessage = styled.div`
-  color: ${props => props.isError ? '#e53e3e' : '#718096'};
-  margin: 1rem 0;
-  font-style: italic;
-  font-size: 0.9rem;
-  background-color: ${props => props.isError ? '#FED7D7' : 'transparent'};
-  padding: ${props => props.isError ? '0.5rem 1rem' : '0'};
-  border-radius: ${props => props.isError ? '8px' : '0'};
-  display: ${props => props.show ? 'block' : 'none'};
+const FAQAnswer = styled.p`
+  color: #4a5568;
+  line-height: 1.6;
 `;
 
-const LoadingDots = styled.span`
-  &::after {
-    content: '.';
-    animation: dots 1.5s steps(5, end) infinite;
-  }
-  
-  @keyframes dots {
-    0%, 20% { content: '.'; }
-    40% { content: '..'; }
-    60% { content: '...'; }
-    80%, 100% { content: ''; }
-  }
-`;
-
-// Icon components for buttons
-const DeleteIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
-    <line x1="18" y1="9" x2="12" y2="15"></line>
-    <line x1="12" y1="9" x2="18" y2="15"></line>
+// Icons for platforms
+const WindowsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#0078D6">
+    <path d="M0,3.4v7.9l9.3-1.3V3.4L0,3.4z M10.7,3.4v7.9l9.3-1.3V3.4L10.7,3.4z M0,12.8v7.9h9.3v-9.2L0,12.8z M10.7,11.5v9.2H20v-7.9L10.7,11.5z"/>
   </svg>
 );
 
-const ClearIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="15" y1="9" x2="9" y2="15"></line>
-    <line x1="9" y1="9" x2="15" y2="15"></line>
+const MacIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#999999">
+    <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
   </svg>
 );
 
-const RetryIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="1 4 1 10 7 10"></polyline>
-    <polyline points="23 20 23 14 17 14"></polyline>
-    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+const LinuxIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#333333">
+    <path d="M13.18,14.5C12.53,15.26 11.47,15.26 10.82,14.5L7.44,9.44L10.82,4.5C11.46,3.74 12.53,3.74 13.18,4.5L16.56,9.44L13.18,14.5M14.46,14.66L11.3,19.5H5.27L2.27,14.66C1.73,13.77 1.79,12.61 2.39,11.67L5.27,4.5H18.73L21.61,11.67C22.21,12.61 22.27,13.77 21.73,14.66L18.73,19.5H12.7L9.54,14.66" />
   </svg>
 );
 
 function ASLTranslator() {
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [translation, setTranslation] = useState("Waiting...");
-  const [word, setWord] = useState("");
-  const [error, setError] = useState("");
-  const [isServerConnected, setIsServerConnected] = useState(true);
-  const [isCapturing, setIsCapturing] = useState(false);
+  const [os, setOs] = useState(null);
   
-  // Update this URL to your current ngrok URL
-  const serverUrl = "https://544b-143-44-224-17.ngrok-free.app"; 
-
+  // Detect user's operating system
   useEffect(() => {
-    // Start camera
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          } 
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          console.log("Camera started successfully");
-        }
-      } catch (err) {
-        console.error("Camera error:", err);
-        setError("Camera access denied or not available.");
-      }
-    };
-
-    startCamera();
-    
-    // Start capture interval
-    const interval = setInterval(captureAndSend, 3000); // every 3 seconds
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    const userAgent = window.navigator.userAgent;
+    if (userAgent.indexOf("Windows") !== -1) setOs("windows");
+    else if (userAgent.indexOf("Mac") !== -1) setOs("mac");
+    else if (userAgent.indexOf("Linux") !== -1) setOs("linux");
+    else setOs("unknown");
   }, []);
-
-  const captureAndSend = async () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-    
-    setIsCapturing(true);
-    
-    const ctx = canvas.getContext("2d");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    
-    canvas.toBlob(async (blob) => {
-      const formData = new FormData();
-      formData.append("file", blob, "frame.jpg");
-      
-      try {
-        console.log("Sending image to server...");
-        const res = await fetch(`${serverUrl}/translate`, {
-          method: "POST",
-          body: formData,
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
-        
-        const data = await res.json();
-        console.log("Server response:", data);
-        
-        if (data.label) {
-          const letter = data.label;
-          const confidence = data.confidence;
-          
-          console.log(`Translation: ${letter} (${(confidence * 100).toFixed(0)}%)`);
-          setTranslation(`${letter} (${(confidence * 100).toFixed(0)}%)`);
-          setWord((prev) => prev + letter);
-        } else if (data.error) {
-          console.log("Server error:", data.error);
-          setTranslation(`Error: ${data.error}`);
-        } else {
-          console.log("No translation in response");
-          setTranslation("No sign detected");
-        }
-        
-        setError("");
-        setIsServerConnected(true);
-      } catch (err) {
-        console.error("Error sending frame:", err);
-        setError(`Server error: ${err.message}`);
-        setIsServerConnected(false);
-      } finally {
-        setIsCapturing(false);
-      }
-    }, "image/jpeg", 0.9);
-  };
-
-  const handleDeleteLast = () => {
-    setWord((prev) => prev.slice(0, -1));
-  };
-
-  const handleClearAll = () => {
-    setWord("");
-  };
-
-  const handleRetryConnection = () => {
-    setIsServerConnected(true);
-    setError("");
+  
+  // Replace these with your actual download links
+  const downloadLinks = {
+    windows: "https://drive.google.com/file/d/your-windows-file-id/view",
+    mac: "https://drive.google.com/file/d/your-mac-file-id/view",
+    linux: "https://drive.google.com/file/d/your-linux-file-id/view"
   };
 
   return (
@@ -306,44 +302,129 @@ function ASLTranslator() {
       <Title>ASL Translator</Title>
       <SubTitle>Translate American Sign Language in real-time using your camera</SubTitle>
       
-      <VideoContainer>
-        <Video ref={videoRef} autoPlay playsInline muted />
-        <VideoOverlay isConnected={isServerConnected}>
-          {isServerConnected ? 'Live' : 'Offline'}
-        </VideoOverlay>
-        <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-      </VideoContainer>
+      <Hero>
+        <HeroContent>
+          <HeroTitle>Real-time Sign Language Translation</HeroTitle>
+          <HeroDescription>
+            Our ASL Translator uses advanced computer vision and machine learning to convert 
+            American Sign Language into text instantly. Perfect for learning ASL or 
+            bridging communication gaps.
+          </HeroDescription>
+          <FeatureList>
+            <li>High accuracy recognition of ASL alphabet</li>
+            <li>Real-time translation through your webcam</li>
+            <li>Privacy-focused (works offline)</li>
+            <li>Easy to use with a simple interface</li>
+          </FeatureList>
+        </HeroContent>
+        <HeroImage>
+          <img src="/images/asl-translator-demo.jpg" alt="ASL Translator Demo" />
+        </HeroImage>
+      </Hero>
       
-      <TranslationSection>
-        <TranslationLabel>
-          {isCapturing ? (
-            <span>Processing<LoadingDots /></span>
-          ) : (
-            <span>Translation Result</span>
-          )}
-        </TranslationLabel>
-        <TranslationWord>
-          {word || "Show a sign to begin"}
-        </TranslationWord>
-      </TranslationSection>
+      <DownloadSection>
+        <SectionTitle>Download ASL Translator</SectionTitle>
+        <p>Select your operating system to download the latest version</p>
+        
+        <DownloadOptions>
+          <DownloadOption highlighted={os === 'windows'}>
+            <PlatformIcon><WindowsIcon /></PlatformIcon>
+            <PlatformName>Windows</PlatformName>
+            <PlatformDetails>For Windows 10 and 11</PlatformDetails>
+            <DownloadButton href={downloadLinks.windows} target="_blank" rel="noopener noreferrer">
+              Download
+            </DownloadButton>
+            {os === 'windows' && <RecommendedBadge>Recommended</RecommendedBadge>}
+          </DownloadOption>
+          
+          <DownloadOption highlighted={os === 'mac'}>
+            <PlatformIcon><MacIcon /></PlatformIcon>
+            <PlatformName>macOS</PlatformName>
+            <PlatformDetails>For macOS 10.14 and newer</PlatformDetails>
+            <DownloadButton href={downloadLinks.mac} target="_blank" rel="noopener noreferrer">
+              Download
+            </DownloadButton>
+            {os === 'mac' && <RecommendedBadge>Recommended</RecommendedBadge>}
+          </DownloadOption>
+          
+          <DownloadOption highlighted={os === 'linux'}>
+            <PlatformIcon><LinuxIcon /></PlatformIcon>
+            <PlatformName>Linux</PlatformName>
+            <PlatformDetails>For Ubuntu, Debian, and more</PlatformDetails>
+            <DownloadButton href={downloadLinks.linux} target="_blank" rel="noopener noreferrer">
+              Download
+            </DownloadButton>
+            {os === 'linux' && <RecommendedBadge>Recommended</RecommendedBadge>}
+          </DownloadOption>
+        </DownloadOptions>
+      </DownloadSection>
       
-      <ButtonContainer>
-        <Button primary onClick={handleDeleteLast}>
-          <DeleteIcon /> Delete Last
-        </Button>
-        <Button danger onClick={handleClearAll}>
-          <ClearIcon /> Clear All
-        </Button>
-        {!isServerConnected && (
-          <Button success onClick={handleRetryConnection}>
-            <RetryIcon /> Retry Connection
-          </Button>
-        )}
-      </ButtonContainer>
+      <SectionTitle>Easy Installation</SectionTitle>
+      <InstallationSteps>
+        <Step>
+          <StepNumber>1</StepNumber>
+          <StepTitle>Download</StepTitle>
+          <StepDescription>
+            Download the appropriate version for your operating system
+          </StepDescription>
+        </Step>
+        
+        <Step>
+          <StepNumber>2</StepNumber>
+          <StepTitle>Install</StepTitle>
+          <StepDescription>
+            Run the installer and follow the on-screen instructions
+          </StepDescription>
+        </Step>
+        
+        <Step>
+          <StepNumber>3</StepNumber>
+          <StepTitle>Launch</StepTitle>
+          <StepDescription>
+            Open the ASL Translator from your desktop or applications folder
+          </StepDescription>
+        </Step>
+      </InstallationSteps>
       
-      <StatusMessage show={!isServerConnected || error} isError={!!error}>
-        {error || (isServerConnected ? "" : "Server disconnected. Click 'Retry Connection' to attempt reconnection.")}
-      </StatusMessage>
+      <FAQSection>
+        <SectionTitle>Frequently Asked Questions</SectionTitle>
+        
+        <FAQItem>
+          <FAQQuestion>Why is the ASL Translator a separate download?</FAQQuestion>
+          <FAQAnswer>
+            Our ASL Translator uses advanced computer vision algorithms and deep learning 
+            models that require direct access to your camera and processing power that is 
+            best suited for a native application. This ensures the highest accuracy and 
+            performance for your ASL translation needs.
+          </FAQAnswer>
+        </FAQItem>
+        
+        <FAQItem>
+          <FAQQuestion>Is the ASL Translator free to use?</FAQQuestion>
+          <FAQAnswer>
+            Yes! The ASL Translator is completely free to download and use as part of the 
+            SalInterpret project. We're committed to making sign language translation 
+            technology accessible to everyone.
+          </FAQAnswer>
+        </FAQItem>
+        
+        <FAQItem>
+          <FAQQuestion>Do I need an internet connection to use the translator?</FAQQuestion>
+          <FAQAnswer>
+            No, once installed, the ASL Translator works completely offline. All processing 
+            happens on your device, which also means your data stays private.
+          </FAQAnswer>
+        </FAQItem>
+        
+        <FAQItem>
+          <FAQQuestion>What sign language symbols are supported?</FAQQuestion>
+          <FAQAnswer>
+            Currently, the ASL Translator supports the American Sign Language alphabet (A-Z). 
+            We're working on expanding the capabilities to include more signs and phrases in 
+            future updates.
+          </FAQAnswer>
+        </FAQItem>
+      </FAQSection>
     </Container>
   );
 }
