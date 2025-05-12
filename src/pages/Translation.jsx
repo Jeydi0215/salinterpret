@@ -80,7 +80,7 @@ function ASLTranslator() {
   const [currentWord, setCurrentWord] = useState("");
   const [lastLetter, setLastLetter] = useState("");
 
-  const ngrokBase = "https://4a64-143-44-224-17.ngrok-free.app"; // Replace with your ngrok domain
+  const ngrokBase = "https://8450-143-44-224-17.ngrok-free.app"; // Replace with your ngrok domain
 
   useEffect(() => {
     let stream;
