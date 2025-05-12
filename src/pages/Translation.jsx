@@ -39,19 +39,48 @@ const CameraContainer = styled.div`
   }
 `;
 
-const LetterDisplay = styled.h2`
+const WordDisplay = styled.h2`
   margin-top: 1.5rem;
   color: #2b6cb0;
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 2.2rem;
+  font-weight: 600;
+`;
+
+const ButtonGroup = styled.div`
+  margin-top: 1.5rem;
+
+  button {
+    padding: 0.75rem 1.5rem;
+    margin: 0 0.5rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .delete-letter {
+    background-color: #e53e3e;
+  }
+
+  .delete-all {
+    background-color: #2b6cb0;
+  }
+
+  button:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
 `;
 
 function ASLTranslator() {
   const videoRef = useRef(null);
   const canvas = document.createElement("canvas");
-  const [latestLetter, setLatestLetter] = useState("");
+  const [currentWord, setCurrentWord] = useState("");
+  const [lastLetter, setLastLetter] = useState("");
 
-  const ngrokBase = "https://26dd-143-44-224-17.ngrok-free.app"; // 🔁 Replace with your real ngrok URL
+  const ngrokBase = "https://26dd-143-44-224-17.ngrok-free.app"; // ✅ your Flask endpoint
 
   useEffect(() => {
     let stream;
@@ -85,15 +114,16 @@ function ASLTranslator() {
             })
               .then((res) => res.json())
               .then((data) => {
-                if (data.label) {
-                  setLatestLetter(data.label);
+                if (data.label && data.label !== lastLetter) {
+                  setCurrentWord((prev) => prev + data.label);
+                  setLastLetter(data.label);
                 }
               })
               .catch((err) => {
                 console.error("Error fetching letter:", err);
               });
           }, "image/jpeg");
-        }, 500);
+        }, 2000);
       } catch (err) {
         console.error("Camera error:", err);
       }
@@ -105,20 +135,36 @@ function ASLTranslator() {
       if (intervalId) clearInterval(intervalId);
       if (stream) stream.getTracks().forEach((track) => track.stop());
     };
-  }, []);
+  }, [lastLetter]);
+
+  const deleteLastLetter = () => {
+    setCurrentWord((prev) => prev.slice(0, -1));
+  };
+
+  const clearWord = () => {
+    setCurrentWord("");
+    setLastLetter("");
+  };
 
   return (
     <Container>
       <Title>ASL Translator</Title>
-      <SubTitle>Live webcam capture for ASL recognition (Python handles the translation)</SubTitle>
+      <SubTitle>Real-time webcam ASL recognition</SubTitle>
 
       <CameraContainer>
         <video ref={videoRef} autoPlay muted playsInline />
       </CameraContainer>
 
-      <LetterDisplay>
-        {latestLetter ? `Detected: ${latestLetter}` : "Waiting for hand sign..."}
-      </LetterDisplay>
+      <WordDisplay>{currentWord || "Waiting for letters..."}</WordDisplay>
+
+      <ButtonGroup>
+        <button className="delete-letter" onClick={deleteLastLetter}>
+          Delete Letter
+        </button>
+        <button className="delete-all" onClick={clearWord}>
+          Delete All
+        </button>
+      </ButtonGroup>
     </Container>
   );
 }
