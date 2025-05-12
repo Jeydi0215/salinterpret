@@ -38,7 +38,7 @@ const TranslationText = styled.div`
 
   p {
     font-size: 1.6rem;
-    color: #333;
+    color: white;
     font-weight: bold;
   }
 `;
