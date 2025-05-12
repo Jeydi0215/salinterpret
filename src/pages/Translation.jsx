@@ -79,12 +79,13 @@ function ASLTranslator() {
   const canvas = document.createElement("canvas");
   const [currentWord, setCurrentWord] = useState("");
   const [lastLetter, setLastLetter] = useState("");
+  const lastCaptureRef = useRef(Date.now());
 
-  const ngrokBase = "https://8450-143-44-224-17.ngrok-free.app"; // Replace with your ngrok domain
+  const ngrokBase = "https://8450-143-44-224-17.ngrok-free.app"; // Replace with your current ngrok
 
   useEffect(() => {
     let stream;
-    let isRunning = true;
+    let animationId;
 
     const startCamera = async () => {
       try {
@@ -93,13 +94,19 @@ function ASLTranslator() {
           videoRef.current.srcObject = stream;
         }
 
-        const loop = async () => {
-          if (!isRunning || !videoRef.current || videoRef.current.readyState !== 4) {
-            setTimeout(loop, 2000);
-            return;
-          }
+        const loop = () => {
+          animationId = requestAnimationFrame(loop);
+
+          const now = Date.now();
+          const elapsed = now - lastCaptureRef.current;
+
+          if (elapsed < 2000) return; // Wait 2 seconds between captures
 
           const video = videoRef.current;
+          if (!video || video.readyState !== 4) return;
+
+          lastCaptureRef.current = now;
+
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           const ctx = canvas.getContext("2d");
@@ -125,13 +132,10 @@ function ASLTranslator() {
               .catch((err) => {
                 console.error("Error fetching letter:", err);
               });
-
-            // schedule next capture
-            setTimeout(loop, 2000);
           }, "image/jpeg");
         };
 
-        loop();
+        loop(); // Start animation loop
       } catch (err) {
         console.error("Camera access error:", err);
       }
@@ -140,7 +144,7 @@ function ASLTranslator() {
     startCamera();
 
     return () => {
-      isRunning = false;
+      cancelAnimationFrame(animationId);
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
