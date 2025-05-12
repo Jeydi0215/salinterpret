@@ -96,7 +96,7 @@ function ASLTranslator() {
   const canvasRef = useRef(document.createElement("canvas"));
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
-  const ngrokBase = "https://e4ad-143-44-224-17.ngrok-free.app"; // replace with your ngrok URL
+  const ngrokBase = "https://a306-143-44-224-17.ngrok-free.app"; // replace with your ngrok URL
 
   useEffect(() => {
     let stream;
