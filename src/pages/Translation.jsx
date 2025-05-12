@@ -79,58 +79,59 @@ function ASLTranslator() {
   const canvas = document.createElement("canvas");
   const [currentWord, setCurrentWord] = useState("");
   const [lastLetter, setLastLetter] = useState("");
-  const ngrokBase = "https://b8aa-143-44-224-17.ngrok-free.app"; // Replace with your ngrok URL
+
+  const ngrokBase = "https://4a64-143-44-224-17.ngrok-free.app"; // Replace with your ngrok domain
 
   useEffect(() => {
     let stream;
-    let lastSent = 0;
     let isRunning = true;
 
     const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
 
         const loop = async () => {
-          if (!isRunning) return;
-
-          const now = Date.now();
-          const video = videoRef.current;
-
-          if (video && video.readyState === 4 && now - lastSent >= 2000) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob((blob) => {
-              if (!blob) return;
-
-              const formData = new FormData();
-              formData.append("file", blob, "frame.jpg");
-
-              fetch(`${ngrokBase}/translate`, {
-                method: "POST",
-                body: formData,
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.label && data.label !== lastLetter) {
-                    setCurrentWord((prev) => prev + data.label);
-                    setLastLetter(data.label);
-                    lastSent = Date.now();
-                  }
-                })
-                .catch((err) => {
-                  console.error("Error fetching letter:", err);
-                });
-            }, "image/jpeg");
+          if (!isRunning || !videoRef.current || videoRef.current.readyState !== 4) {
+            setTimeout(loop, 2000);
+            return;
           }
 
-          requestAnimationFrame(loop);
+          const video = videoRef.current;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+
+            const formData = new FormData();
+            formData.append("file", blob, "frame.jpg");
+
+            fetch(`${ngrokBase}/translate`, {
+              method: "POST",
+              body: formData,
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.label && data.label !== lastLetter) {
+                  setCurrentWord((prev) => prev + data.label);
+                  setLastLetter(data.label);
+                }
+              })
+              .catch((err) => {
+                console.error("Error fetching letter:", err);
+              });
+
+            // schedule next capture
+            setTimeout(loop, 2000);
+          }, "image/jpeg");
         };
 
-        requestAnimationFrame(loop);
+        loop();
       } catch (err) {
         console.error("Camera access error:", err);
       }
@@ -140,7 +141,9 @@ function ASLTranslator() {
 
     return () => {
       isRunning = false;
-      if (stream) stream.getTracks().forEach((track) => track.stop());
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [lastLetter]);
 
