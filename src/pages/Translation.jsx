@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
+// === STYLED COMPONENTS ===
 const Container = styled.div`
   max-width: 900px;
   margin: 2rem auto;
@@ -38,14 +39,52 @@ const CameraContainer = styled.div`
   }
 `;
 
+const WordDisplay = styled.h2`
+  margin-top: 1.5rem;
+  color: #2b6cb0;
+  font-size: 1.8rem;
+  font-weight: 600;
+`;
+
+const ButtonGroup = styled.div`
+  margin-top: 1.5rem;
+
+  button {
+    padding: 0.75rem 1.5rem;
+    margin: 0 0.5rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .delete-letter {
+    background-color: #e53e3e;
+  }
+
+  .delete-all {
+    background-color: #2b6cb0;
+  }
+
+  button:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+`;
+
+// === MAIN COMPONENT ===
 function ASLTranslator() {
   const videoRef = useRef(null);
-  const ngrokURL = "https://2c28-143-44-224-17.ngrok-free.app/translate"; // replace this!
+  const canvas = document.createElement("canvas");
+  const [translatedWord, setTranslatedWord] = useState("");
+
+  const ngrokBase = "https://your-ngrok-id.ngrok-free.app"; // 🔁 replace with your real ngrok domain
 
   useEffect(() => {
     let stream;
     let intervalId;
-    const canvas = document.createElement("canvas");
 
     const startCamera = async () => {
       try {
@@ -68,22 +107,16 @@ function ASLTranslator() {
             const formData = new FormData();
             formData.append("file", blob, "frame.jpg");
 
-            fetch(ngrokURL, {
+            fetch(`${ngrokBase}/translate`, {
               method: "POST",
               body: formData,
-            })
-              .then(res => res.json())
-              .then(data => {
-                console.log("Prediction:", data); // Optional
-              })
-              .catch(err => {
-                console.error("Error sending frame:", err);
-              });
+            }).catch((err) => {
+              console.error("Error sending frame:", err);
+            });
           }, "image/jpeg");
-        }, 500); // send frame every 500ms
-
+        }, 500);
       } catch (err) {
-        console.error("Camera access error:", err);
+        console.error("Camera error:", err);
       }
     };
 
@@ -91,17 +124,48 @@ function ASLTranslator() {
 
     return () => {
       if (intervalId) clearInterval(intervalId);
-      if (stream) stream.getTracks().forEach(track => track.stop());
+      if (stream) stream.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  // Poll translated word every second
+  useEffect(() => {
+    const poll = setInterval(() => {
+      fetch(`${ngrokBase}/word`)
+        .then((res) => res.json())
+        .then((data) => setTranslatedWord(data.word || ""))
+        .catch((err) => console.error("Word fetch failed:", err));
+    }, 1000);
+
+    return () => clearInterval(poll);
+  }, []);
+
+  // Delete button actions
+  const deleteLetter = () => {
+    fetch(`${ngrokBase}/delete-letter`, { method: "POST" });
+  };
+
+  const deleteAll = () => {
+    fetch(`${ngrokBase}/delete-all`, { method: "POST" });
+  };
 
   return (
     <Container>
       <Title>ASL Translator</Title>
       <SubTitle>Live webcam capture for ASL recognition (Python handles the translation)</SubTitle>
+
       <CameraContainer>
         <video ref={videoRef} autoPlay muted playsInline />
       </CameraContainer>
+
+      <WordDisplay>
+        Translation: {translatedWord || "Detecting..."}
+      </WordDisplay>
+
+      <ButtonGroup>
+        <button className="delete-letter" onClick={deleteLetter}>Delete Letter</button>
+        <button className="delete-all" onClick={deleteAll}>Delete All</button>
+      </ButtonGroup>
     </Container>
   );
 }
