@@ -80,11 +80,11 @@ function ASLTranslator() {
   const [currentWord, setCurrentWord] = useState("");
   const [lastLetter, setLastLetter] = useState("");
 
-  const ngrokBase = "https://26dd-143-44-224-17.ngrok-free.app"; // ✅ your Flask endpoint
+  const ngrokBase = "https://26dd-143-44-224-17.ngrok-free.app"; // Replace with your ngrok domain
 
   useEffect(() => {
     let stream;
-    let intervalId;
+    let isRunning = true;
 
     const startCamera = async () => {
       try {
@@ -93,10 +93,13 @@ function ASLTranslator() {
           videoRef.current.srcObject = stream;
         }
 
-        intervalId = setInterval(() => {
-          const video = videoRef.current;
-          if (!video || video.readyState !== 4) return;
+        const loop = async () => {
+          if (!isRunning || !videoRef.current || videoRef.current.readyState !== 4) {
+            setTimeout(loop, 2000);
+            return;
+          }
 
+          const video = videoRef.current;
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           const ctx = canvas.getContext("2d");
@@ -122,18 +125,25 @@ function ASLTranslator() {
               .catch((err) => {
                 console.error("Error fetching letter:", err);
               });
+
+            // schedule next capture
+            setTimeout(loop, 2000);
           }, "image/jpeg");
-        }, 2000);
+        };
+
+        loop();
       } catch (err) {
-        console.error("Camera error:", err);
+        console.error("Camera access error:", err);
       }
     };
 
     startCamera();
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
-      if (stream) stream.getTracks().forEach((track) => track.stop());
+      isRunning = false;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [lastLetter]);
 
@@ -149,13 +159,13 @@ function ASLTranslator() {
   return (
     <Container>
       <Title>ASL Translator</Title>
-      <SubTitle>Real-time webcam ASL recognition</SubTitle>
+      <SubTitle>Real-time webcam ASL recognition using Python + React</SubTitle>
 
       <CameraContainer>
         <video ref={videoRef} autoPlay muted playsInline />
       </CameraContainer>
 
-      <WordDisplay>{currentWord || "Waiting for letters..."}</WordDisplay>
+      <WordDisplay>{currentWord || "Waiting for signs..."}</WordDisplay>
 
       <ButtonGroup>
         <button className="delete-letter" onClick={deleteLastLetter}>
