@@ -1,42 +1,33 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Navbar from '../components/UserNavbar';
 
 // === Styled Layout ===
-const TranslationContainer = styled.div`
+const TranslationContainer = styled.div
   max-width: 900px;
   margin: 2rem auto;
   padding: 1rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-`;
+;
 
-const CameraPlaceholder = styled.div`
+const CameraPlaceholder = styled.div
   display: flex;
   justify-content: center;
   margin-bottom: 1.5rem;
   background: white;
   padding: 1rem;
   border-radius: 12px;
-  position: relative;
-`;
+;
 
-const VideoFeed = styled.video`
+const VideoFeed = styled.video
   width: 100%;
   max-width: 640px;
   border-radius: 16px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-`;
+;
 
-const CanvasOverlay = styled.canvas`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-`;
-
-const TranslationText = styled.div`
+const TranslationText = styled.div
   text-align: center;
   margin-bottom: 1rem;
 
@@ -51,9 +42,9 @@ const TranslationText = styled.div`
     color: white;
     font-weight: bold;
   }
-`;
+;
 
-const Instructions = styled.div`
+const Instructions = styled.div
   background: #f7fafc;
   padding: 1rem 2rem;
   border-radius: 12px;
@@ -69,9 +60,9 @@ const Instructions = styled.div`
     font-size: 1rem;
     margin: 0.25rem 0;
   }
-`;
+;
 
-const ButtonGroup = styled.div`
+const ButtonGroup = styled.div
   display: flex;
   justify-content: center;
   margin: 1.5rem 0;
@@ -99,11 +90,11 @@ const ButtonGroup = styled.div`
     opacity: 0.9;
     transform: scale(1.02);
   }
-`;
+;
 
 function ASLTranslator() {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef(document.createElement("canvas"));
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
   const ngrokBase = "https://c593-143-44-224-17.ngrok-free.app"; // replace with your ngrok URL
@@ -121,9 +112,9 @@ function ASLTranslator() {
 
         intervalId = setInterval(() => {
           const video = videoRef.current;
-          const canvas = document.createElement("canvas");
+          const canvas = canvasRef.current;
 
-          if (!video || video.readyState !== 4) return;
+          if (!video || !canvas || video.readyState !== 4) return;
 
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
@@ -135,7 +126,7 @@ function ASLTranslator() {
             const formData = new FormData();
             formData.append("file", blob, "frame.jpg");
 
-            fetch(`${ngrokBase}/translate`, {
+            fetch(${ngrokBase}/translate, {
               method: "POST",
               body: formData,
             })
@@ -144,15 +135,6 @@ function ASLTranslator() {
                 if (data.label && data.label !== lastLetter) {
                   setTranslation((prev) => prev + data.label);
                   setLastLetter(data.label);
-                }
-
-                if (data.bbox && canvasRef.current) {
-                  const [x, y, w, h] = data.bbox;
-                  const draw = canvasRef.current.getContext("2d");
-                  draw.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                  draw.strokeStyle = "#00FF00";
-                  draw.lineWidth = 3;
-                  draw.strokeRect(x, y, w, h);
                 }
               })
               .catch((err) => {
@@ -187,7 +169,6 @@ function ASLTranslator() {
       <Navbar />
       <CameraPlaceholder>
         <VideoFeed ref={videoRef} autoPlay playsInline muted />
-        <CanvasOverlay ref={canvasRef} />
       </CameraPlaceholder>
 
       <TranslationText>
