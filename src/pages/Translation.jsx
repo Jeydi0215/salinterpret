@@ -17,6 +17,7 @@ const CameraPlaceholder = styled.div`
   background: white;
   padding: 1rem;
   border-radius: 12px;
+  position: relative;
 `;
 
 const VideoFeed = styled.video`
@@ -24,6 +25,15 @@ const VideoFeed = styled.video`
   max-width: 640px;
   border-radius: 16px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+`;
+
+const CanvasOverlay = styled.canvas`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 `;
 
 const TranslationText = styled.div`
@@ -93,7 +103,7 @@ const ButtonGroup = styled.div`
 
 function ASLTranslator() {
   const videoRef = useRef(null);
-  const canvasRef = useRef(document.createElement("canvas"));
+  const canvasRef = useRef(null);
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
   const ngrokBase = "https://c593-143-44-224-17.ngrok-free.app"; // replace with your ngrok URL
@@ -111,9 +121,9 @@ function ASLTranslator() {
 
         intervalId = setInterval(() => {
           const video = videoRef.current;
-          const canvas = canvasRef.current;
+          const canvas = document.createElement("canvas");
 
-          if (!video || !canvas || video.readyState !== 4) return;
+          if (!video || video.readyState !== 4) return;
 
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
@@ -134,6 +144,15 @@ function ASLTranslator() {
                 if (data.label && data.label !== lastLetter) {
                   setTranslation((prev) => prev + data.label);
                   setLastLetter(data.label);
+                }
+
+                if (data.bbox && canvasRef.current) {
+                  const [x, y, w, h] = data.bbox;
+                  const draw = canvasRef.current.getContext("2d");
+                  draw.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                  draw.strokeStyle = "#00FF00";
+                  draw.lineWidth = 3;
+                  draw.strokeRect(x, y, w, h);
                 }
               })
               .catch((err) => {
@@ -168,6 +187,7 @@ function ASLTranslator() {
       <Navbar />
       <CameraPlaceholder>
         <VideoFeed ref={videoRef} autoPlay playsInline muted />
+        <CanvasOverlay ref={canvasRef} />
       </CameraPlaceholder>
 
       <TranslationText>
