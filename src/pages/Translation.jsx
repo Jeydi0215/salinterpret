@@ -14,6 +14,9 @@ const CameraPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   margin-bottom: 1.5rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
 `;
 
 const VideoFeed = styled.video`
@@ -25,7 +28,7 @@ const VideoFeed = styled.video`
 
 const TranslationText = styled.div`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 
   h2 {
     color: #2b6cb0;
@@ -58,12 +61,42 @@ const Instructions = styled.div`
   }
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+
+  button {
+    padding: 0.75rem 1.5rem;
+    margin: 0 0.5rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .delete-letter {
+    background-color: #e53e3e;
+  }
+
+  .delete-all {
+    background-color: #2b6cb0;
+  }
+
+  button:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+`;
+
 function ASLTranslator() {
   const videoRef = useRef(null);
   const canvasRef = useRef(document.createElement("canvas"));
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
-  const ngrokBase = "https://8450-143-44-224-17.ngrok-free.app"; // update this!
+  const ngrokBase = "https://8450-143-44-224-17.ngrok-free.app"; // replace with your ngrok URL
 
   useEffect(() => {
     let stream;
@@ -121,16 +154,36 @@ function ASLTranslator() {
     };
   }, [lastLetter]);
 
+  const deleteLastLetter = () => {
+    setTranslation((prev) => prev.slice(0, -1));
+  };
+
+  const clearWord = () => {
+    setTranslation("");
+    setLastLetter("");
+  };
+
   return (
     <TranslationContainer>
       <Navbar />
       <CameraPlaceholder>
         <VideoFeed ref={videoRef} autoPlay playsInline muted />
       </CameraPlaceholder>
+
       <TranslationText>
         <h2>Translation:</h2>
         <p>{translation || "Waiting for signs..."}</p>
       </TranslationText>
+
+      <ButtonGroup>
+        <button className="delete-letter" onClick={deleteLastLetter}>
+          Delete Letter
+        </button>
+        <button className="delete-all" onClick={clearWord}>
+          Delete All
+        </button>
+      </ButtonGroup>
+
       <Instructions>
         <h2>Instructions:</h2>
         <p>1. Place your right hand in front of the camera.</p>
