@@ -40,7 +40,7 @@ const CameraContainer = styled.div`
 
 function ASLTranslator() {
   const videoRef = useRef(null);
-  const ngrokURL = "https://2c28-143-44-224-17.ngrok-free.app"; // replace this!
+  const ngrokURL = "https://2c28-143-44-224-17.ngrok-free.app/translate"; // replace this!
 
   useEffect(() => {
     let stream;
