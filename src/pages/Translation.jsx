@@ -80,7 +80,7 @@ function ASLTranslator() {
   const canvas = document.createElement("canvas");
   const [translatedWord, setTranslatedWord] = useState("");
 
-  const ngrokBase = "https://your-ngrok-id.ngrok-free.app"; // 🔁 replace with your real ngrok domain
+  const ngrokBase = "https://26dd-143-44-224-17.ngrok-free.app/translate"; // 🔁 replace with your real ngrok domain
 
   useEffect(() => {
     let stream;
