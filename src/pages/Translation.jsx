@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Navbar from '../components/UserNavbar';
 
-// === Styled Layout ===
 const TranslationContainer = styled.div`
   max-width: 900px;
   margin: 2rem auto;
@@ -10,20 +9,15 @@ const TranslationContainer = styled.div`
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 `;
 
-const CameraPlaceholder = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 12px;
-`;
-
-const VideoFeed = styled.video`
-  width: 100%;
-  max-width: 640px;
-  border-radius: 16px;
+const CameraContainer = styled.div`
+  width: 640px;
+  height: 360px;
+  margin: 0 auto 1.5rem auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #000;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
 `;
 
 const TranslationText = styled.div`
@@ -43,10 +37,18 @@ const TranslationText = styled.div`
   }
 `;
 
+const Status = styled.div`
+  text-align: center;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: ${props => props.active ? '#38a169' : '#718096'};
+`;
+
 const Instructions = styled.div`
   background: #f7fafc;
   padding: 1rem 2rem;
   border-radius: 12px;
+  margin-top: 1rem;
 
   h2 {
     color: #2c5282;
@@ -93,69 +95,52 @@ const ButtonGroup = styled.div`
 
 function ASLTranslator() {
   const videoRef = useRef(null);
-  const canvasRef = useRef(document.createElement("canvas"));
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
-  const ngrokBase = "https://4528-143-44-145-19.ngrok-free.app"; // replace with your ngrok URL
+  const [model, setModel] = useState(null);
 
   useEffect(() => {
-    let stream;
-    let intervalId;
+    const loadModel = async () => {
+      const modelURL = "https://teachablemachine.withgoogle.com/models/XRLg01NG7/model.json";
+      const metadataURL = "https://teachablemachine.withgoogle.com/models/XRLg01NG7/metadata.json";
 
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+      const tmImage = await import("@teachablemachine/image");
+      const loadedModel = await tmImage.load(modelURL, metadataURL);
+      setModel(loadedModel);
+    };
 
-        intervalId = setInterval(() => {
-          const video = videoRef.current;
-          const canvas = canvasRef.current;
-
-          if (!video || !canvas || video.readyState !== 4) return;
-
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-            const formData = new FormData();
-            formData.append("file", blob, "frame.jpg");
-
-            fetch(`${ngrokBase}/translate`, {
-              method: "POST",
-              body: formData,
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.label && data.label !== lastLetter) {
-                  setTranslation((prev) => prev + data.label);
-                  setLastLetter(data.label);
-                }
-              })
-              .catch((err) => {
-                console.error("Error fetching letter:", err);
-              });
-          }, "image/jpeg");
-        }, 2000);
-      } catch (err) {
-        console.error("Camera access error:", err);
+    const setupCamera = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(e => console.warn("play() interrupted:", e));
+        };
       }
     };
 
-    startCamera();
+    loadModel();
+    setupCamera();
+  }, []);
 
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-      if (stream) stream.getTracks().forEach((track) => track.stop());
-    };
-  }, [lastLetter]);
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (!videoRef.current || !model) return;
+
+      const prediction = await model.predict(videoRef.current);
+      const bestGuess = prediction.reduce((max, p) => p.probability > max.probability ? p : max);
+
+      if (bestGuess.probability > 0.8 && bestGuess.className !== lastLetter) {
+        setTranslation(prev => prev + bestGuess.className);
+        setLastLetter(bestGuess.className);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [model, lastLetter]);
 
   const deleteLastLetter = () => {
-    setTranslation((prev) => prev.slice(0, -1));
+    setTranslation(prev => prev.slice(0, -1));
   };
 
   const clearWord = () => {
@@ -166,9 +151,9 @@ function ASLTranslator() {
   return (
     <TranslationContainer>
       <Navbar />
-      <CameraPlaceholder>
-        <VideoFeed ref={videoRef} autoPlay playsInline muted />
-      </CameraPlaceholder>
+      <CameraContainer>
+        <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </CameraContainer>
 
       <TranslationText>
         <h2>Translation:</h2>
@@ -176,19 +161,15 @@ function ASLTranslator() {
       </TranslationText>
 
       <ButtonGroup>
-        <button className="delete-letter" onClick={deleteLastLetter}>
-          Delete Letter
-        </button>
-        <button className="delete-all" onClick={clearWord}>
-          Delete All
-        </button>
+        <button className="delete-letter" onClick={deleteLastLetter}>Delete Letter</button>
+        <button className="delete-all" onClick={clearWord}>Delete All</button>
       </ButtonGroup>
 
       <Instructions>
         <h2>Instructions:</h2>
-        <p>1. Place your right hand in front of the camera.</p>
+        <p>1. Place your hand(s) in front of the camera.</p>
         <p>2. Wait for the translation to appear.</p>
-        <p>Note: This app for now only translates the alphabet.</p>
+        <p>Note: This app currently translates alphabet letters only.</p>
       </Instructions>
     </TranslationContainer>
   );
