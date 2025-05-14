@@ -103,7 +103,7 @@ function ASLTranslator() {
   const [lastLetter, setLastLetter] = useState("");
   const [model, setModel] = useState(null);
 
-  useEffect(() => {s
+  useEffect(() => {
     const loadModel = async () => {
       const modelURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/model.json";
       const metadataURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/metadata.json";
