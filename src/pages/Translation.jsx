@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Navbar from '../components/UserNavbar';
+import { Hands } from "@mediapipe/hands";
+import { Camera } from "@mediapipe/camera_utils";
+import * as drawingUtils from "@mediapipe/drawing_utils";
 
 const TranslationContainer = styled.div`
   max-width: 900px;
@@ -95,11 +98,12 @@ const ButtonGroup = styled.div`
 
 function ASLTranslator() {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const [translation, setTranslation] = useState("");
   const [lastLetter, setLastLetter] = useState("");
   const [model, setModel] = useState(null);
 
-  useEffect(() => {
+  useEffect(() => {s
     const loadModel = async () => {
       const modelURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/model.json";
       const metadataURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/metadata.json";
@@ -111,10 +115,67 @@ function ASLTranslator() {
 
     const setupCamera = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+
+        const hands = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.7,
+        });
+
+        hands.onResults((results) => {
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext("2d");
+          ctx.save();
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          if (results.image) {
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+          }
+
+      if (results.multiHandLandmarks) {
+  for (const landmarks of results.multiHandLandmarks) {
+    // Convert normalized landmark positions to pixel values
+    const points = landmarks.map(pt => ({
+      x: pt.x * canvas.width,
+      y: pt.y * canvas.height,
+    }));
+
+    const minX = Math.min(...points.map(p => p.x));
+    const maxX = Math.max(...points.map(p => p.x));
+    const minY = Math.min(...points.map(p => p.y));
+    const maxY = Math.max(...points.map(p => p.y));
+
+    const boxWidth = maxX - minX;
+    const boxHeight = maxY - minY;
+
+    // Draw bounding box
+    ctx.strokeStyle = "#1e90ff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(minX, minY, boxWidth, boxHeight);
+  }
+}
+          ctx.restore();
+        });
+
+        const camera = new Camera(videoRef.current, {
+          onFrame: async () => {
+            await hands.send({ image: videoRef.current });
+          },
+          width: 640,
+          height: 360,
+        });
+
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(e => console.warn("play() interrupted:", e));
+          videoRef.current.play().catch((e) => console.warn("play() interrupted:", e));
+          camera.start();
         };
       }
     };
@@ -152,7 +213,24 @@ function ASLTranslator() {
     <TranslationContainer>
       <Navbar />
       <CameraContainer>
-        <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            position: 'absolute'
+          }}
+        />
+        <canvas
+          ref={canvasRef}
+          width="640"
+          height="360"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        />
       </CameraContainer>
 
       <TranslationText>
