@@ -101,8 +101,8 @@ function ASLTranslator() {
 
   useEffect(() => {
     const loadModel = async () => {
-      const modelURL = "https://teachablemachine.withgoogle.com/models/XRLg01NG7/model.json";
-      const metadataURL = "https://teachablemachine.withgoogle.com/models/XRLg01NG7/metadata.json";
+      const modelURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/model.json";
+      const metadataURL = "https://teachablemachine.withgoogle.com/models/AgwPr5b46/metadata.json";
 
       const tmImage = await import("@teachablemachine/image");
       const loadedModel = await tmImage.load(modelURL, metadataURL);
