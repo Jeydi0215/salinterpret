@@ -16,9 +16,17 @@ export default function Login() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogIn = async () => {
+    if (!formValues.email || !formValues.password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    
     setLoading(true);
+    setError("");
+    
     try {
       const { email, password } = formValues;
       const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
@@ -27,42 +35,42 @@ export default function Login() {
       await checkIfAdmin(user.uid);
     } catch (err) {
       console.log("Error during sign-in:", err);
-      setLoading(false); // Ensure loading is stopped if an error occurs
+      setError("Incorrect email or password. Please try again.");
+      setLoading(false);
     }
   };
 
   const checkIfAdmin = async (uid) => {
     try {
-      // Update to match the correct collection
       const userDoc = doc(db, 'salinterpret', uid);
       const docSnap = await getDoc(userDoc);
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        console.log("User document data:", userData);
-
+        
         if (userData.roles && Array.isArray(userData.roles)) {
-          console.log("User roles array:", userData.roles);
           if (userData.roles.includes("admin")) {
-            console.log("User is admin, navigating to /Main");
-            navigate("/Main"); // Redirect to admin main page
+            navigate("/Main"); 
           } else {
-            console.log("User is not admin, navigating to /UserMain");
-            navigate("/UserMain"); // Redirect to user main page
+            navigate("/UserMain"); 
           }
         } else {
-          console.log("User roles field is not an array or is missing.");
-          navigate("/UserMain"); // Default to user main page if roles field is invalid
+          navigate("/UserMain"); 
         }
       } else {
-        console.log("User document does not exist");
-        navigate("/UserMain"); // Default to user main page if document is missing
+        navigate("/UserMain"); 
       }
     } catch (error) {
       console.error("Error checking admin status:", error);
-      navigate("/UserMain"); // Default to user main page on error
+      navigate("/UserMain"); 
     } finally {
-      setLoading(false); // Stop loading once role is confirmed
+      setLoading(false); 
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogIn();
     }
   };
 
@@ -70,30 +78,58 @@ export default function Login() {
     <Container>
       <BackgroundImage />
       <div className="content">
-        <Header />
-        <div className="form-container flex column a-center j-center">
-          <div className="form flex column a-center j-center">
-            <div className="title">
-              <h3>Login</h3>
-            </div>
-            <div className="container flex column">
+        <Header hideSignIn={true} />
+        <div className="form-container">
+          <div className="login-form">
+            <h1>Sign In</h1>
+            
+            {error && <div className="error-message">{error}</div>}
+            
+            <div className="input-group">
               <input 
                 type="email" 
-                placeholder="Email Address" 
+                placeholder="Email or phone number" 
                 name="email" 
                 value={formValues.email} 
                 onChange={(e) => setFormValues({...formValues, [e.target.name]: e.target.value})}
+                onKeyPress={handleKeyPress}
               />
+            </div>
+            
+            <div className="input-group">
               <input 
                 type="password" 
                 placeholder="Password" 
                 name="password" 
                 value={formValues.password} 
                 onChange={(e) => setFormValues({...formValues, [e.target.name]: e.target.value})}
+                onKeyPress={handleKeyPress}
               />
-              <button onClick={handleLogIn} disabled={loading}>
-                {loading ? "Loading..." : "Log in"}
-              </button>
+            </div>
+            
+            <button 
+              className="signin-button" 
+              onClick={handleLogIn} 
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+            
+            <div className="form-footer">
+              <div className="remember-me">
+                <input type="checkbox" id="remember" />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <a href="#" className="help-link">Need help?</a>
+            </div>
+            
+            <div className="signup-now">
+              <span>New here? </span>
+              <a href="/signup" onClick={(e) => {e.preventDefault(); navigate('/signup');}}>Sign up now</a>
+            </div>
+            
+            <div className="recaptcha-info">
+             
             </div>
           </div>
         </div>
@@ -104,77 +140,174 @@ export default function Login() {
 
 const Container = styled.div`
   position: relative;
+  height: 100vh;
+  width: 100vw;
 
   .content {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.75);
     height: 100vh;
     width: 100vw;
-    display: grid;
-    grid-template-rows: 15vh 85vh;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
   }
 
   .form-container {
-    gap: 2rem;
-    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
   }
 
-  .form {
-    padding: 2rem;
-    background-color: #000000b0;
-    width: 25vw;
-    gap: 2rem;
+  .login-form {
+    background-color: rgba(0, 0, 0, 0.75);
+    border-radius: 4px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    max-height: 700px;
+    padding: 60px 68px 40px;
+    margin-bottom: 90px;
+    width: 450px;
     color: white;
+  }
 
-    .container {
-      gap: 2rem;
+  h1 {
+    color: white;
+    font-size: 32px;
+    font-weight: 500;
+    margin-bottom: 28px;
+  }
 
-      input {
-        padding: 0.5rem 1rem;
-        width: 15rem;
-      }
+  .error-message {
+    background-color: #e87c03;
+    border-radius: 4px;
+    font-size: 14px;
+    margin: 0 0 16px;
+    padding: 10px 20px;
+  }
 
-      button {
-        padding: 0.5rem 1rem;
-        background-color: #e50914;
-        border: none;
-        cursor: pointer;
-        color: white;
-        border-radius: 0.2rem;
-        font-weight: bolder;
-        font-size: 1.05rem;
-      }
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  input {
+    background-color: #333;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    height: 50px;
+    line-height: 50px;
+    padding: 16px 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  input::placeholder {
+    color: #8c8c8c;
+  }
+
+  input:focus {
+    outline: none;
+    background-color: #454545;
+  }
+
+  .signin-button {
+    background-color: #44bdd9;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 24px 0 12px;
+    padding: 16px;
+    width: 100%;
+  }
+
+  .signin-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 60px;
+    font-size: 13px;
+    color: #b3b3b3;
+  }
+
+  .remember-me {
+    display: flex;
+    align-items: center;
+  }
+
+  .remember-me input {
+    height: auto;
+    width: auto;
+    margin-right: 5px;
+  }
+
+  .help-link {
+    color: #b3b3b3;
+    text-decoration: none;
+  }
+
+  .help-link:hover {
+    text-decoration: underline;
+  }
+
+  .signup-now {
+    color: #737373;
+    font-size: 16px;
+    margin-top: 16px;
+  }
+
+  .signup-now a {
+    color: white;
+    text-decoration: none;
+    margin-left: 5px;
+  }
+
+  .signup-now a:hover {
+    text-decoration: underline;
+  }
+
+  .recaptcha-info {
+    color: #8c8c8c;
+    font-size: 13px;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 740px) {
+    .login-form {
+      padding: 40px 40px 30px;
+      width: 85%;
+      min-height: auto;
     }
   }
 
-  @media (max-width: 768px) {
-    .form {
-      width: 50vw;
-
-      .container {
-        input {
-          width: 100%;
-        }
-      }
+  @media (max-width: 500px) {
+    .login-form {
+      padding: 30px 20px 20px;
+      width: 90%;
+      margin-bottom: 40px;
     }
-  }
 
-  @media (max-width: 480px) {
-    .form {
-      width: 75vw;
-      
-      .container {
-        input {
-          width: 100%;
-        }
+    h1 {
+      font-size: 24px;
+    }
 
-        button {
-          width: 100%;
-        }
-      }
+    .form-footer {
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
     }
   }
 `;
