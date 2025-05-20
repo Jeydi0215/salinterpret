@@ -134,8 +134,15 @@ export default function Signup() {
             <div className="signup-form">
               {error && <div className="error-message">{error}</div>}
               
-              <div className="form-description">
-                Ready to start? Enter your email to create or restart your membership.
+              <div className="form-container">
+                <div className="form-description">
+                  Ready to start? Enter your email to create your account.
+                </div>
+                <div className="login-link">
+                  <span onClick={() => navigate("/login")} className="back-to-login">
+                    &nbsp;&nbsp;Already have an account? Sign in
+                  </span>
+                </div>
               </div>
               
               <div className="input-group">
@@ -238,9 +245,33 @@ const Container = styled.div`
     max-width: 800px;
   }
 
+  .form-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
   .form-description {
     font-size: 1.2rem;
-    margin-bottom: 1rem;
+    text-align: left;
+  }
+
+  .login-link {
+    text-align: right;
+    margin-left: 15px;
+  }
+
+  .back-to-login {
+    color: #44bdd9;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .back-to-login:hover {
+    text-decoration: underline;
   }
 
   .error-message {
@@ -338,6 +369,16 @@ const Container = styled.div`
   }
 
   @media (max-width: 740px) {
+    .form-container {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .login-link {
+      margin-top: 0.5rem;
+      text-align: left;
+    }
+    
     .input-group {
       flex-direction: column;
     }
