@@ -17,6 +17,7 @@ export default function Login() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogIn = async () => {
     if (!formValues.email || !formValues.password) {
@@ -74,6 +75,10 @@ export default function Login() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Container>
       <BackgroundImage />
@@ -96,15 +101,29 @@ export default function Login() {
               />
             </div>
             
-            <div className="input-group">
+            <div className="input-group password-input-group">
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"}
                 placeholder="Password" 
                 name="password" 
                 value={formValues.password} 
                 onChange={(e) => setFormValues({...formValues, [e.target.name]: e.target.value})}
                 onKeyPress={handleKeyPress}
               />
+              <div className="password-toggle" onClick={togglePasswordVisibility}>
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                )}
+              </div>
             </div>
             
             <button 
@@ -129,7 +148,6 @@ export default function Login() {
             </div>
             
             <div className="recaptcha-info">
-             
             </div>
           </div>
         </div>
@@ -193,6 +211,25 @@ const Container = styled.div`
 
   .input-group {
     margin-bottom: 16px;
+    position: relative;
+  }
+
+  .password-input-group {
+    position: relative;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #8c8c8c;
+    z-index: 10;
+    
+    &:hover {
+      color: white;
+    }
   }
 
   input {
