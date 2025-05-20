@@ -1,621 +1,297 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { useInView } from 'react-intersection-observer';
-import ASL from '../assets/logo.png';
-import BackgroundImage from '../assets/lopit.png';
-import KaliwaLogo from '../assets/logo.png';
-import { useNavigate } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa';
-import Hacker from '../assets/Hacker.png';
-import Hipster from '../assets/Hipster.png';
-import Member from '../assets/Member.png';
-import Mentor from '../assets/Mentor.png';
-import { Analytics } from '@vercel/analytics/react';
+import React, { useEffect, useState } from 'react';
+import { firebaseFirestore } from '../utils/firebase-config';
+import { collection, getDocs } from 'firebase/firestore';
+import AdminNavbar from '../components/AdminNavbar';
 
-const scrollToSection = (id) => {
-  const section = document.getElementById(id);
-  if (section) {
-    section.scrollIntoView({ behavior: 'smooth' });
-  }
-};
+const AdminStats = () => {
+  const [quizData, setQuizData] = useState([]);
+  const [userStats, setUserStats] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const Navbar = ({ onSeeMoreClick }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [isAgreed, setIsAgreed] = useState(false);
-  const navigate = useNavigate();
+  useEffect(() => {
+    const fetchQuizResults = async () => {
+      try {
+        console.log('Fetching quiz results...');
+        setIsLoading(true);
+        
+        // Get quiz results
+        const quizResultsRef = collection(firebaseFirestore, "quizResults");
+        console.log('Collection reference created for quizResults');
+        
+        const snapshot = await getDocs(quizResultsRef);
+        console.log(`Got ${snapshot.size} documents from Firestore`);
+        
+        // Process all quiz results
+        const allResults = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          console.log('Document data:', data);
+          allResults.push({
+            id: doc.id,
+            ...data,
+            // Convert server timestamp to display date
+            displayDate: data.timestamp?.toDate ? 
+              data.timestamp.toDate().toLocaleString() : 
+              'Unknown date'
+          });
+        });
+        
+        // Sort by timestamp (newest first)
+        allResults.sort((a, b) => {
+          if (!a.timestamp || !b.timestamp) return 0;
+          return b.timestamp.seconds - a.timestamp.seconds;
+        });
+        
+        console.log('Processed quiz results:', allResults);
+        setQuizData(allResults);
+        
+        // Process user stats by email
+        const userScores = {};
+        allResults.forEach(result => {
+          // Use email as the primary identifier, falling back to userId if email not available
+          const userIdentifier = result.email || result.userId || 'Unknown';
+          
+          if (!userScores[userIdentifier]) {
+            userScores[userIdentifier] = {
+              email: result.email || 'Anonymous',
+              userId: result.userId,
+              userName: result.userName || 'Anonymous User',
+              scores: [],
+              attempts: 0,
+              totalCorrect: 0,
+              totalQuestions: 0
+            };
+          }
+          
+          userScores[userIdentifier].scores.push(result.score || 0);
+          userScores[userIdentifier].attempts += 1;
+          userScores[userIdentifier].totalCorrect += result.score || 0;
+          userScores[userIdentifier].totalQuestions += result.totalQuestions || 0;
+        });
+        
+        // Calculate averages and format for display
+        const userStatsArray = Object.values(userScores).map(user => {
+          const avgScore = user.scores.length > 0 && user.totalQuestions > 0
+            ? (user.totalCorrect / user.totalQuestions * 100).toFixed(1)
+            : 0;
+            
+          return {
+            ...user,
+            avgScore: `${avgScore}%`,
+            correctRatio: `${user.totalCorrect}/${user.totalQuestions}`
+          };
+        });
+        
+        // Sort by attempts (highest first)
+        userStatsArray.sort((a, b) => b.attempts - a.attempts);
+        
+        console.log('Processed user stats:', userStatsArray);
+        setUserStats(userStatsArray);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching quiz results:', err);
+        setError(`Failed to load quiz data: ${err.message}`);
+        setIsLoading(false);
+      }
+    };
 
-  const handleMenuToggle = () => {
-    setMenuOpen(!menuOpen);
-  };
+    fetchQuizResults();
+  }, []);
 
-  const handleFreeTrialClick = () => {
-    if (!isAgreed) {
-      setIsPopupVisible(true);
-    } else {
-      navigate('/login');
-    }
-  };
-
-  const handleAgreeAndClose = () => {
-    setIsAgreed(true);
-    setIsPopupVisible(false);
-    navigate('/login');
-  };
-
-  return (
-    <>
-      <Analytics />
-      <NavContainer>
-        <BackgroundBlur />
-        <Nav>
-          <Logo>
-            <img src={ASL} alt="Logo" />
-            Salinterpret
-          </Logo>
-          <NavMenu className={menuOpen ? 'open' : ''}>
-            <NavItem onClick={() => scrollToSection('about')}>About</NavItem>
-            <NavItem onClick={() => scrollToSection('pricing')}>Pricing</NavItem>
-            <NavItem onClick={() => scrollToSection('features')}>Features</NavItem>
-            <NavItem onClick={() => scrollToSection('contact')}>Contact</NavItem>
-          </NavMenu>
-          <NavActions>
-            <MenuIcon onClick={handleMenuToggle} />
-          </NavActions>
-        </Nav>
-
-        <HeroSection>
-          <LeftSection>
-            <Title>Welcome!</Title>
-            <ButtonContainer>
-              <FreeTrialButton onClick={handleFreeTrialClick}>Start Now!</FreeTrialButton>
-              
-            </ButtonContainer>
-          </LeftSection>
-          <RightSection>
-            <LogoWrapper>
-              <KaliwaLogoImg src={KaliwaLogo} alt="Kaliwa Logo" />
-            </LogoWrapper>
-            <HeroTextContainer>
-              <Description>Salinterpret</Description>
-              <Text>
-                A web application that translates American Sign Language (ASL) into text in real-time. Using advanced computer vision technology, Salinterpret bridges the communication gap between the ASL community and non-signers, fostering inclusivity and understanding. Communicate easily and connect without barriers. 🌐✋🗨️
-              </Text>
-            </HeroTextContainer>
-          </RightSection>
-        </HeroSection>
-      </NavContainer>
-
-      <AboutSection />
-      <PricingSection />
-      <FeaturesSection />
-      <ContactSection />
-
-      {isPopupVisible && (
-        <PopupOverlay>
-          <PopupContainer>
-            <h2>Terms and Conditions</h2>
-            <ScrollableContent>
-            <p>
-            Welcome to Salinterpret! By accessing or using Salinterpret, a web-based sign language translation app, you agree to these Terms and Conditions. If you do not agree, please do not use Salinterpret. <br/>
-
-1. Acceptance of Terms:<br/>
-
- - You confirm that you are at least 18 years old, or you have parental/guardian permission if younger.<br/>
-  -Account registration may be required for certain features. You are responsible for keeping your account details secure and notifying us of any unauthorized use.<br/>
-
-2. User Responsibilities:<br/>
-
-- Provide accurate information when using the app.<br/>
-Misuse of Salinterpret, interference with its functionality, or engagement in unlawful activities is prohibited.<br/>
-
-3. Privacy:<br/>
-
-- By using the app, you consent to data collection and usage as outlined in our [Privacy Policy].<br/>
-
-4. Intellectual Property:<br/>
-
-- All content, design, and code are the intellectual property of Numbros.<br/>
-Duplication, distribution, or unauthorized use of our content is prohibited.<br/>
-
-5. Disclaimer of Warranties:<br/>
-
-- Salinterpret is provided “as is” without any express or implied warranties.<br/>
-- We do not guarantee error-free, secure, or uninterrupted operation and cannot ensure translation accuracy.<br/>
-
-
-If you have any questions, please contact us at salinterpretasl@gmail.com. Thank you for choosing Salinterpret!<br/>
-
-            </p>
-            </ScrollableContent>
-            <CheckboxContainer>
-              <input type="checkbox" id="termsCheckbox" checked={isAgreed} onChange={() => setIsAgreed(!isAgreed)} />
-              <label htmlFor="termsCheckbox">I agree to the Terms and Conditions</label>
-            </CheckboxContainer>
-            <PopupButton onClick={handleAgreeAndClose}>Agree and Continue</PopupButton>
-            <CloseButton onClick={() => setIsPopupVisible(false)}>Close</CloseButton>
-          </PopupContainer>
-        </PopupOverlay>
-      )}
-    </>
-  );
-};
-
-// Sections
-const AboutSection = () => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
-  return (
-    <Section id="about" ref={ref}>
-      <h2>About Us</h2>
-      <ImagesContainer>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Hacker} alt="Hacker" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Hipster} alt="Hipster" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Member} alt="Member" />
-        </ImageWrapper>
-        <ImageWrapper className={inView ? 'in-view' : ''}>
-          <img src={Mentor} alt="Mentor" />
-        </ImageWrapper>
-      </ImagesContainer>
-      <p><strong><i>Meet the Team Numbros: The Team Behind Salinterpret</i></strong></p>
-      <p>
-        <ul>
-          <li>Justine Dimalanta: Hacker & Hustler, leading technical development</li>
-          <li>Lara Jane Acar: Hipster, designing an intuitive user experience.</li>
-          <li>Jerson Mamangun: Co-Hacker, refining the app’s performance.</li>
-          <li>Mr. Chris Allen Pineda: Project Adviser, guiding our mission.</li>
-        </ul>
-      </p>
-    </Section>
-  );
-};
-
-const PricingSection = () => (
-  <Section id="pricing">
-    <h2>Pricing</h2>
-    <p>
+  // Style constants
+  const styles = {
+    container: {
+      padding: '30px',
+      background: 'linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%)',
+      minHeight: '100vh',
+      color: 'white',
+      fontFamily: 'Poppins, sans-serif'
+    },
+    contentContainer: {
+      marginTop: '100px', // Add space below navbar
+      padding: '0 20px'
       
-    Salinterpret is a free web app designed to bridge communication gaps. Our app offers essential features without any cost, ensuring that you have access to real-time translation and sign-to-word language features at no charge. You just need to have mobile data to access the app. Whether you're looking to communicate with the hearing-impaired or enhance your own understanding, Salinterpret is here to support you without any fees. Explore our features and experience the power 
-    </p>
-  </Section>
-);
-
-const FeaturesSection = () => (
-  <Section id="features">
-    <h2>Features</h2>
-    <p>Salinterpret is a cutting-edge platform designed to revolutionize the way individuals learn sign language. Combining interactive courses, gamification, and comprehensive video tutorials with support for multiple languages, Salinterpret is the most engaging, accessible, and effective way to master sign language.</p>
-  </Section>
-);
-
-const ContactSection = () => (
-  <Section id="contact">
-    <h2>Contact Us</h2>
-    <p>Have questions or feedback? Reach out to us at salinterpretasl@gmail.com.</p>
-  </Section>
-);
-
-const NavContainer = styled.div`
-  position: relative;
-  height: 100vh;
-  overflow: auto;
-  position: sticky;
-  scroll-snap-type: y mandatory;
-`;
-
-const BackgroundBlur = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url(${BackgroundImage}) no-repeat center center/cover;
-  filter: blur(3px);
-  z-index: -1;
-`;
-
-const Nav = styled.nav`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  color: white;
-  position: absolute;
-  width: 100%;
-  top: 0;
-  z-index: 100;
-`;
-
-const Logo = styled.div`
-  font-size: 24px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  img {
-    width: 40px;
-    margin-right: 10px;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
-`;
-
-const NavMenu = styled.ul`
-  display: flex;
-  list-style: none;
-  &.open {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    background: white;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-  }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const NavItem = styled.li`
-  margin: 0 20px;
-  font-size: 16px;
-  cursor: pointer;
-
-  &:hover {
-    color: yellow;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 14px;
-    margin: 10px 0;
-  }
-`;
-
-const NavActions = styled.div`
-  display: flex;
-  align-items: center;
-
-  @media (max-width: 768px) {
-    .sign-in-button {
-      display: none;
+    },
+    header: {
+      fontSize: '28px',
+      fontWeight: 600,
+      marginBottom: '30px',
+      background: 'linear-gradient(90deg, #41bfde 0%, #4e7fff 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      display: 'inline-block'
+    },
+    section: {
+      marginBottom: '40px',
+      background: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '16px',
+      padding: '25px',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+    },
+    sectionTitle: {
+      fontSize: '20px',
+      fontWeight: 500,
+      marginBottom: '20px',
+      color: '#e0e0e0'
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginTop: '15px'
+    },
+    tableHeader: {
+      background: 'rgba(65, 191, 222, 0.15)',
+      color: '#41bfde',
+      textAlign: 'left',
+      padding: '12px 15px',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+    },
+    tableCell: {
+      padding: '12px 15px',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+    },
+    evenRow: {
+      background: 'rgba(255, 255, 255, 0.02)'
+    },
+    oddRow: {
+      background: 'rgba(255, 255, 255, 0.05)'
+    },
+    loadingOrError: {
+      textAlign: 'center',
+      padding: '30px',
+      fontSize: '18px',
+      color: '#999'
+    },
+    scoreHighlight: {
+      fontWeight: 'bold',
+      color: '#41bfde'
+    },
+    debugSection: {
+      margin: '20px 0',
+      padding: '15px',
+      background: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '5px',
+      border: '1px solid #333',
+      display: 'none' // Set to 'block' to show debug info
     }
-  }
-`;
+  };
 
-const MenuIcon = styled(FaBars)`
-  display: none;
-  cursor: pointer;
-  font-size: 24px;
-
-  @media (max-width: 768px) {
-    display: block;
-  }
-`;
-
-const MobileNavMenu = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: block;
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    background: white;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-  }
-`;
-
-const HeroSection = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 100vh;
-  padding: 0 100px;
-  position: relative;
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    padding: 0 20px;
-    flex-direction: column;
-    text-align: center;
-  }
-`;
-
-const LeftSection = styled.div`
-  flex: 1;
-  margin-right: 50px;
-
-  @media (max-width: 768px) {
-    margin-right: 0;
-    margin-top:50%;
-  }
-`;
-
-const Title = styled.h1`
-  font-size: 48px;
-  margin-bottom: 20px;
-
-  @media (max-width: 768px) {
-    font-size: 32px;
-  }
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  max-width: 300px;
-  margin-top: 20px;
-
-  @media (max-width: 768px) {
-    flex-direction: row;
-    gap:20px;
-    align-items: center;
-  }
-`;
-const FreeTrialButton = styled.button`
-  background: #41bfde;
-  color: black;
-  border: none;
-  padding: 30px 30px; 
-  font-size: 18px;
-  margin-right: 15px;
-  border-radius: 5px;
-  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
-  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
-  width: 200px; 
-  &:hover {
-    background: #3a2ba0;
-  }
-`;
-
-const SeeMoreButton = styled.button`
-  background: #febd03;
-  color: black;
-  border: none;
-  width:40%;
-  font-size:20px;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease;
-
-  &:hover {
-    background: yellow;
-  }
-`;
-
-const RightSection = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  @media (max-width: 768px) {
-    margin-top: 20px;
-  }
-`;
-
-const LogoWrapper = styled.div`
-  margin-bottom: 20px;
-`;
-
-const KaliwaLogoImg = styled.img`
-  width: 150px;
-`;
-
-const HeroTextContainer = styled.div`
-  max-width: 500px;
-  text-align: center;
-`;
-
-const Description = styled.h2`
-  font-size: 28px;
-  margin-bottom: 10px;
-`;
-
-const Text = styled.p`
-  font-size: 16px;
-  line-height: 1.5;
-`;
-
-const Section = styled.section`
-  padding: 50px;
-  scroll-snap-align: start;
-
-  h2 {
-    margin-bottom: 20px;
+  if (isLoading) {
+    return (
+      <div style={styles.container}>
+        <AdminNavbar />
+        <div style={styles.contentContainer}>
+          <h2 style={styles.header}>Gamification Stats</h2>
+          <div style={styles.loadingOrError}>Loading quiz data...</div>
+        </div>
+      </div>
+    );
   }
 
-  p {
-    font-size: 18px;
-    line-height: 1.6;
-  }
-`;
-
-const ImagesContainer = styled.div`
-  display: flex; 
-  flex-wrap: nowrap; 
-  gap: 10px;
-  overflow-x: auto; 
-  justify-content: center; 
-  margin: 0 auto;
-  max-width: 1200px; 
-
-  @media (max-width: 768px) {
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 10px;
-    overflow-x: hidden;
-    justify-content: center; 
-  }
-`;
-
-const ImageWrapper = styled.div`
-  opacity: 0;
-  transition: opacity 1s ease-in;
-
-  &.in-view {
-    opacity: 1;
+  if (error) {
+    return (
+      <div style={styles.container}>
+        <AdminNavbar />
+        <div style={styles.contentContainer}>
+          <h2 style={styles.header}>Gamification Stats</h2>
+          <div style={styles.loadingOrError}>{error}</div>
+        </div>
+      </div>
+    );
   }
 
-  img {
-    width: 150px; 
-    width:100%;
-    height: auto; 
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-`;
+  // Debug information (hidden by default)
+  const debugInfo = {
+    quizDataLength: quizData.length,
+    userStatsLength: userStats.length,
+    firebaseFirestore: !!firebaseFirestore ? 'Available' : 'Not Available'
+  };
 
+  return (
+    <div style={styles.container}>
+      <AdminNavbar />
+      <div style={styles.contentContainer}>
+        <h2 style={styles.header}>Gamification Stats</h2>
+        
+        {/* Debug information (hidden by default) */}
+        <div style={styles.debugSection}>
+          <h3>Debug Information</h3>
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
+        
+        {/* User Statistics Section */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>User Performance</h3>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.tableHeader}>Email</th>
+                <th style={styles.tableHeader}>Attempts</th>
+                <th style={styles.tableHeader}>Correct Answers</th>
+                <th style={styles.tableHeader}>Average Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {userStats.length > 0 ? (
+                userStats.map((user, index) => (
+                  <tr key={user.userId || index} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
+                    <td style={styles.tableCell}>{user.email}</td>
+                    <td style={styles.tableCell}>{user.attempts}</td>
+                    <td style={styles.tableCell}>{user.correctRatio}</td>
+                    <td style={styles.tableCell}>
+                      <span style={styles.scoreHighlight}>{user.avgScore}</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" style={{...styles.tableCell, textAlign: 'center'}}>
+                    No quiz data available yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Recent Quiz Results Section */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>Recent Quiz Results</h3>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.tableHeader}>Date</th>
+                <th style={styles.tableHeader}>Email</th>
+                <th style={styles.tableHeader}>Score</th>
+                <th style={styles.tableHeader}>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quizData.length > 0 ? (
+                quizData.slice(0, 10).map((result, index) => (
+                  <tr key={result.id} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
+                    <td style={styles.tableCell}>{result.displayDate}</td>
+                    <td style={styles.tableCell}>{result.email || 'Anonymous'}</td>
+                    <td style={styles.tableCell}>{result.score}/{result.totalQuestions}</td>
+                    <td style={styles.tableCell}>
+                      <span style={styles.scoreHighlight}>{result.percentage}%</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" style={{...styles.tableCell, textAlign: 'center'}}>
+                    No recent quiz results
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContainer = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 500px;
-  color:black;
-  width: 100%;
-  text-align: center;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  p {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-`;
-
-const CloseButton = styled.button`
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  &:hover {
-    background: #c62828;
-  }
-`;
-
-
-const TermsPopup = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 400px;
-  text-align: center;
-
-  h2 {
-    margin-bottom: 15px;
-  }
-
-  p {
-    font-size: 16px;
-    margin-bottom: 15px;
-  }
-`;
-
-const CheckboxWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  margin-top: 15px;
-
-  input {
-    margin-right: 10px;
-  }
-
-  label {
-    font-size: 14px;
-  }
-`;
-
-
-const SectionTitle = styled.h2`
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 20px;
-`;
-
-const SectionContent = styled.p`
-  font-size: 16px;
-  color: #666;
-`;
-const CheckboxContainer = styled.div`
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-
-  input {
-    margin-right: 10px;
-  }
-
-  label {
-    cursor: pointer;
-    text-decoration: underline;
-    color: blue;
-  }
-`;
-const PopupButton = styled.button`
-  background: #4CAF50;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 10px;
-`;
-
-const ScrollableContent = styled.div`
- 
-    max-height: 350px;
-    overflow-y: auto; 
-    padding-right: 10px; 
-  `;
-export default Navbar;
+export default AdminStats;
