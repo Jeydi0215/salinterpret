@@ -37,6 +37,31 @@ const CanvasOverlay = styled.canvas`
   pointer-events: none;
 `;
 
+const PredictionDisplay = styled.div`
+  text-align: center;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 0 0 12px 12px;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: bold;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  
+  span.probability {
+    color: ${props => {
+      const probability = parseFloat(props.probability);
+      if (probability >= 80) return '#4ade80'; // green
+      if (probability >= 60) return '#fbbf24'; // yellow
+      return '#f87171'; // red
+    }};
+    margin-left: 0.5rem;
+  }
+`;
+
 const TranslationText = styled.div`
   text-align: center;
   margin-bottom: 1rem;
@@ -118,6 +143,7 @@ function ASLTranslator() {
   const [lastLetter, setLastLetter] = useState("");
   const [model, setModel] = useState(null);
   const [mode, setMode] = useState("words");
+  const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
 
   const ngrokBase = "https://6dea-143-44-224-17.ngrok-free.app"; // <-- your flask URL
 
@@ -205,11 +231,17 @@ function ASLTranslator() {
             const prediction = await model.predict(videoRef.current);
             const bestGuess = prediction.reduce((max, p) => p.probability > max.probability ? p : max);
 
+            // Update current prediction for display
+            setCurrentPrediction({
+              letter: bestGuess.className,
+              probability: (bestGuess.probability * 100).toFixed(0)
+            });
+
             if (bestGuess.probability > 0.8 && bestGuess.className !== lastLetter) {
               setTranslation((prev) => prev + bestGuess.className);
               setLastLetter(bestGuess.className);
             }
-          }, 2000);
+          }, 500); // More frequent updates for better UX
         } else {
           intervalId = setInterval(() => {
             const video = videoRef.current;
@@ -233,6 +265,14 @@ function ASLTranslator() {
               })
                 .then((res) => res.json())
                 .then((data) => {
+                  // Update current prediction with data from API
+                  if (data.label) {
+                    setCurrentPrediction({
+                      letter: data.label,
+                      probability: data.confidence ? (data.confidence * 100).toFixed(0) : "50"
+                    });
+                  }
+                  
                   if (data.label && data.label !== lastLetter) {
                     setTranslation((prev) => prev + data.label);
                     setLastLetter(data.label);
@@ -242,7 +282,7 @@ function ASLTranslator() {
                   console.error("Error fetching letter:", err);
                 });
             }, "image/jpeg");
-          }, 2000);
+          }, 500); // More frequent updates for better UX
         }
       } catch (err) {
         console.error("Camera access error:", err);
@@ -280,6 +320,13 @@ function ASLTranslator() {
         <CanvasOverlay ref={canvasRef} width={640} height={360} />
       </CameraPlaceholder>
 
+      <PredictionDisplay probability={currentPrediction.probability}>
+        Current: {currentPrediction.letter || "Waiting..."} 
+        <span className="probability">
+          ({currentPrediction.probability}%)
+        </span>
+      </PredictionDisplay>
+
       <TranslationText>
         <h2>Translation ({mode.toUpperCase()} Mode):</h2>
         <p>{translation || "Waiting for signs..."}</p>
@@ -308,7 +355,6 @@ function ASLTranslator() {
 }
 
 export default ASLTranslator;
-  
 
 // import React, { useEffect, useRef, useState } from "react";
 // import styled from "styled-components";
