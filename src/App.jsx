@@ -11,7 +11,7 @@ import Quiz from './pages/Quiz';
 import Translation from './pages/Translation';
 import Start from './pages/Start'
 import UserMain from './pages/UserMain'
-
+import Stats from './pages/Stats'
   
 
 export default function App() {
@@ -27,9 +27,9 @@ export default function App() {
         <Route path="/Player" element={<Player />} /> 
         <Route path="/Translation" element={<Translation/>} /> 
         <Route path="/Quiz" element={<Quiz/>} /> 
-        <Route path="/Main" element={<Main />} />
+        <Route path="/Main" element={<Main/>} />
         <Route path="/UserMain" element={<UserMain />} />
-   
+        <Route path="/Stats" element={<Stats />} />
    
         
       </Routes>
