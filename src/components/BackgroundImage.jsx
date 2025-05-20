@@ -1,5 +1,5 @@
 import React from 'react';
-import background from "../assets/bg.jpg";
+import background from "../assets/lopit.png";
 import styled from "styled-components";
 
 export default function BackgroundImage() {
