@@ -145,7 +145,7 @@ function ASLTranslator() {
   const [mode, setMode] = useState("words");
   const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
 
-  const ngrokBase = "https://3e0c-175-176-11-57.ngrok-free.app"; // <-- your flask URL
+  const ngrokBase = " https://2d49-175-176-11-57.ngrok-free.app"; // <-- your flask URL
 
   const getModelURLs = () => ({
     modelURL: "https://teachablemachine.withgoogle.com/models/AgwPr5b46/model.json",
