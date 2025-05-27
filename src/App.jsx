@@ -12,6 +12,7 @@ import Translation from './pages/Translation';
 import Start from './pages/Start'
 import UserMain from './pages/UserMain'
 import Stats from './pages/Stats'
+import TranslationLetters from './pages/TranslationLetters.jsx'
   
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/Main" element={<Main/>} />
         <Route path="/UserMain" element={<UserMain />} />
         <Route path="/Stats" element={<Stats />} />
+        <Route path="/TranslationLetters" element={<TranslationLetters />} />
    
         
       </Routes>
