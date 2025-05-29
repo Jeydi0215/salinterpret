@@ -394,7 +394,7 @@ function ASLTranslator() {
   const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
   const [showInstructions, setShowInstructions] = useState(true);
 
-  const ngrokBase = "https://aa45-143-44-224-17.ngrok-free.app";
+  const ngrokBase = "https://2c7d-143-44-224-17.ngrok-free.app";
   const confidenceThreshold = 0.5;
 
   useEffect(() => {
