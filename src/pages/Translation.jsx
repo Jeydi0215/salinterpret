@@ -410,7 +410,7 @@ const StatusDisplay = styled.div`
         color: #4caf50;
       `;
     }
-  }}
+  }}g
 `;
 
 function ASLTranslator() {
@@ -428,7 +428,7 @@ function ASLTranslator() {
   const [showInstructions, setShowInstructions] = useState(true);
   const [status, setStatus] = useState('ready');
 
-  const ngrokBase = "https://723b-175-176-11-22.ngrok-free.app";
+  const ngrokBase = "https://ab45-143-44-224-17.ngrok-free.app";
   const confidenceThreshold = 0.4;
 
   // Single function to handle API calls with proper throttling
@@ -571,37 +571,44 @@ function ASLTranslator() {
 
     const startCamera = async () => {
       try {
+        console.log("🎥 Starting camera...");
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
         
         // Check if component is still mounted before setting video
         if (!isMountedRef.current) {
+          console.log("⚠️ Component unmounted during camera start, stopping stream");
           stream.getTracks().forEach(track => track.stop());
           return;
         }
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          console.log("✅ Camera stream set to video element");
         }
 
         // Single interval for all API calls - every 2 seconds
         intervalId = setInterval(() => {
           // Check if component is still mounted
           if (!isMountedRef.current) {
+            console.log("⚠️ Component unmounted, clearing interval");
             clearInterval(intervalId);
             return;
           }
+          console.log("🔄 Making API call...");
           makeApiCall();
         }, 2000);
 
+        console.log("✅ Camera and interval setup completed");
+
       } catch (err) {
-        console.error("Camera access error:", err);
+        console.error("❌ Camera access error:", err);
         if (isMountedRef.current) setStatus('error');
       }
     };
 
     startCamera();
 
-    // Cleanup function
+    // Cleanup function - this only runs when component unmounts or dependencies change
     return () => {
       console.log("🧹 Cleaning up Words Translation component...");
       
@@ -625,6 +632,7 @@ function ASLTranslator() {
       // Clear video source
       if (videoRef.current) {
         videoRef.current.srcObject = null;
+        console.log("✅ Video source cleared");
       }
       
       // Reset processing flags
@@ -632,7 +640,7 @@ function ASLTranslator() {
       
       console.log("✅ Words Translation cleanup completed");
     };
-  }, []); // Remove dependency array to prevent re-running
+  }, []); // Empty dependency array - only runs once on mount
 
   const deleteLastLetter = () => {
     setTranslation((prev) => prev.trim().split(" ").slice(0, -1).join(" "));
