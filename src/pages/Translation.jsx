@@ -7,18 +7,18 @@ const TranslationContainer = styled.div`
   margin: 2rem auto;
   padding: 1rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin-top: 7rem; /* Add space for fixed navbar */
+  margin-top: 7rem;
 
   @media screen and (max-width: 768px) {
     margin: 1rem auto;
     padding: 0.5rem;
-    margin-top: 6rem; /* Adjust for mobile navbar height */
+    margin-top: 6rem;
   }
 
   @media screen and (max-width: 480px) {
     margin: 0.5rem auto;
     padding: 0.25rem;
-    margin-top: 5.5rem; /* Adjust for smaller mobile navbar */
+    margin-top: 5.5rem;
   }
 `;
 
@@ -71,7 +71,7 @@ const CanvasOverlay = styled.canvas`
 const InfoButton = styled.button`
   position: absolute;
   top: 15px;
-  left: 15px; /* Move to left side to avoid navbar logout button */
+  left: 15px;
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -383,154 +383,256 @@ const ModalContent = styled.div`
   }
 `;
 
+const StatusDisplay = styled.div`
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  
+  ${props => {
+    if (props.status === 'translating') {
+      return `
+        background-color: rgba(33, 150, 243, 0.1);
+        border: 1px solid #2196f3;
+        color: #2196f3;
+      `;
+    } else if (props.status === 'error') {
+      return `
+        background-color: rgba(244, 67, 54, 0.1);
+        border: 1px solid #f44336;
+        color: #f44336;
+      `;
+    } else {
+      return `
+        background-color: rgba(76, 175, 80, 0.1);
+        border: 1px solid #4caf50;
+        color: #4caf50;
+      `;
+    }
+  }}
+`;
+
 function ASLTranslator() {
   const videoRef = useRef(null);
   const hiddenCanvasRef = useRef(document.createElement("canvas"));
   const canvasRef = useRef(null);
   const lastTranslatedTimeRef = useRef(0);
+  const lastApiCallTimeRef = useRef(0);
+  const isProcessingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   const [translation, setTranslation] = useState("");
   const [lastWord, setLastWord] = useState("");
   const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
   const [showInstructions, setShowInstructions] = useState(true);
+  const [status, setStatus] = useState('ready');
 
-  const ngrokBase = "https://2c7d-143-44-224-17.ngrok-free.app";
-  const confidenceThreshold = 0.5;
+  const ngrokBase = "https://c8eb-143-44-224-17.ngrok-free.app";
+  const confidenceThreshold = 0.4;
+
+  // Single function to handle API calls with proper throttling
+  const makeApiCall = async () => {
+    // Check if component is still mounted
+    if (!isMountedRef.current) return;
+
+    const now = Date.now();
+    
+    if (now - lastApiCallTimeRef.current < 2000) {
+      return;
+    }
+    
+    if (isProcessingRef.current) {
+      return;
+    }
+    
+    const video = videoRef.current;
+    const canvas = hiddenCanvasRef.current;
+    
+    if (!video || !canvas || video.readyState !== 4) {
+      return;
+    }
+    
+    isProcessingRef.current = true;
+    lastApiCallTimeRef.current = now;
+    
+    // Check if still mounted before updating state
+    if (isMountedRef.current) {
+      setStatus('translating');
+    }
+    
+    try {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob || !isMountedRef.current) {
+          isProcessingRef.current = false;
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", blob, "frame.jpg");
+
+        try {
+          const response = await fetch(`${ngrokBase}/translate-words`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!isMountedRef.current) {
+            isProcessingRef.current = false;
+            return;
+          }
+
+          if (response.ok) {
+            const data = await response.json();
+            
+            // Update bounding boxes
+            if (data.bbox && canvasRef.current && isMountedRef.current) {
+              const ctx = canvasRef.current.getContext("2d");
+              const overlayCanvas = canvasRef.current;
+
+              overlayCanvas.width = overlayCanvas.offsetWidth;
+              overlayCanvas.height = overlayCanvas.offsetHeight;
+
+              ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+              const videoW = video.videoWidth;
+              const videoH = video.videoHeight;
+              const scaleX = overlayCanvas.width / videoW;
+              const scaleY = overlayCanvas.height / videoH;
+
+              const bboxes = Array.isArray(data.bbox[0]) ? data.bbox : [data.bbox];
+              bboxes.forEach(([x, y, w, h]) => {
+                const sx = x * scaleX;
+                const sy = y * scaleY;
+                const sw = w * scaleX;
+                const sh = h * scaleY;
+
+                ctx.strokeStyle = "#00ffcc";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(sx, sy, sw, sh);
+              });
+            }
+
+            // Update current prediction
+            const label = data.label;
+            const confidence = data.confidence || 0;
+            
+            if (isMountedRef.current) {
+              setCurrentPrediction({
+                letter: label,
+                probability: (confidence * 100).toFixed(0),
+              });
+
+              // Update translation if conditions are met
+              if (
+                confidence >= confidenceThreshold &&
+                label !== lastWord &&
+                now - lastTranslatedTimeRef.current >= 2000
+              ) {
+                setTranslation((prev) => prev + " " + label);
+                setLastWord(label);
+                lastTranslatedTimeRef.current = now;
+              }
+              
+              setStatus('ready');
+            }
+          } else if (response.status === 429) {
+            console.log('Rate limited - will retry in 2 seconds');
+            if (isMountedRef.current) setStatus('error');
+          } else {
+            const errorData = await response.json();
+            console.error('Translation error:', errorData);
+            if (isMountedRef.current) setStatus('error');
+          }
+        } catch (err) {
+          console.error("Error fetching translation:", err);
+          if (isMountedRef.current) setStatus('error');
+        } finally {
+          isProcessingRef.current = false;
+        }
+      }, "image/jpeg", 0.8);
+      
+    } catch (err) {
+      console.error("Canvas error:", err);
+      isProcessingRef.current = false;
+      if (isMountedRef.current) setStatus('error');
+    }
+  };
 
   useEffect(() => {
-    let stream;
-    let bboxIntervalId;
-    let translationIntervalId;
+    let stream = null;
+    let intervalId = null;
+    isMountedRef.current = true;
 
     const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        // Check if component is still mounted before setting video
+        if (!isMountedRef.current) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
 
-        // Frequent bounding box updates for smooth tracking (every 200ms)
-        bboxIntervalId = setInterval(() => {
-          const video = videoRef.current;
-          const canvas = hiddenCanvasRef.current;
-          const overlayCanvas = canvasRef.current;
-
-          if (!video || !canvas || video.readyState !== 4) return;
-
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-            const formData = new FormData();
-            formData.append("file", blob, "frame.jpg");
-
-            fetch(`${ngrokBase}/translate-words`, {
-              method: "POST",
-              body: formData,
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                // Always update bounding boxes for smooth tracking
-                if (data.bbox && overlayCanvas) {
-                  const ctx = overlayCanvas.getContext("2d");
-                  const video = videoRef.current;
-
-                  overlayCanvas.width = overlayCanvas.offsetWidth;
-                  overlayCanvas.height = overlayCanvas.offsetHeight;
-
-                  ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-                  const videoW = video.videoWidth;
-                  const videoH = video.videoHeight;
-                  const scaleX = overlayCanvas.width / videoW;
-                  const scaleY = overlayCanvas.height / videoH;
-
-                  const bboxes = Array.isArray(data.bbox[0]) ? data.bbox : [data.bbox];
-                  bboxes.forEach(([x, y, w, h]) => {
-                    const sx = x * scaleX;
-                    const sy = y * scaleY;
-                    const sw = w * scaleX;
-                    const sh = h * scaleY;
-
-                    ctx.strokeStyle = "#00ffcc";
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(sx, sy, sw, sh);
-                  });
-                }
-
-                // Update current prediction display
-                const label = data.label;
-                const confidence = data.confidence || 0;
-                setCurrentPrediction({
-                  letter: label,
-                  probability: (confidence * 100).toFixed(0),
-                });
-              })
-              .catch((err) => {
-                console.error("Error fetching bounding box:", err);
-              });
-          }, "image/jpeg");
-        }, 200); // Update every 200ms for smooth tracking
-
-        // Less frequent translation updates to avoid spam (every 2 seconds)
-        translationIntervalId = setInterval(() => {
-          const video = videoRef.current;
-          const canvas = hiddenCanvasRef.current;
-
-          if (!video || !canvas || video.readyState !== 4) return;
-
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-            const formData = new FormData();
-            formData.append("file", blob, "frame.jpg");
-
-            fetch(`${ngrokBase}/translate-words`, {
-              method: "POST",
-              body: formData,
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                const label = data.label;
-                const confidence = data.confidence || 0;
-
-                const now = Date.now();
-                if (
-                  confidence >= confidenceThreshold &&
-                  label !== lastWord &&
-                  now - lastTranslatedTimeRef.current >= 2000
-                ) {
-                  setTranslation((prev) => prev + " " + label);
-                  setLastWord(label);
-                  lastTranslatedTimeRef.current = now;
-                }
-              })
-              .catch((err) => {
-                console.error("Error fetching translation:", err);
-              });
-          }, "image/jpeg");
-        }, 2000); // Translation check every 2 seconds
+        // Single interval for all API calls - every 2 seconds
+        intervalId = setInterval(() => {
+          // Check if component is still mounted
+          if (!isMountedRef.current) {
+            clearInterval(intervalId);
+            return;
+          }
+          makeApiCall();
+        }, 2000);
 
       } catch (err) {
         console.error("Camera access error:", err);
+        if (isMountedRef.current) setStatus('error');
       }
     };
 
     startCamera();
 
+    // Cleanup function
     return () => {
-      if (bboxIntervalId) clearInterval(bboxIntervalId);
-      if (translationIntervalId) clearInterval(translationIntervalId);
-      if (stream) stream.getTracks().forEach((track) => track.stop());
+      console.log("🧹 Cleaning up Words Translation component...");
+      
+      // Mark as unmounted
+      isMountedRef.current = false;
+      
+      // Clear interval
+      if (intervalId) {
+        clearInterval(intervalId);
+        console.log("✅ Interval cleared");
+      }
+      
+      // Stop camera stream
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          console.log("✅ Camera track stopped");
+        });
+      }
+      
+      // Clear video source
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      
+      // Reset processing flags
+      isProcessingRef.current = false;
+      
+      console.log("✅ Words Translation cleanup completed");
     };
-  }, [lastWord]);
+  }, []); // Remove dependency array to prevent re-running
 
   const deleteLastLetter = () => {
     setTranslation((prev) => prev.trim().split(" ").slice(0, -1).join(" "));
@@ -539,6 +641,17 @@ function ASLTranslator() {
   const clearWord = () => {
     setTranslation("");
     setLastWord("");
+  };
+
+  const getStatusMessage = () => {
+    switch (status) {
+      case 'translating':
+        return '🔄 Translating...';
+      case 'error':
+        return '⚠️ Connection issue - retrying...';
+      default:
+        return '✅ Ready';
+    }
   };
 
   return (
@@ -554,6 +667,10 @@ function ASLTranslator() {
           </svg>
         </InfoButton>
       </CameraPlaceholder>
+
+      <StatusDisplay status={status}>
+        {getStatusMessage()}
+      </StatusDisplay>
 
       <PredictionDisplay probability={currentPrediction.probability}>
         <div>Current Prediction:</div>
