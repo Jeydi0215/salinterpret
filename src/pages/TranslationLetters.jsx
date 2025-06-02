@@ -428,7 +428,7 @@ function ASLTranslator() {
   const [showInstructions, setShowInstructions] = useState(true);
   const [status, setStatus] = useState('ready');
 
-  const ngrokBase = "https://80db-143-44-224-17.ngrok-free.app";
+  const ngrokBase = "https://878f-143-44-224-17.ngrok-free.app";
   const confidenceThreshold = 0.2;
 
   // Single function to handle API calls with proper throttling
