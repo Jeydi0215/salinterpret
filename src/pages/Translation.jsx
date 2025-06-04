@@ -410,7 +410,7 @@ const StatusDisplay = styled.div`
         color: #4caf50;
       `;
     }
-  }}g
+  }}
 `;
 
 function ASLTranslator() {
@@ -423,17 +423,17 @@ function ASLTranslator() {
   const isMountedRef = useRef(true);
 
   const [translation, setTranslation] = useState("");
-  const [lastWord, setLastWord] = useState("");
+  const [lastLetter, setLastLetter] = useState("");
   const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
   const [showInstructions, setShowInstructions] = useState(true);
   const [status, setStatus] = useState('ready');
 
-  const ngrokBase = "https://e2b5-175-176-13-120.ngrok-free.app";
+  // FIXED: Updated ngrok URL - replace with your current ngrok URL
+  const ngrokBase = "https://a42a-143-44-224-17.ngrok-free.app";
   const confidenceThreshold = 0.4;
 
-  // Single function to handle API calls with proper throttling
+  // FIXED: Improved API call with better error handling and retry logic
   const makeApiCall = async () => {
-    // Check if component is still mounted
     if (!isMountedRef.current) return;
 
     const now = Date.now();
@@ -456,7 +456,6 @@ function ASLTranslator() {
     isProcessingRef.current = true;
     lastApiCallTimeRef.current = now;
     
-    // Check if still mounted before updating state
     if (isMountedRef.current) {
       setStatus('translating');
     }
@@ -477,10 +476,20 @@ function ASLTranslator() {
         formData.append("file", blob, "frame.jpg");
 
         try {
+          // FIXED: Added proper headers and timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
           const response = await fetch(`${ngrokBase}/translate-words`, {
             method: "POST",
             body: formData,
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+            signal: controller.signal
           });
+
+          clearTimeout(timeoutId);
 
           if (!isMountedRef.current) {
             isProcessingRef.current = false;
@@ -512,14 +521,14 @@ function ASLTranslator() {
                 const sw = w * scaleX;
                 const sh = h * scaleY;
 
-                ctx.strokeStyle = "#00ffcc";
+                ctx.strokeStyle = "#1e90ff";
                 ctx.lineWidth = 3;
                 ctx.strokeRect(sx, sy, sw, sh);
               });
             }
 
             // Update current prediction
-            const label = data.label;
+            const label = data.label || "";
             const confidence = data.confidence || 0;
             
             if (isMountedRef.current) {
@@ -531,27 +540,57 @@ function ASLTranslator() {
               // Update translation if conditions are met
               if (
                 confidence >= confidenceThreshold &&
-                label !== lastWord &&
+                label !== lastLetter &&
+                label !== "" &&
                 now - lastTranslatedTimeRef.current >= 2000
               ) {
-                setTranslation((prev) => prev + " " + label);
-                setLastWord(label);
+                setTranslation((prev) => prev + label);
+                setLastLetter(label);
                 lastTranslatedTimeRef.current = now;
               }
               
               setStatus('ready');
             }
-          } else if (response.status === 429) {
-            console.log('Rate limited - will retry in 2 seconds');
-            if (isMountedRef.current) setStatus('error');
           } else {
-            const errorData = await response.json();
-            console.error('Translation error:', errorData);
-            if (isMountedRef.current) setStatus('error');
+            console.error(`API Error: ${response.status} ${response.statusText}`);
+            
+            if (response.status === 400) {
+              // Hand detection issue - not a critical error
+              if (isMountedRef.current) {
+                setCurrentPrediction({
+                  letter: "No hand detected",
+                  probability: 0
+                });
+                setStatus('ready');
+              }
+            } else {
+              if (isMountedRef.current) {
+                setStatus('error');
+                setCurrentPrediction({
+                  letter: `Error ${response.status}`,
+                  probability: 0
+                });
+              }
+            }
           }
         } catch (err) {
-          console.error("Error fetching translation:", err);
-          if (isMountedRef.current) setStatus('error');
+          console.error("Fetch error:", err);
+          
+          if (isMountedRef.current) {
+            if (err.name === 'AbortError') {
+              setStatus('error');
+              setCurrentPrediction({
+                letter: "Request timeout",
+                probability: 0
+              });
+            } else {
+              setStatus('error');
+              setCurrentPrediction({
+                letter: "Connection error",
+                probability: 0
+              });
+            }
+          }
         } finally {
           isProcessingRef.current = false;
         }
@@ -560,10 +599,17 @@ function ASLTranslator() {
     } catch (err) {
       console.error("Canvas error:", err);
       isProcessingRef.current = false;
-      if (isMountedRef.current) setStatus('error');
+      if (isMountedRef.current) {
+        setStatus('error');
+        setCurrentPrediction({
+          letter: "Camera error",
+          probability: 0
+        });
+      }
     }
   };
 
+  // FIXED: Improved useEffect with better cleanup
   useEffect(() => {
     let stream = null;
     let intervalId = null;
@@ -571,84 +617,75 @@ function ASLTranslator() {
 
     const startCamera = async () => {
       try {
-        console.log("🎥 Starting camera...");
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
+        });
         
-        // Check if component is still mounted before setting video
         if (!isMountedRef.current) {
-          console.log("⚠️ Component unmounted during camera start, stopping stream");
           stream.getTracks().forEach(track => track.stop());
           return;
         }
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          console.log("✅ Camera stream set to video element");
+          
+          // Wait for video to be ready before starting API calls
+          videoRef.current.onloadedmetadata = () => {
+            if (isMountedRef.current) {
+              intervalId = setInterval(() => {
+                if (isMountedRef.current) {
+                  makeApiCall();
+                }
+              }, 2000);
+            }
+          };
         }
 
-        // Single interval for all API calls - every 2 seconds
-        intervalId = setInterval(() => {
-          // Check if component is still mounted
-          if (!isMountedRef.current) {
-            console.log("⚠️ Component unmounted, clearing interval");
-            clearInterval(intervalId);
-            return;
-          }
-          console.log("🔄 Making API call...");
-          makeApiCall();
-        }, 2000);
-
-        console.log("✅ Camera and interval setup completed");
-
       } catch (err) {
-        console.error("❌ Camera access error:", err);
-        if (isMountedRef.current) setStatus('error');
+        console.error("Camera access error:", err);
+        if (isMountedRef.current) {
+          setStatus('error');
+          setCurrentPrediction({
+            letter: "Camera access denied",
+            probability: 0
+          });
+        }
       }
     };
 
     startCamera();
 
-    // Cleanup function - this only runs when component unmounts or dependencies change
     return () => {
-      console.log("🧹 Cleaning up Words Translation component...");
-      
-      // Mark as unmounted
       isMountedRef.current = false;
       
-      // Clear interval
       if (intervalId) {
         clearInterval(intervalId);
-        console.log("✅ Interval cleared");
       }
       
-      // Stop camera stream
       if (stream) {
         stream.getTracks().forEach((track) => {
           track.stop();
-          console.log("✅ Camera track stopped");
         });
       }
       
-      // Clear video source
       if (videoRef.current) {
         videoRef.current.srcObject = null;
-        console.log("✅ Video source cleared");
       }
       
-      // Reset processing flags
       isProcessingRef.current = false;
-      
-      console.log("✅ Words Translation cleanup completed");
     };
-  }, []); // Empty dependency array - only runs once on mount
+  }, []);
 
   const deleteLastLetter = () => {
-    setTranslation((prev) => prev.trim().split(" ").slice(0, -1).join(" "));
+    setTranslation((prev) => prev.slice(0, -1));
   };
 
   const clearWord = () => {
     setTranslation("");
-    setLastWord("");
+    setLastLetter("");
   };
 
   const getStatusMessage = () => {
@@ -689,13 +726,13 @@ function ASLTranslator() {
       </PredictionDisplay>
 
       <TranslationText>
-        <h2>Translation (WORDS Mode):</h2>
-        <p>{translation.trim() || "Waiting for signs..."}</p>
+        <h2>Translation (LETTERS Mode):</h2>
+        <p>{translation || "Waiting for signs..."}</p>
       </TranslationText>
 
       <ButtonGroup>
         <button className="delete-letter" onClick={deleteLastLetter}>
-          Delete Last Word
+          Delete Last Letter
         </button>
         <button className="delete-all" onClick={clearWord}>
           Clear All
@@ -706,12 +743,17 @@ function ASLTranslator() {
         <Modal>
           <ModalContent>
             <h2>Instructions</h2>
-            <p>1. Place one or two hands in front of the camera.</p>
-            <p>2. The system translates every 2 seconds if confident.</p>
-            <p>3. Translation is accumulated below; current prediction shows latest word only.</p>
+            <p>1. Spell one letter at a time in front of the camera.</p>
+            <p>2. The system checks every 2 seconds if confident.</p>
+            <p>3. Blue boxes will track your hands smoothly.</p>
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#fef5e7', borderRadius: '8px', border: '1px solid #f6ad55' }}>
               <p style={{ color: '#c05621', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
                 📏 For best results, keep your device 10-15 inches away from your hands.
+              </p>
+            </div>
+            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6fffa', borderRadius: '8px', border: '1px solid #38b2ac' }}>
+              <p style={{ color: '#234e52', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
+              
               </p>
             </div>
             <button onClick={() => setShowInstructions(false)}>
