@@ -238,7 +238,7 @@ const ButtonGroup = styled.div`
     font-size: 0.95rem;
   }
 
-  .delete-letter {
+  .delete-word {
     background-color: #e53e3e;
   }
 
@@ -413,7 +413,7 @@ const StatusDisplay = styled.div`
   }}
 `;
 
-function ASLTranslator() {
+function ASLWordsTranslator() {
   const videoRef = useRef(null);
   const hiddenCanvasRef = useRef(document.createElement("canvas"));
   const canvasRef = useRef(null);
@@ -423,17 +423,41 @@ function ASLTranslator() {
   const isMountedRef = useRef(true);
 
   const [translation, setTranslation] = useState("");
-  const [lastLetter, setLastLetter] = useState("");
-  const [currentPrediction, setCurrentPrediction] = useState({ letter: "", probability: 0 });
+  const [lastWord, setLastWord] = useState("");
+  const [currentPrediction, setCurrentPrediction] = useState({ word: "", probability: 0 });
   const [showInstructions, setShowInstructions] = useState(true);
   const [status, setStatus] = useState('ready');
 
-  // FIXED: Updated ngrok URL - replace with your current ngrok URL
-  const ngrokBase = "https://a42a-143-44-224-17.ngrok-free.app";
+  // UPDATED: Changed to your Hugging Face Spaces URL
+  const apiBase = "https://soleil0215-asl-words.hf.space";
   const confidenceThreshold = 0.4;
 
-  // FIXED: Improved API call with better error handling and retry logic
-  const makeApiCall = async () => {
+  // Health check function
+  const checkApiHealth = async () => {
+    try {
+      const response = await fetch(`${apiBase}/health`, {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+        },
+        mode: 'cors'
+      });
+      
+      if (response.ok) {
+        console.log("API health check passed");
+        return true;
+      } else {
+        console.log("API health check failed:", response.status);
+        return false;
+      }
+    } catch (error) {
+      console.log("API health check error:", error);
+      return false;
+    }
+  };
+
+  // UPDATED: API call for words translation
+  const makeApiCall = async (retryCount = 0) => {
     if (!isMountedRef.current) return;
 
     const now = Date.now();
@@ -466,6 +490,7 @@ function ASLTranslator() {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      // Convert canvas to blob for FormData
       canvas.toBlob(async (blob) => {
         if (!blob || !isMountedRef.current) {
           isProcessingRef.current = false;
@@ -473,20 +498,17 @@ function ASLTranslator() {
         }
 
         const formData = new FormData();
-        formData.append("file", blob, "frame.jpg");
+        formData.append('file', blob, 'image.jpg');
 
         try {
-          // FIXED: Added proper headers and timeout
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-          const response = await fetch(`${ngrokBase}/translate-words`, {
+          const response = await fetch(`${apiBase}/translate-words`, {
             method: "POST",
             body: formData,
-            headers: {
-              'ngrok-skip-browser-warning': 'true',
-            },
-            signal: controller.signal
+            signal: controller.signal,
+            mode: 'cors'
           });
 
           clearTimeout(timeoutId);
@@ -499,7 +521,7 @@ function ASLTranslator() {
           if (response.ok) {
             const data = await response.json();
             
-            // Update bounding boxes
+            // Update bounding boxes (if your API returns them)
             if (data.bbox && canvasRef.current && isMountedRef.current) {
               const ctx = canvasRef.current.getContext("2d");
               const overlayCanvas = canvasRef.current;
@@ -528,24 +550,24 @@ function ASLTranslator() {
             }
 
             // Update current prediction
-            const label = data.label || "";
+            const word = data.prediction || data.label || "";
             const confidence = data.confidence || 0;
             
             if (isMountedRef.current) {
               setCurrentPrediction({
-                letter: label,
+                word: word,
                 probability: (confidence * 100).toFixed(0),
               });
 
               // Update translation if conditions are met
               if (
                 confidence >= confidenceThreshold &&
-                label !== lastLetter &&
-                label !== "" &&
+                word !== lastWord &&
+                word !== "" &&
                 now - lastTranslatedTimeRef.current >= 2000
               ) {
-                setTranslation((prev) => prev + label);
-                setLastLetter(label);
+                setTranslation((prev) => prev ? `${prev} ${word}` : word);
+                setLastWord(word);
                 lastTranslatedTimeRef.current = now;
               }
               
@@ -554,20 +576,48 @@ function ASLTranslator() {
           } else {
             console.error(`API Error: ${response.status} ${response.statusText}`);
             
+            // Log the error response body for debugging
+            try {
+              const errorText = await response.text();
+              console.error('Error response body:', errorText);
+            } catch (e) {
+              console.error('Could not read error response');
+            }
+            
+            // Handle 503 Service Unavailable with retry logic (Hugging Face cold start)
+            if (response.status === 503 && retryCount < 3) {
+              console.log(`Service unavailable, retrying... (attempt ${retryCount + 1})`);
+              isProcessingRef.current = false;
+              setTimeout(() => {
+                if (isMountedRef.current) {
+                  makeApiCall(retryCount + 1);
+                }
+              }, 5000);
+              return;
+            }
+            
             if (response.status === 400) {
-              // Hand detection issue - not a critical error
+              // Bad request - possibly no hand detected
               if (isMountedRef.current) {
                 setCurrentPrediction({
-                  letter: "No hand detected",
+                  word: "No hand detected",
                   probability: 0
                 });
                 setStatus('ready');
+              }
+            } else if (response.status === 503) {
+              if (isMountedRef.current) {
+                setStatus('error');
+                setCurrentPrediction({
+                  word: "Service starting up...",
+                  probability: 0
+                });
               }
             } else {
               if (isMountedRef.current) {
                 setStatus('error');
                 setCurrentPrediction({
-                  letter: `Error ${response.status}`,
+                  word: `Error ${response.status}`,
                   probability: 0
                 });
               }
@@ -580,13 +630,13 @@ function ASLTranslator() {
             if (err.name === 'AbortError') {
               setStatus('error');
               setCurrentPrediction({
-                letter: "Request timeout",
+                word: "Request timeout",
                 probability: 0
               });
             } else {
               setStatus('error');
               setCurrentPrediction({
-                letter: "Connection error",
+                word: "Connection error",
                 probability: 0
               });
             }
@@ -602,14 +652,13 @@ function ASLTranslator() {
       if (isMountedRef.current) {
         setStatus('error');
         setCurrentPrediction({
-          letter: "Camera error",
+          word: "Camera error",
           probability: 0
         });
       }
     }
   };
 
-  // FIXED: Improved useEffect with better cleanup
   useEffect(() => {
     let stream = null;
     let intervalId = null;
@@ -617,6 +666,14 @@ function ASLTranslator() {
 
     const startCamera = async () => {
       try {
+        // Check API health before starting camera
+        console.log("Checking API health...");
+        const isHealthy = await checkApiHealth();
+        
+        if (!isHealthy) {
+          console.warn("API health check failed, but continuing anyway...");
+        }
+
         stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             width: { ideal: 640 },
@@ -632,7 +689,6 @@ function ASLTranslator() {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           
-          // Wait for video to be ready before starting API calls
           videoRef.current.onloadedmetadata = () => {
             if (isMountedRef.current) {
               intervalId = setInterval(() => {
@@ -649,7 +705,7 @@ function ASLTranslator() {
         if (isMountedRef.current) {
           setStatus('error');
           setCurrentPrediction({
-            letter: "Camera access denied",
+            word: "Camera access denied",
             probability: 0
           });
         }
@@ -679,13 +735,15 @@ function ASLTranslator() {
     };
   }, []);
 
-  const deleteLastLetter = () => {
-    setTranslation((prev) => prev.slice(0, -1));
+  const deleteLastWord = () => {
+    const words = translation.split(' ').filter(word => word.length > 0);
+    words.pop();
+    setTranslation(words.join(' '));
   };
 
-  const clearWord = () => {
+  const clearAll = () => {
     setTranslation("");
-    setLastLetter("");
+    setLastWord("");
   };
 
   const getStatusMessage = () => {
@@ -720,21 +778,21 @@ function ASLTranslator() {
       <PredictionDisplay probability={currentPrediction.probability}>
         <div>Current Prediction:</div>
         <div style={{ fontSize: "1.6rem", margin: "0.5rem 0" }}>
-          {currentPrediction.letter || "Waiting..."}
+          {currentPrediction.word || "Waiting..."}
         </div>
         <div>Confidence: <span className="probability">{currentPrediction.probability}%</span></div>
       </PredictionDisplay>
 
       <TranslationText>
-        <h2>Translation (LETTERS Mode):</h2>
+        <h2>Translation (WORDS Mode):</h2>
         <p>{translation || "Waiting for signs..."}</p>
       </TranslationText>
 
       <ButtonGroup>
-        <button className="delete-letter" onClick={deleteLastLetter}>
-          Delete Last Letter
+        <button className="delete-word" onClick={deleteLastWord}>
+          Delete Last Word
         </button>
-        <button className="delete-all" onClick={clearWord}>
+        <button className="delete-all" onClick={clearAll}>
           Clear All
         </button>
       </ButtonGroup>
@@ -743,17 +801,17 @@ function ASLTranslator() {
         <Modal>
           <ModalContent>
             <h2>Instructions</h2>
-            <p>1. Spell one letter at a time in front of the camera.</p>
-            <p>2. The system checks every 2 seconds if confident.</p>
-            <p>3. Blue boxes will track your hands smoothly.</p>
+            <p>1. Sign complete words in front of the camera.</p>
+            <p>2. The system analyzes your signs every 2 seconds.</p>
+            <p>3. Blue boxes will track your hands automatically.</p>
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#fef5e7', borderRadius: '8px', border: '1px solid #f6ad55' }}>
               <p style={{ color: '#c05621', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
-                📏 For best results, keep your device 10-15 inches away from your hands.
+                📏 For best results, keep your device 10-15 inches away and sign clearly.
               </p>
             </div>
             <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6fffa', borderRadius: '8px', border: '1px solid #38b2ac' }}>
               <p style={{ color: '#234e52', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
-              
+                🚀 Now powered by Hugging Face Spaces for reliable ASL word recognition!
               </p>
             </div>
             <button onClick={() => setShowInstructions(false)}>
@@ -766,4 +824,4 @@ function ASLTranslator() {
   );
 }
 
-export default ASLTranslator;
+export default ASLWordsTranslator;
