@@ -272,6 +272,7 @@ export default function Upload() {
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
   const [location, setLocation] = useState('');
+  const [category, setCategory] = useState('');
   const [progress, setProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -303,6 +304,12 @@ export default function Upload() {
     document.getElementById('file-upload').click();
   };
 
+  const handleLocationChange = (e) => {
+    setLocation(e.target.value);
+    // Reset category when location changes
+    setCategory('');
+  };
+
   const handleUpload = () => {
     if (!file) {
       alert('Please choose a file before uploading.');
@@ -319,6 +326,11 @@ export default function Upload() {
       return;
     }
 
+    if (location === 'courses' && !category) {
+      alert('Please select a category for the course.');
+      return;
+    }
+
     setIsUploading(true);
     setUploadStatus(null);
     
@@ -329,6 +341,7 @@ export default function Upload() {
         title,
         tags,
         location,
+        ...(location === 'courses' && { category }),
       },
     };
 
@@ -358,6 +371,7 @@ export default function Upload() {
             setTitle('');
             setTags('');
             setLocation('');
+            setCategory('');
             setProgress(0);
             setUploadStatus(null);
           }, 2000);
@@ -408,12 +422,28 @@ export default function Upload() {
               <SelectField
                 id="location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={handleLocationChange}
               >
                 <option value="">Select location</option>
                 <option value="courses">Courses</option>
                 <option value="main">Main</option>
               </SelectField>
+              
+              {location === 'courses' && (
+                <>
+                  <FormLabel htmlFor="category">Category</FormLabel>
+                  <SelectField
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    <option value="">Select category</option>
+                    <option value="alphabets">Alphabets</option>
+                    <option value="common_words">Common Words</option>
+                    <option value="common_phrases">Common Phrases</option>
+                  </SelectField>
+                </>
+              )}
               
               <FormDivider />
               
