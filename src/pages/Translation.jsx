@@ -421,6 +421,12 @@ function ASLWordsTranslator() {
   const lastApiCallTimeRef = useRef(0);
   const isProcessingRef = useRef(false);
   const isMountedRef = useRef(true);
+  const animationFrameRef = useRef(null);
+  
+  // Smooth tracking state
+  const currentBboxRef = useRef(null);
+  const targetBboxRef = useRef(null);
+  const lastBboxUpdateRef = useRef(0);
 
   const [translation, setTranslation] = useState("");
   const [lastWord, setLastWord] = useState("");
@@ -456,7 +462,140 @@ function ASLWordsTranslator() {
     }
   };
 
-  // UPDATED: API call for words translation
+  // Smooth interpolation function
+  const lerp = (start, end, factor) => {
+    return start + (end - start) * factor;
+  };
+
+  // Smooth bounding box animation
+  const animateBoundingBox = () => {
+    if (!canvasRef.current || !isMountedRef.current || !videoRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const ctx = canvasRef.current.getContext("2d");
+    const overlayCanvas = canvasRef.current;
+
+    // Set canvas size to match display size
+    overlayCanvas.width = overlayCanvas.offsetWidth;
+    overlayCanvas.height = overlayCanvas.offsetHeight;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // If we have target and current bboxes, interpolate between them
+    if (targetBboxRef.current && currentBboxRef.current) {
+      const now = Date.now();
+      const timeSinceUpdate = now - lastBboxUpdateRef.current;
+      const interpolationDuration = 500; // 500ms smooth transition
+      
+      let factor = Math.min(timeSinceUpdate / interpolationDuration, 1);
+      // Ease out function for smoother animation
+      factor = 1 - Math.pow(1 - factor, 3);
+
+      const videoW = video.videoWidth;
+      const videoH = video.videoHeight;
+      const scaleX = overlayCanvas.width / videoW;
+      const scaleY = overlayCanvas.height / videoH;
+
+      // Interpolate between current and target positions
+      const interpolatedBbox = [
+        lerp(currentBboxRef.current[0], targetBboxRef.current[0], factor),
+        lerp(currentBboxRef.current[1], targetBboxRef.current[1], factor),
+        lerp(currentBboxRef.current[2], targetBboxRef.current[2], factor),
+        lerp(currentBboxRef.current[3], targetBboxRef.current[3], factor)
+      ];
+
+      // Update current bbox to interpolated position
+      currentBboxRef.current = interpolatedBbox;
+
+      // Draw the bounding box
+      const [x, y, w, h] = interpolatedBbox;
+      const sx = x * scaleX;
+      const sy = y * scaleY;
+      const sw = w * scaleX;
+      const sh = h * scaleY;
+
+      ctx.strokeStyle = "#1e90ff";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(sx, sy, sw, sh);
+
+      // Add corner indicators for better visual feedback
+      const cornerSize = 15;
+      ctx.fillStyle = "#1e90ff";
+      
+      // Top-left corner
+      ctx.fillRect(sx - 2, sy - 2, cornerSize, 4);
+      ctx.fillRect(sx - 2, sy - 2, 4, cornerSize);
+      
+      // Top-right corner
+      ctx.fillRect(sx + sw - cornerSize + 2, sy - 2, cornerSize, 4);
+      ctx.fillRect(sx + sw - 2, sy - 2, 4, cornerSize);
+      
+      // Bottom-left corner
+      ctx.fillRect(sx - 2, sy + sh - 2, cornerSize, 4);
+      ctx.fillRect(sx - 2, sy + sh - cornerSize + 2, 4, cornerSize);
+      
+      // Bottom-right corner
+      ctx.fillRect(sx + sw - cornerSize + 2, sy + sh - 2, cornerSize, 4);
+      ctx.fillRect(sx + sw - 2, sy + sh - cornerSize + 2, 4, cornerSize);
+    }
+
+    // Continue animation
+    if (isMountedRef.current) {
+      animationFrameRef.current = requestAnimationFrame(animateBoundingBox);
+    }
+  };
+
+  // Function to update target bounding box (called when new data arrives)
+  const updateTargetBoundingBox = (bboxData, video) => {
+    if (!bboxData || !isMountedRef.current || !video) {
+      return;
+    }
+
+    const bboxes = Array.isArray(bboxData[0]) ? bboxData : [bboxData];
+    
+    if (bboxes.length > 0) {
+      const newTargetBbox = bboxes[0]; // Use first detected hand
+      
+      // If this is the first bbox, set both current and target to avoid jump
+      if (!currentBboxRef.current) {
+        currentBboxRef.current = [...newTargetBbox];
+        targetBboxRef.current = [...newTargetBbox];
+      } else {
+        // Set new target for smooth interpolation
+        targetBboxRef.current = [...newTargetBbox];
+      }
+      
+      lastBboxUpdateRef.current = Date.now();
+      
+      // Start animation if not already running
+      if (!animationFrameRef.current) {
+        animateBoundingBox();
+      }
+    }
+  };
+
+  // Function to clear bounding boxes
+  const clearBoundingBoxes = () => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+    
+    // Clear tracking state
+    currentBboxRef.current = null;
+    targetBboxRef.current = null;
+    
+    // Cancel animation
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  };
+
+  // UPDATED: API call for words translation with smooth tracking
   const makeApiCall = async (retryCount = 0) => {
     if (!isMountedRef.current) return;
 
@@ -521,39 +660,16 @@ function ASLWordsTranslator() {
           if (response.ok) {
             const data = await response.json();
             
-            // Update bounding boxes (if your API returns them)
-            if (data.bbox && canvasRef.current && isMountedRef.current) {
-              const ctx = canvasRef.current.getContext("2d");
-              const overlayCanvas = canvasRef.current;
-
-              overlayCanvas.width = overlayCanvas.offsetWidth;
-              overlayCanvas.height = overlayCanvas.offsetHeight;
-
-              ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-              const videoW = video.videoWidth;
-              const videoH = video.videoHeight;
-              const scaleX = overlayCanvas.width / videoW;
-              const scaleY = overlayCanvas.height / videoH;
-
-              const bboxes = Array.isArray(data.bbox[0]) ? data.bbox : [data.bbox];
-              bboxes.forEach(([x, y, w, h]) => {
-                const sx = x * scaleX;
-                const sy = y * scaleY;
-                const sw = w * scaleX;
-                const sh = h * scaleY;
-
-                ctx.strokeStyle = "#1e90ff";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(sx, sy, sw, sh);
-              });
-            }
-
-            // Update current prediction
-            const word = data.prediction || data.label || "";
-            const confidence = data.confidence || 0;
-            
             if (isMountedRef.current) {
+              // Update bounding boxes with smooth tracking
+              if (data.bbox) {
+                updateTargetBoundingBox(data.bbox, video);
+              }
+
+              // Update current prediction
+              const word = data.prediction || data.label || "";
+              const confidence = data.confidence || 0;
+              
               setCurrentPrediction({
                 word: word,
                 probability: (confidence * 100).toFixed(0),
@@ -576,12 +692,15 @@ function ASLWordsTranslator() {
           } else {
             console.error(`API Error: ${response.status} ${response.statusText}`);
             
-            // Log the error response body for debugging
+            // Try to parse response even on error to check for bbox data
             try {
-              const errorText = await response.text();
-              console.error('Error response body:', errorText);
-            } catch (e) {
-              console.error('Could not read error response');
+              const errorData = await response.json();
+              // Some APIs return bbox data even in error responses
+              if (errorData.bbox && isMountedRef.current) {
+                updateTargetBoundingBox(errorData.bbox, video);
+              }
+            } catch (parseError) {
+              console.error('Could not parse error response as JSON');
             }
             
             // Handle 503 Service Unavailable with retry logic (Hugging Face cold start)
@@ -599,6 +718,7 @@ function ASLWordsTranslator() {
             if (response.status === 400) {
               // Bad request - possibly no hand detected
               if (isMountedRef.current) {
+                clearBoundingBoxes();
                 setCurrentPrediction({
                   word: "No hand detected",
                   probability: 0
@@ -627,6 +747,8 @@ function ASLWordsTranslator() {
           console.error("Fetch error:", err);
           
           if (isMountedRef.current) {
+            clearBoundingBoxes();
+            
             if (err.name === 'AbortError') {
               setStatus('error');
               setCurrentPrediction({
@@ -650,6 +772,7 @@ function ASLWordsTranslator() {
       console.error("Canvas error:", err);
       isProcessingRef.current = false;
       if (isMountedRef.current) {
+        clearBoundingBoxes();
         setStatus('error');
         setCurrentPrediction({
           word: "Camera error",
@@ -716,6 +839,11 @@ function ASLWordsTranslator() {
 
     return () => {
       isMountedRef.current = false;
+      
+      // Cancel animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       
       if (intervalId) {
         clearInterval(intervalId);
@@ -803,17 +931,12 @@ function ASLWordsTranslator() {
             <h2>Instructions</h2>
             <p>1. Sign complete words in front of the camera.</p>
             <p>2. The system analyzes your signs every 2 seconds.</p>
-            <p>3. Blue boxes will track your hands automatically.</p>
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#fef5e7', borderRadius: '8px', border: '1px solid #f6ad55' }}>
               <p style={{ color: '#c05621', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
-                📏 For best results, keep your device 10-15 inches away and sign clearly.
+                 For best results, keep your device 10-15 inches away and sign clearly.
               </p>
             </div>
-            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6fffa', borderRadius: '8px', border: '1px solid #38b2ac' }}>
-              <p style={{ color: '#234e52', fontWeight: 'bold', fontSize: '0.95rem', margin: '0' }}>
-                🚀 Now powered by Hugging Face Spaces for reliable ASL word recognition!
-              </p>
-            </div>
+            
             <button onClick={() => setShowInstructions(false)}>
               Got it!
             </button>
