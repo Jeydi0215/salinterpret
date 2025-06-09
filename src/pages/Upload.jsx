@@ -440,7 +440,7 @@ export default function Upload() {
                     <option value="">Select category</option>
                     <option value="alphabets">Alphabets</option>
                     <option value="common_words">Common Words</option>
-                    <option value="common_phrases">Common Phrases</option>
+                    <option value="Common Phrases">Common Phrases</option>
                   </SelectField>
                 </>
               )}
