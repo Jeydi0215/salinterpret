@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import logo from '../assets/logo.png';
-import Hacker from  '../assets/Hacker.png';
-import Hipster from  '../assets/Hipster.png';
+import Hacker from  '../assets/Dimalanta.jpg';
+import Hipster from  '../assets/Acar.jpg';
 import Mentor from  '../assets/Mentor.png';
-import Member from  '../assets/Member.png';
+import Member from  '../assets/Mamangun.jpg';
 import { Link } from 'react-router-dom';
 import lopit from '../assets/lopit.png';
 import { Analytics } from '@vercel/analytics/react';
