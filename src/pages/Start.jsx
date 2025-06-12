@@ -431,7 +431,7 @@ const SalinterpretLandingPage = () => {
               </CTA>
             </HeroText>
             <HeroImage>
-              <img src="https://via.placeholder.com/600x400" alt="Salinterpret App Demo" />
+             
             </HeroImage>
           </HeroContent>
         </Container>
