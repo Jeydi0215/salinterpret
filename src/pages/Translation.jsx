@@ -5,8 +5,12 @@ function ASLTranslationPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [stream, setStream] = useState(null);
+  const [captureCount, setCaptureCount] = useState(0);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
+  // Your backend URL - UPDATE THIS
+  const BACKEND_URL = 'https://flasky-d9sr.onrender.com/ai-translate';
 
   // Start camera
   useEffect(() => {
@@ -21,7 +25,11 @@ function ASLTranslationPage() {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        } 
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -38,7 +46,6 @@ function ASLTranslationPage() {
     if (!videoRef.current || isProcessing) return;
     
     setIsProcessing(true);
-    setError('');
 
     try {
       // Capture frame from video
@@ -49,47 +56,26 @@ function ASLTranslationPage() {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0);
       
-      // Convert to base64
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      const base64Image = imageData.split(',')[1];
+      // Convert to blob
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+      
+      // Send to backend
+      const formData = new FormData();
+      formData.append('image', blob, 'frame.jpg');
 
-      // Call AI API (Claude)
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(BACKEND_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: base64Image
-                }
-              },
-              {
-                type: 'text',
-                text: 'What ASL (American Sign Language) letter or sign is being shown in this image? Respond with ONLY the letter or word being signed, nothing else. If no clear ASL sign is visible, respond with "No sign detected".'
-              }
-            ]
-          }]
-        })
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('AI API request failed');
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
-      const aiResponse = data.content[0].text.trim();
-      
-      setTranslation(aiResponse);
+      setTranslation(data.translation || 'No sign detected');
+      setCaptureCount(prev => prev + 1);
+      setError('');
     } catch (err) {
       setError('Translation failed: ' + err.message);
       console.error('Error:', err);
@@ -98,14 +84,16 @@ function ASLTranslationPage() {
     }
   };
 
-  // Auto-capture every 2 seconds
+  // Real-time auto-capture - adjustable interval
   useEffect(() => {
+    if (!stream) return;
+    
     const interval = setInterval(() => {
       captureAndTranslate();
-    }, 2000);
+    }, 1500); // Capture every 1.5 seconds for real-time feel
 
     return () => clearInterval(interval);
-  }, [isProcessing]);
+  }, [stream, isProcessing]);
 
   return (
     <div style={{
@@ -114,9 +102,16 @@ function ASLTranslationPage() {
       alignItems: 'center',
       minHeight: '100vh',
       backgroundColor: '#ffc0cb',
-      padding: '2rem'
+      padding: '1rem',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      <h1 style={{ marginBottom: '2rem', color: '#333' }}>ASL AI Translator</h1>
+      <h1 style={{ 
+        marginBottom: '1.5rem', 
+        color: '#333',
+        fontSize: 'clamp(1.5rem, 5vw, 2.5rem)'
+      }}>
+        ASL AI Translator
+      </h1>
       
       {/* Camera Feed */}
       <div style={{
@@ -126,56 +121,107 @@ function ASLTranslationPage() {
         backgroundColor: '#000',
         borderRadius: '12px',
         overflow: 'hidden',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
       }}>
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          muted
           style={{
             width: '100%',
             height: 'auto',
-            display: 'block'
+            display: 'block',
+            transform: 'scaleX(-1)' // Mirror the video
           }}
         />
-        {isProcessing && (
+        
+        {/* Status Indicator */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '14px'
+        }}>
           <div style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '14px'
-          }}>
-            Analyzing...
-          </div>
-        )}
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: isProcessing ? '#f59e0b' : '#10b981',
+            animation: isProcessing ? 'pulse 1s infinite' : 'none'
+          }} />
+          {isProcessing ? 'Analyzing...' : 'Ready'}
+        </div>
+
+        {/* Capture Count */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '14px'
+        }}>
+          Captures: {captureCount}
+        </div>
+
+        {/* Hand Guide Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '60%',
+          height: '60%',
+          border: '3px dashed rgba(255,255,255,0.5)',
+          borderRadius: '12px',
+          pointerEvents: 'none'
+        }} />
       </div>
 
       {/* Hidden canvas for capture */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Translation Result */}
+      {/* Translation Result - LARGE and PROMINENT */}
       <div style={{
         marginTop: '2rem',
         padding: '2rem',
         backgroundColor: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        borderRadius: '16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         width: '100%',
         maxWidth: '640px',
-        textAlign: 'center'
+        textAlign: 'center',
+        minHeight: '120px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
-        <h2 style={{ marginBottom: '1rem', color: '#333' }}>Translation:</h2>
-        <p style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          color: '#4a5568',
-          minHeight: '3rem'
+        <h2 style={{ 
+          marginBottom: '1rem', 
+          color: '#666',
+          fontSize: '1.2rem',
+          fontWeight: 'normal'
         }}>
-          {translation || 'Waiting for sign...'}
+          Translation:
+        </h2>
+        <p style={{
+          fontSize: 'clamp(3rem, 8vw, 5rem)',
+          fontWeight: 'bold',
+          color: '#2d3748',
+          margin: 0,
+          letterSpacing: '0.05em'
+        }}>
+          {translation || '👋'}
         </p>
       </div>
 
@@ -188,33 +234,50 @@ function ASLTranslationPage() {
           color: '#c00',
           borderRadius: '8px',
           width: '100%',
-          maxWidth: '640px'
+          maxWidth: '640px',
+          fontSize: '0.9rem'
         }}>
-          {error}
+          ⚠️ {error}
         </div>
       )}
 
-      {/* Instructions */}
+      {/* Quick Instructions */}
       <div style={{
         marginTop: '2rem',
         padding: '1.5rem',
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         borderRadius: '12px',
         width: '100%',
         maxWidth: '640px'
       }}>
-        <h3 style={{ marginBottom: '1rem', color: '#333' }}>Instructions:</h3>
-        <ol style={{ textAlign: 'left', lineHeight: '1.8', color: '#555' }}>
-          <li>Allow camera access when prompted</li>
-          <li>Position your hand clearly in the camera view</li>
-          <li>Make an ASL sign (letter or gesture)</li>
-          <li>Wait for AI to analyze and translate (every 2 seconds)</li>
-          <li>Try different signs!</li>
+        <h3 style={{ 
+          marginBottom: '1rem', 
+          color: '#333',
+          fontSize: '1.3rem'
+        }}>
+          📋 How to Use:
+        </h3>
+        <ol style={{ 
+          textAlign: 'left', 
+          lineHeight: '1.8', 
+          color: '#555',
+          paddingLeft: '1.5rem'
+        }}>
+          <li>Position your hand in the dashed box area</li>
+          <li>Make clear ASL signs (letters or gestures)</li>
+          <li>Hold each sign for 1-2 seconds</li>
+          <li>Watch the translation update in real-time!</li>
         </ol>
-        <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
-          <strong>Note:</strong> This uses AI vision to recognize ASL signs in real-time. 
-          No pre-trained model needed!
-        </p>
+        <div style={{
+          marginTop: '1rem',
+          padding: '1rem',
+          backgroundColor: '#e6f7ff',
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          color: '#0066cc'
+        }}>
+          💡 <strong>Tip:</strong> The app captures and analyzes automatically every 1.5 seconds
+        </div>
       </div>
 
       {/* Manual Capture Button */}
@@ -222,19 +285,35 @@ function ASLTranslationPage() {
         onClick={captureAndTranslate}
         disabled={isProcessing}
         style={{
-          marginTop: '1rem',
-          padding: '12px 32px',
+          marginTop: '1.5rem',
+          padding: '14px 36px',
           fontSize: '1.1rem',
-          backgroundColor: isProcessing ? '#ccc' : '#4299e1',
+          fontWeight: '600',
+          backgroundColor: isProcessing ? '#cbd5e0' : '#4299e1',
           color: 'white',
           border: 'none',
-          borderRadius: '8px',
+          borderRadius: '10px',
           cursor: isProcessing ? 'not-allowed' : 'pointer',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+          transition: 'all 0.2s',
+          transform: isProcessing ? 'scale(0.98)' : 'scale(1)'
+        }}
+        onMouseEnter={e => {
+          if (!isProcessing) e.target.style.backgroundColor = '#3182ce';
+        }}
+        onMouseLeave={e => {
+          if (!isProcessing) e.target.style.backgroundColor = '#4299e1';
         }}
       >
-        {isProcessing ? 'Analyzing...' : 'Capture & Translate Now'}
+        {isProcessing ? '⏳ Analyzing...' : '📸 Capture Now'}
       </button>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </div>
   );
 }
