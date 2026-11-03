@@ -293,8 +293,7 @@ const Curve = styled.div`
 const RowWrap = styled.section`
   position: relative;
   z-index: 3;
-  margin-top: -50px;
-  padding: 0 0 56px;
+  padding: 28px 0 56px;
   scroll-margin-top: 20px;
 `;
 
@@ -455,21 +454,19 @@ const Screen = styled.div`
 `;
 
 const ReadingChip = styled.div`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 2;
-  max-width: 190px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
   padding: 10px 16px;
   border-left: 4px solid ${C.red};
   border-radius: 4px;
-  background: rgba(20, 20, 20, 0.85);
-  font-size: 0.85rem;
-  line-height: 1.3;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.9rem;
   animation: ${pop} 0.35s ease both;
-  strong { display: block; font-size: 1.5rem; font-weight: 900; }
+  strong { font-size: 1.6rem; font-weight: 900; line-height: 1; }
   span { color: ${C.gray}; }
-  .match { color: ${C.green}; font-weight: 600; }
+  .match { margin-left: auto; color: ${C.green}; font-weight: 600; }
 `;
 
 const Phone = styled.div`
@@ -742,6 +739,14 @@ const SalinterpretLandingPage = () => {
                 <span className="who">Typing</span>
                 <div className="bubble me">Nice to meet you too!</div>
               </div>
+              <div className="group">
+                <span className="who">Signing</span>
+                <div className="bubble them">Where is the library?</div>
+              </div>
+              <div className="group me-side">
+                <span className="who">Typing</span>
+                <div className="bubble me">Down the hall, on the left.</div>
+              </div>
             </Chat>
           </FeatVisual>
         </div>
@@ -783,7 +788,7 @@ const SalinterpretLandingPage = () => {
         </ReasonGrid>
       </ReasonsWrap>
 
-      <div style={{ borderTop: `8px solid ${C.line}`, paddingTop: 56 }} id="about">
+      <div style={{ borderTop: `8px solid ${C.line}`, paddingTop: 24 }} id="about">
         <Row title="Meet the team">
           {TEAM.map((m) => (
             <TeamCard key={m.name}>
