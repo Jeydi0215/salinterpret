@@ -1,541 +1,605 @@
 // SalinterpretLandingPage.jsx
 import React, { useState, useEffect } from 'react';
-
-
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
-import logo from '../assets/logo.png';
-import Hacker from  '../assets/Dimalanta.jpg';
-import Hipster from  '../assets/Acar.jpg';
-import Mentor from  '../assets/Mentor.png';
-import Member from  '../assets/Mamangun.jpg';
 import { Link } from 'react-router-dom';
-import lopit from '../assets/lopit.png';
 import { Analytics } from '@vercel/analytics/react';
+import logo from '../assets/logo.png';
+import Hacker from '../assets/Dimalanta.jpg';
+import Hipster from '../assets/Acar.jpg';
+import Mentor from '../assets/Mentor.png';
+import Member from '../assets/Mamangun.jpg';
+import lopit from '../assets/lopit.png';
 
-const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ---------- Tokens ---------- */
+const C = {
+  ink: '#14163A',
+  cobalt: '#3A3AF5',
+  signal: '#FFD23F',
+  mist: '#ECEEFF',
+  white: '#FFFFFF',
+  slate: '#4A4D75',
+  soft: '#B9BCE8',
+};
+const DISPLAY = "'Bricolage Grotesque', 'Segoe UI', sans-serif";
+const BODY = "'Atkinson Hyperlegible', 'Segoe UI', sans-serif";
+
+/* ---------- Motion ---------- */
+const rise = keyframes`
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+`;
+const blink = keyframes`50% { opacity: 0; }`;
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 `;
 
 const GlobalStyle = createGlobalStyle`
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    color: #1e293b;
+    font-family: ${BODY};
+    color: ${C.ink};
+    background: ${C.mist};
     line-height: 1.6;
     overflow-x: hidden;
-    background: #f8fafc;
-    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { display: block; max-width: 100%; }
+  :focus-visible { outline: 3px solid ${C.cobalt}; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 `;
-const ContactSection = styled.section`
-  background: white;
-  padding: 80px 0;
-  background:#141414;
-`;
 
-const ContactGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 50px;
-`;
-
-const ContactInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  color:white;
-`;
-
-const ContactItem = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const ContactIcon = styled.div`
-  width: 50px;
-  height: 50px;
-  background: rgba(37, 99, 235, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  font-size: 1.2rem;
-  color: #2563eb;
-`;
-
-const ContactForm = styled.form`
-  background:  #1f1f1f;
-  padding: 30px;
-  border-radius: 10px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 20px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color:white;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #e2e8f0;
-  border-radius: 5px;
-  font-size: 1rem;
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  min-height: 150px;
-  padding: 12px 15px;
-  border: 1px solid #e2e8f0;
-  border-radius: 5px;
-  font-size: 1rem;
-`;
-
-const Footer = styled.footer`
-  background: #1e293b;
-  color: white;
-  padding: 60px 0 20px;
-  text-align: center;
-`;
-
-const FooterText = styled.p`
-  font-size: 0.9rem;
-  color: #94a3b8;
-`;
+/* ---------- Layout ---------- */
 const Container = styled.div`
-  max-width: 1200px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
 `;
 
+const Section = styled.section`
+  padding: 110px 0;
+  scroll-margin-top: 80px;
+  background: ${({ $dark }) => ($dark ? C.ink : C.mist)};
+  color: ${({ $dark }) => ($dark ? C.white : C.ink)};
+`;
+
+const SectionTitle = styled.h2`
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: clamp(2rem, 4.5vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  max-width: 14ch;
+  margin-bottom: 56px;
+`;
+
+/* ---------- Nav ---------- */
 const Nav = styled.nav`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1100px, calc(100% - 32px));
   z-index: 1000;
-  background: ${({ scrolled }) => (scrolled ? '#ffffff' : '#000000')};
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: ${({ scrolled }) => (scrolled ? '0 2px 10px rgba(0, 0, 0, 0.1)' : 'none')};
-`;
-
-const NavContainer = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 20px;
+  justify-content: space-between;
+  padding: 10px 12px 10px 22px;
+  border-radius: 999px;
+  background: ${({ $scrolled }) => ($scrolled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)')};
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 2px solid ${C.ink};
+  transition: background 0.3s ease;
 `;
 
 const Logo = styled.a`
   display: flex;
   align-items: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2563eb;
-  text-decoration: none;
-  img {
-    height: 40px;
-    margin-right: 10px;
-  }
+  img { height: 34px; width: auto; }
 `;
 
 const NavLinks = styled.ul`
   display: flex;
+  gap: 6px;
   list-style: none;
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const NavLink = styled.li`
-  margin-left: 30px;
+  @media (max-width: 760px) { display: none; }
   a {
-    color: ${({ scrolled }) => (scrolled ? '#1e293b' : '#ffffff')};
+    display: block;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: ${C.ink};
     text-decoration: none;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    &:hover {
-      color: #e50914;
-    }
+    transition: background 0.2s ease;
+    &:hover { background: ${C.signal}; }
   }
 `;
 
-const Section = styled.section`
-  padding: 80px 0;
-  animation: ${fadeInUp} 1s ease forwards;
-  background:#141414;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  position: relative;
-  color: #2563eb;
-  opacity: 0;
-  animation: ${fadeInUp} 1s ease forwards;
-  animation-delay: 0.3s;
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
-    background: #f59e0b;
-    border-radius: 2px;
+const Button = styled.a`
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: 2px solid ${C.ink};
+  font-family: ${BODY};
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  background: ${({ $primary }) => ($primary ? C.ink : 'transparent')};
+  color: ${({ $primary }) => ($primary ? C.signal : C.ink)};
+  transition: transform 0.15s ease, background 0.15s ease;
+  &:hover {
+    transform: translateY(-2px);
+    background: ${({ $primary }) => ($primary ? C.cobalt : C.signal)};
+    color: ${({ $primary }) => ($primary ? C.white : C.ink)};
   }
 `;
 
-const Hero = styled.div`
-  position: relative;
-  padding: 180px 0 100px;
-  overflow: hidden;
-  z-index: 1;
-
-  &::before {
-    content: '';
-    background-image: url(${lopit});
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: blur(4px);
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    transform: scale(1.05); /* Optional: avoid edge cropping after blur */
-  }
+/* ---------- Hero ---------- */
+const Hero = styled.header`
+  padding: 150px 0 110px;
+  scroll-margin-top: 0;
 `;
-const HeroContent = styled.div`
-  display: flex;
-  flex-direction: column;
+
+const HeroGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 72px;
   align-items: center;
-  justify-content: space-between;
-  @media (min-width: 992px) {
-    flex-direction: row;
-  }
+  @media (max-width: 920px) { grid-template-columns: 1fr; gap: 56px; }
 `;
 
 const HeroText = styled.div`
-  flex: 1;
-  max-width: 600px;
-  animation: ${fadeInUp} 1s ease forwards;
-`;
-
-const HeroTagline = styled.span`
-  color: #2563eb;
-  font-weight: 600;
-  margin-bottom: 15px;
-  display: inline-block;
-  background: white;
-  padding: 5px 15px;
-  border-radius: 50px;
+  > * { opacity: 0; animation: ${rise} 0.8s ease forwards; }
+  > :nth-child(2) { animation-delay: 0.12s; }
+  > :nth-child(3) { animation-delay: 0.24s; }
 `;
 
 const HeroTitle = styled.h1`
-  font-size: 3.5rem;
-  margin-bottom: 20px;
-  color: white;
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: clamp(2.8rem, 7vw, 5.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin-bottom: 28px;
+`;
+
+const CaptionLine = styled.span`
+  background: ${C.ink};
+  color: ${C.signal};
+  padding: 0.02em 0.22em;
+  border-radius: 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 `;
 
 const HeroSubtitle = styled.p`
   font-size: 1.2rem;
-  color: white;
-  margin-bottom: 30px;
+  color: ${C.slate};
+  max-width: 46ch;
+  margin-bottom: 36px;
 `;
 
 const CTA = styled.div`
   display: flex;
-  gap: 15px;
+  gap: 14px;
   flex-wrap: wrap;
 `;
 
-const Button = styled.a`
-  padding: 12px 28px;
-  border-radius: 50px;
-  font-weight: 600;
-  text-decoration: none;
-  background: ${props => props.primary ? '#2563eb' : '#f59e0b'};
-  color: ${props => props.primary ? '#fff' : '#1e293b'};
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  &:hover {
-    transform: translateY(-2px);
-  }
-`;
-
-const HeroImage = styled.div`
-  flex: 1;
-  max-width: 600px;
-  animation: ${fadeInUp} 1s ease forwards;
-  animation-delay: 0.3s;
-  img {
-    width: 100%;
-    border-radius: 10px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  }
-  height:80vh;
-`;
-
-const AboutGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
- 
-`;
-
-const TeamCard = styled.div`
-  background: 	#1f1f1f;
-  border-radius: 10px;
+/* Live caption demo */
+const Stage = styled.div`
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: 580px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 32px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  animation: ${fadeInUp} 1s ease forwards;
-  &:hover {
-    transform: translateY(-10px);
+  background: ${C.ink};
+  border: 2px solid ${C.ink};
+  box-shadow: 14px 14px 0 ${C.signal};
+  animation: ${rise} 0.9s ease 0.3s both;
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const LivePill = styled.div`
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: ${C.ink};
+  color: ${C.white};
+  font-size: 0.85rem;
+  font-weight: 700;
+  &::before {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff4d4d;
+    animation: ${pulse} 1.4s ease-in-out infinite;
+  }
+`;
+
+const CaptionBar = styled.div`
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(20, 22, 58, 0.94);
+`;
+
+const CaptionText = styled.p`
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  line-height: 1.25;
+  min-height: 2.5em;
+  color: ${C.signal};
+`;
+
+const Caret = styled.span`
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: -0.12em;
+  background: ${C.signal};
+  animation: ${blink} 1s steps(1) infinite;
+`;
+
+const Confidence = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: ${C.soft};
+`;
+
+const Meter = styled.div`
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  div {
+    height: 100%;
+    border-radius: 999px;
+    background: ${C.signal};
+    transition: width 0.12s linear;
+  }
+`;
+
+/* ---------- Team ---------- */
+const TeamGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 32px;
+  @media (min-width: 900px) {
+    > :nth-child(even) { margin-top: 44px; }
   }
 `;
 
 const TeamImg = styled.img`
   width: 100%;
-  height: 250px;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-`;
-
-const TeamInfo = styled.div`
-  padding: 20px;
+  border-radius: 26px;
+  border: 2px solid ${C.ink};
+  margin-bottom: 18px;
 `;
 
 const TeamName = styled.h3`
-  font-size: 1.3rem;
-  margin-bottom: 5px;
-  color:#ffffff;
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1.2;
 `;
 
 const TeamRole = styled.p`
-  color: #2563eb;
-  font-weight: 500;
+  color: ${C.cobalt};
+  font-weight: 700;
+  margin-bottom: 6px;
 `;
 
 const TeamBio = styled.p`
-  color:#b3b3b3;
-  font-size: 0.95rem;
+  color: ${C.slate};
+  font-size: 0.98rem;
 `;
 
-const FeaturesGrid = styled.div`
+/* ---------- Features ---------- */
+const FeatureRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
-`;
-
-const FeatureCard = styled.div`
-  background: #1f1f1f;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  text-align: center;
-  transition: all 0.3s ease;
-  animation: ${fadeInUp} 1s ease forwards;
-  &:hover {
-    transform: translateY(-5px);
+  grid-template-columns: 64px 1fr 1.3fr;
+  gap: 24px;
+  align-items: baseline;
+  padding: 28px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  &:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.18); }
+  @media (max-width: 760px) {
+    grid-template-columns: 48px 1fr;
+    > p { grid-column: 2; }
   }
 `;
 
-const FeatureIcon = styled.div`
-  font-size: 2.5rem;
-  color: #2563eb;
-  margin-bottom: 20px;
+const FeatureIcon = styled.span`
+  font-size: 1.9rem;
+  line-height: 1;
 `;
 
 const FeatureTitle = styled.h3`
-  font-size: 1.3rem;
-  margin-bottom: 15px;
-  color: #2563eb;
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+  line-height: 1.15;
 `;
 
 const FeatureDesc = styled.p`
-  color:#b3b3b3;
+  color: ${C.soft};
+  max-width: 52ch;
 `;
 
-const scrollToSection = (id) => {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-};
+/* ---------- Contact ---------- */
+const ContactGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+  @media (max-width: 860px) { grid-template-columns: 1fr; gap: 40px; }
+`;
 
-const SalinterpretLandingPage = () => {
-  const [scrolled, setScrolled] = useState(false);
+const EmailLink = styled.a`
+  display: inline-block;
+  font-family: ${DISPLAY};
+  font-weight: 800;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  color: ${C.ink};
+  text-decoration-thickness: 3px;
+  text-decoration-color: ${C.signal};
+  text-underline-offset: 6px;
+  word-break: break-all;
+  &:hover { text-decoration-color: ${C.cobalt}; }
+`;
+
+const Form = styled.form`
+  background: ${C.white};
+  border: 2px solid ${C.ink};
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: 10px 10px 0 ${C.ink};
+`;
+
+const Field = styled.div`
+  margin-bottom: 20px;
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid ${C.ink};
+    border-radius: 12px;
+    font: inherit;
+    background: ${C.mist};
+    color: ${C.ink};
+    transition: background 0.15s ease;
+    &:focus { outline: none; background: ${C.white}; box-shadow: 0 0 0 3px ${C.cobalt}; }
+  }
+  textarea { min-height: 140px; resize: vertical; }
+`;
+
+const Footer = styled.footer`
+  background: ${C.ink};
+  color: ${C.soft};
+  padding: 32px 0;
+  font-size: 0.92rem;
+`;
+
+/* ---------- Data ---------- */
+const PHRASES = [
+  { t: 'Hello, nice to meet you', c: 97 },
+  { t: 'Where is the library?', c: 94 },
+  { t: 'Thank you so much', c: 99 },
+];
+
+const TEAM = [
+  { name: 'Justine Dimalanta', role: 'Hacker & Hustler', bio: 'Leading technical development and business strategy.', img: Hacker },
+  { name: 'Lara Jane Acar', role: 'Hipster', bio: 'Designing an intuitive user experience.', img: Hipster },
+  { name: 'Jerson Mamangun', role: 'Co-Hacker', bio: "Refining the app's performance and core functionality.", img: Member },
+  { name: 'Chris Allen Pineda', role: 'Project Adviser', bio: 'Guiding our mission to make communication accessible.', img: Mentor },
+];
+
+const FEATURES = [
+  { icon: '🈸', title: 'Real-time translation', desc: 'Instant ASL-to-text conversion powered by computer vision.' },
+  { icon: '📱', title: 'Works on your phone', desc: 'Use it anywhere on mobile or tablet.' },
+  { icon: '👥', title: 'Multi-user conversations', desc: 'Talk with more than one person in the same session.' },
+  { icon: '📚', title: 'Learning resources', desc: 'Tutorials and guides to learn ASL basics.' },
+  { icon: '🎥', title: 'Video tutorials', desc: 'Step-by-step videos to help you master ASL signs and usage.' },
+  { icon: '📈', title: 'Confidence score', desc: 'See how sure the AI is about each sign, so you know how far to trust it.' },
+];
+
+/* ---------- Typed caption hook ---------- */
+const useTypedCaption = () => {
+  const [reduce] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const [state, setState] = useState({ i: 0, n: 0 });
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (reduce) return undefined;
+    const { i, n } = state;
+    const len = PHRASES[i].t.length;
+    const id = setTimeout(
+      () => setState(n < len ? { i, n: n + 1 } : { i: (i + 1) % PHRASES.length, n: 0 }),
+      n < len ? 85 : 2000
+    );
+    return () => clearTimeout(id);
+  }, [state, reduce]);
+
+  return reduce ? { i: 0, n: PHRASES[0].t.length } : state;
+};
+
+/* ---------- Page ---------- */
+const SalinterpretLandingPage = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const { i, n } = useTypedCaption();
+  const phrase = PHRASES[i];
+  const pct = Math.round((phrase.c * n) / phrase.t.length);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const subject = f.get('subject') || `Message from ${f.get('name')}`;
+    const body = `${f.get('message')}\n\n${f.get('name')} (${f.get('email')})`;
+    window.location.href = `mailto:salinterpretasl@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
 
   return (
     <>
       <GlobalStyle />
+      <Analytics />
 
-      <Nav scrolled={scrolled}>
-        <NavContainer>
-          <Logo onClick={() => scrollToSection('home')}>
-            <img src={logo} alt="Logo" />
-           
-          </Logo>
-          <NavLinks>
-            <NavLink scrolled={scrolled}><a onClick={() => scrollToSection('home')}>Home</a></NavLink>
-            <NavLink scrolled={scrolled}><a onClick={() => scrollToSection('about')}>About</a></NavLink>
-            <NavLink scrolled={scrolled}><a onClick={() => scrollToSection('features')}>Features</a></NavLink>
-            <NavLink scrolled={scrolled}><a onClick={() => scrollToSection('contact')}>Contact</a></NavLink>
-          </NavLinks>
-        </NavContainer>
+      <Nav $scrolled={scrolled} aria-label="Main">
+        <Logo href="#home" aria-label="Salinterpret home">
+          <img src={logo} alt="Salinterpret" />
+        </Logo>
+        <NavLinks>
+          <li><a href="#about">About</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </NavLinks>
+        <Button $primary as={Link} to="/login">Try it now</Button>
       </Nav>
-    <Analytics />
+
       <Hero id="home">
         <Container>
-          <HeroContent>
+          <HeroGrid>
             <HeroText>
-              <HeroTagline>Breaking Communication Barriers</HeroTagline>
-              <HeroTitle>Real-time ASL to Text Translation</HeroTitle>
+              <HeroTitle>
+                Sign naturally.<br />
+                <CaptionLine>Be read instantly.</CaptionLine>
+              </HeroTitle>
               <HeroSubtitle>
-                Connect effortlessly with our AI-powered sign language interpretation platform that bridges the gap between the ASL community and non-signers.
+                Salinterpret turns American Sign Language into text in real time, so signers and non-signers can talk without a barrier.
               </HeroSubtitle>
               <CTA>
-              <Button primary onClick={() => window.location.href = '/login'}> Start Now</Button>
-                <Button onClick={() => scrollToSection('features')}>Learn More</Button>
+                <Button $primary as={Link} to="/login">Try it now</Button>
+                <Button href="#features">See features</Button>
               </CTA>
             </HeroText>
-            <HeroImage>
-             
-            </HeroImage>
-          </HeroContent>
+
+            <Stage role="img" aria-label="Demo: a signer is captioned live with a confidence score">
+              <img src={lopit} alt="" />
+              <LivePill>Live</LivePill>
+              <CaptionBar>
+                <CaptionText>
+                  {phrase.t.slice(0, n)}
+                  <Caret />
+                </CaptionText>
+                <Confidence>
+                  <span>Confidence</span>
+                  <Meter><div style={{ width: `${pct}%` }} /></Meter>
+                  <span>{pct}%</span>
+                </Confidence>
+              </CaptionBar>
+            </Stage>
+          </HeroGrid>
         </Container>
       </Hero>
 
       <Section id="about">
         <Container>
-          <SectionTitle>About Us</SectionTitle>
-          <AboutGrid>
-            {[
-              { name: 'Justine Dimalanta', role: 'Hacker & Hustler', bio: 'Leading technical development and business strategy.', img: Hacker },
-              { name: 'Lara Jane Acar', role: 'Hipster', bio: 'Designing an intuitive user experience.', img:Hipster },
-              { name: 'Jerson Mamangun', role: 'Co-Hacker', bio: 'Refining the app\'s performance and core functionality.', img: Member },
-              { name: 'Chris Allen Pineda', role: 'Project Adviser', bio: 'Guiding our mission to make communication accessible.', img:Mentor }
-            ].map((member, index) => (
-              <TeamCard key={index}>
-                <TeamImg src={member.img} alt={member.name} />
-                <TeamInfo>
-                  <TeamName>{member.name}</TeamName>
-                  <TeamRole>{member.role}</TeamRole>
-                  <TeamBio>{member.bio}</TeamBio>
-                </TeamInfo>
-              </TeamCard>
+          <SectionTitle>The people behind Salinterpret</SectionTitle>
+          <TeamGrid>
+            {TEAM.map((m) => (
+              <div key={m.name}>
+                <TeamImg src={m.img} alt={m.name} />
+                <TeamName>{m.name}</TeamName>
+                <TeamRole>{m.role}</TeamRole>
+                <TeamBio>{m.bio}</TeamBio>
+              </div>
             ))}
-          </AboutGrid>
+          </TeamGrid>
         </Container>
       </Section>
 
-      <Section id="features">
+      <Section id="features" $dark>
         <Container>
-          <SectionTitle>Key Features</SectionTitle>
-          <FeaturesGrid>
-            {[
-              { icon: '🈸', title: 'Real-time Translation', desc: 'Instant ASL to text conversion with computer vision.' },
-              { icon: '📱', title: 'Mobile Friendly', desc: 'Use anywhere on mobile or tablet.' },
-              { icon: '👥', title: 'Multi-user Support', desc: 'Conversations between multiple users.' },
-              { icon: '📚', title: 'Learning Resources', desc: 'Tutorials and guides to learn ASL basics.' },
-              { icon: ' 🎥 ', title: 'Video Tutorials', desc: ' Step-by-step video guides to help you master ASL signs and usage.' },
-              { icon: '📈', title: 'Confidence Score', desc: ' See how confident the AI is with each sign prediction to better understand model reliability.' }
-            ].map((feature, idx) => (
-              <FeatureCard key={idx}>
-                <FeatureIcon>{feature.icon}</FeatureIcon>
-                <FeatureTitle>{feature.title}</FeatureTitle>
-                <FeatureDesc>{feature.desc}</FeatureDesc>
-              </FeatureCard>
-            ))}
-          </FeaturesGrid>
+          <SectionTitle>What it does</SectionTitle>
+          {FEATURES.map((f) => (
+            <FeatureRow key={f.title}>
+              <FeatureIcon aria-hidden="true">{f.icon}</FeatureIcon>
+              <FeatureTitle>{f.title}</FeatureTitle>
+              <FeatureDesc>{f.desc}</FeatureDesc>
+            </FeatureRow>
+          ))}
         </Container>
       </Section>
-      <ContactSection id="contact">
-  <Container>
-    <SectionTitle>Get In Touch</SectionTitle>
-    <ContactGrid>
-      <ContactInfo>
-        <ContactItem>
-          <ContactIcon>📧</ContactIcon>
-          <div>
-            <h3>Email Us</h3>
-            <p>salinterpretasl@gmail.com</p>
-          </div>
-        </ContactItem>
-        <ContactItem>
-          <ContactIcon>📞</ContactIcon>
-          <div>
-            <h3>Call Us</h3>
-            <p>+1 (555) 123-4567</p>
-          </div>
-        </ContactItem>
-        <ContactItem>
-          <ContactIcon>📍</ContactIcon>
-          <div>
-            <h3>Visit Us</h3>
-            <p>123 Tech Street, Innovation City</p>
-          </div>
-        </ContactItem>
-      </ContactInfo>
-      <ContactForm>
-        <FormGroup>
-          <Label htmlFor="name">Your Name</Label>
-          <Input id="name" type="text" required />
-        </FormGroup>
-        <FormGroup>
-          <Label htmlFor="email">Email Address</Label>
-          <Input id="email" type="email" required />
-        </FormGroup>
-        <FormGroup>
-          <Label htmlFor="subject">Subject</Label>
-          <Input id="subject" type="text" />
-        </FormGroup>
-        <FormGroup>
-          <Label htmlFor="message">Message</Label>
-          <TextArea id="message" required />
-        </FormGroup>
-        <Button primary type="submit">Send Message</Button>
-      </ContactForm>
-    </ContactGrid>
-  </Container>
-</ContactSection>
 
-<Footer>
-  <Container>
-    <FooterText>&copy; 2023 Salinterpret. All rights reserved.</FooterText>
-  </Container>
-</Footer>
+      <Section id="contact">
+        <Container>
+          <ContactGrid>
+            <div>
+              <SectionTitle>Questions? Write to us.</SectionTitle>
+              <EmailLink href="mailto:salinterpretasl@gmail.com">salinterpretasl@gmail.com</EmailLink>
+            </div>
+            <Form onSubmit={handleSubmit}>
+              <Field>
+                <label htmlFor="name">Your name</label>
+                <input id="name" name="name" type="text" required autoComplete="name" />
+              </Field>
+              <Field>
+                <label htmlFor="email">Email address</label>
+                <input id="email" name="email" type="email" required autoComplete="email" />
+              </Field>
+              <Field>
+                <label htmlFor="subject">Subject</label>
+                <input id="subject" name="subject" type="text" />
+              </Field>
+              <Field>
+                <label htmlFor="message">Message</label>
+                <textarea id="message" name="message" required />
+              </Field>
+              <Button $primary as="button" type="submit">Send message</Button>
+            </Form>
+          </ContactGrid>
+        </Container>
+      </Section>
+
+      <Footer>
+        <Container>&copy; {new Date().getFullYear()} Salinterpret. All rights reserved.</Container>
+      </Footer>
     </>
   );
 };
