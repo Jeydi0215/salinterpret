@@ -157,12 +157,12 @@ const useSigns = () => {
 /* ---------- Hero ---------- */
 const Hero = styled.header`
   position: relative;
-  min-height: 720px;
+  min-height: 620px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 140px 4% 150px;
+  padding: 140px 4% 120px;
   background:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.9) 100%),
     url(${lopit}) center / cover no-repeat;
@@ -293,7 +293,7 @@ const Curve = styled.div`
 const RowWrap = styled.section`
   position: relative;
   z-index: 3;
-  padding: 28px 0 56px;
+  padding: 12px 0 56px;
   scroll-margin-top: 20px;
 `;
 
@@ -301,6 +301,7 @@ const RowTitle = styled.h2`
   font-size: clamp(1.2rem, 2.2vw, 1.6rem);
   font-weight: 700;
   padding: 0 4%;
+  margin-bottom: 14px;
 `;
 
 const RowViewport = styled.div`
@@ -317,7 +318,7 @@ const Track = styled.div`
   margin: -40px 0;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
-  > * { scroll-snap-align: start; flex: 0 0 auto; }
+  > * { scroll-snap-align: start; flex: 1 0 240px; }
 `;
 
 const Arrow = styled.button`
@@ -347,7 +348,7 @@ const lift = `
 const PartCard = styled.article`
   position: relative;
   width: 240px;
-  min-height: 330px;
+  min-height: 290px;
   padding: 24px 22px;
   border-radius: 6px;
   background: linear-gradient(160deg, #303030, #1a1a1a 55%, #0d0d0d);
@@ -357,7 +358,7 @@ const PartCard = styled.article`
   overflow: hidden;
   ${lift}
   &::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: ${C.red}; }
-  .icon { font-size: 3.4rem; line-height: 1; }
+  .icon { font-size: 4.2rem; line-height: 1; }
   h3 { font-size: 1.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 8px; }
   p { font-size: 0.95rem; color: ${C.gray}; }
 `;
@@ -365,6 +366,7 @@ const PartCard = styled.article`
 const TeamCard = styled.article`
   position: relative;
   width: 240px;
+  max-width: 420px;
   aspect-ratio: 2 / 3;
   border-radius: 6px;
   overflow: hidden;
